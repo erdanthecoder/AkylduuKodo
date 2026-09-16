@@ -14,20 +14,16 @@
 // These values are NOT secrets — a Firebase web config is meant to be public.
 // What protects the data is the Firestore rules, not hiding this file.
 //
-// While this is `null`, the app runs in **device mode**: sign-up still works, but
-// accounts and progress stay in this browser only.
+// Set this back to `null` at any time to fall back to device mode (sign-up still
+// works, but accounts and progress stay in one browser).
 
-export const firebaseConfig = null;
-
-// Example of what it looks like once filled in:
-//
-// export const firebaseConfig = {
-//   apiKey: 'AIza…',
-//   authDomain: 'akylduukodo.firebaseapp.com',
-//   projectId: 'akylduukodo',
-//   storageBucket: 'akylduukodo.appspot.com',
-//   messagingSenderId: '000000000000',
-//   appId: '1:000000000000:web:abcdef123456',
-// };
+export const firebaseConfig = {
+  apiKey: 'AIzaSyDXrMgT80j7-0M-Uwx4MRzKHTfX5LdPRsU',
+  authDomain: 'akylduukodo.firebaseapp.com',
+  projectId: 'akylduukodo',
+  storageBucket: 'akylduukodo.firebasestorage.app',
+  messagingSenderId: '482873423827',
+  appId: '1:482873423827:web:cc5d3772d1777479da6126',
+};
 
 export const FIREBASE_SDK = 'https://www.gstatic.com/firebasejs/10.12.2';

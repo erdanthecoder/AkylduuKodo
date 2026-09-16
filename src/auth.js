@@ -65,10 +65,17 @@ let fb = null;
 
 async function firebase() {
   if (fb) return fb;
-  const [{ initializeApp }, auth, fs] = await Promise.all([
-    import(`${FIREBASE_SDK}/firebase-app.js`),
-    import(`${FIREBASE_SDK}/firebase-auth.js`),
-    import(`${FIREBASE_SDK}/firebase-firestore.js`),
+  // A school network can be slow or block the CDN outright; never hang forever.
+  const timeout = new Promise((_, reject) =>
+    setTimeout(() => reject(new Error('sdk-timeout')), 12000),
+  );
+  const [{ initializeApp }, auth, fs] = await Promise.race([
+    Promise.all([
+      import(`${FIREBASE_SDK}/firebase-app.js`),
+      import(`${FIREBASE_SDK}/firebase-auth.js`),
+      import(`${FIREBASE_SDK}/firebase-firestore.js`),
+    ]),
+    timeout,
   ]);
   const app = initializeApp(firebaseConfig);
   fb = { app, auth: auth.getAuth(app), db: fs.getFirestore(app), a: auth, f: fs };
@@ -238,6 +245,15 @@ export async function signOut() {
 }
 
 export function friendlyAuthError(err) {
+  const message = String(err?.message || '');
+  // The sign-in service itself is unreachable (offline, blocked CDN, captive portal).
+  if (
+    message.includes('dynamically imported module') ||
+    message.includes('sdk-timeout') ||
+    message.includes('Failed to fetch')
+  ) {
+    return 'Cannot reach the sign-in service right now — check the connection. You can keep learning without an account and sign in later; nothing is lost.';
+  }
   const code = String(err?.code || '');
   const map = {
     'auth/invalid-email': 'That email address does not look right.',
