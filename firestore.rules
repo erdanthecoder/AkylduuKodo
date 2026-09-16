@@ -1,0 +1,14 @@
+rules_version = '2';
+
+// Each learner owns exactly one document, named after their auth uid.
+// Nobody can read or write anyone else's progress — not even by guessing ids.
+service cloud.firestore {
+  match /databases/{database}/documents {
+    match /learners/{uid} {
+      allow read, write: if request.auth != null && request.auth.uid == uid;
+    }
+    match /{document=**} {
+      allow read, write: if false;
+    }
+  }
+}

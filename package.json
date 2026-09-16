@@ -1,0 +1,13 @@
+{
+  "name": "akylduukodo",
+  "version": "1.0.0",
+  "description": "AkylduuKodo — an interactive course for learning to code: lessons, guided practice and a weekly study goal.",
+  "type": "module",
+  "scripts": {
+    "start": "node server.mjs",
+    "dev": "node server.mjs",
+    "test": "node tests/curriculum.test.mjs"
+  },
+  "license": "MIT",
+  "private": true
+}

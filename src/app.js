@@ -1,0 +1,223 @@
+// app.js — router, top bar, bottom nav, and the first-run welcome.
+
+import { h, clear, sfx, confetti } from './ui.js';
+import { ui, LANGS } from './i18n.js';
+import * as store from './state.js';
+import { HomeView } from './views/home.js';
+import { JourneyView } from './views/journey.js';
+import { LessonView } from './views/lesson.js';
+import { PracticeView } from './views/practice.js';
+import { LabView } from './views/lab.js';
+import { SettingsView } from './views/settings.js';
+import { AccountView } from './views/account.js';
+import * as auth from './auth.js';
+import { animateIn, countUp, startBackdrop } from './anim.js';
+
+const NAV = [
+  { hash: '#/home', icon: '🏠', key: 'nav_home' },
+  { hash: '#/journey', icon: '🗺️', key: 'nav_journey' },
+  { hash: '#/practice', icon: '🎯', key: 'nav_practice' },
+  { hash: '#/lab', icon: '🧪', key: 'nav_lab' },
+  { hash: '#/settings', icon: '⚙️', key: 'nav_settings' },
+];
+
+let currentView = null;
+let lastXp = 0;
+
+function accountButton() {
+  const u = auth.user();
+  if (!u) {
+    return h('button', { class: 'pill pill-btn pill-signin', onclick: () => go('#/account') }, '👤 Sign in');
+  }
+  return h('button', { class: 'pill pill-btn pill-user', onclick: () => go('#/account'), title: u.email || u.name },
+    u.photo
+      ? h('img', { class: 'pill-avatar', src: u.photo, alt: '', referrerpolicy: 'no-referrer' })
+      : h('span', { class: 'pill-avatar pill-avatar-letter' }, (u.name || '?').slice(0, 1).toUpperCase()),
+    h('span', { class: 'pill-user-name' }, (u.name || 'Account').split(' ')[0]),
+  );
+}
+
+function go(hash, force = false) {
+  if (location.hash === hash && force) render();
+  else if (location.hash === hash) render();
+  else location.hash = hash;
+}
+
+function mount(node) {
+  if (currentView) currentView.dispatchEvent(new CustomEvent('view-destroy'));
+  currentView = node;
+  const main = document.getElementById('main');
+  clear(main).append(node);
+  animateIn(node);
+  window.scrollTo({ top: 0, behavior: 'instant' in window ? 'instant' : 'auto' });
+}
+
+function render() {
+  const s = store.get();
+  if (!s.onboarded) return mount(Onboarding());
+
+  const [, route, arg] = (location.hash || '#/home').split('/');
+  void route;
+  const path = (location.hash || '#/home').replace('#/', '').split('/');
+
+  switch (path[0]) {
+    case 'journey':
+      mount(JourneyView(go));
+      break;
+    case 'lesson':
+      mount(LessonView(path[1], go));
+      break;
+    case 'practice':
+      mount(PracticeView(go, path[1]));
+      break;
+    case 'lab':
+      mount(LabView());
+      break;
+    case 'settings':
+      mount(SettingsView(go, render));
+      break;
+    case 'account':
+      mount(AccountView(go, render));
+      break;
+    default:
+      mount(HomeView(go));
+  }
+  void arg;
+  paintChrome();
+}
+
+function paintChrome() {
+  const s = store.get();
+  const lvl = store.level();
+  const week = store.weekProgress();
+  const bar = document.getElementById('topbar');
+  const xpPill = h('span', { class: 'pill', title: ui('xp') }, '⚡ ', h('b', { class: 'xp-count' }, String(lastXp)));
+  clear(bar).append(
+    h('button', { class: 'brand', onclick: () => go('#/home') },
+      h('span', { class: 'brand-mark' }, '🏔️'),
+      h('span', { class: 'brand-name' }, 'Akyldu', h('em', {}, 'u'), 'Kodo'),
+    ),
+    h('div', { class: 'top-stats' },
+      h('span', { class: 'pill pill-level', title: ui('level') }, `${lvl.emoji} ${lvl.name}`),
+      xpPill,
+      h('span', { class: 'pill', title: ui('streak') }, h('span', { class: 'flame' }, '🔥'), ` ${store.streak()}`),
+      h('span', { class: 'pill', title: ui('this_week') }, `🎯 ${week.count}/${week.goal}`),
+      accountButton(),
+    ),
+  );
+  countUp(xpPill.querySelector('.xp-count'), lastXp, s.xp);
+  lastXp = s.xp;
+
+  const nav = document.getElementById('nav');
+  const active = (location.hash || '#/home').split('/').slice(0, 2).join('/');
+  clear(nav).append(
+    ...NAV.map((item) =>
+      h('button', {
+        class: 'nav-btn ' + (active === item.hash ? 'nav-on' : ''),
+        onclick: () => {
+          sfx('click', store.get().sound);
+          go(item.hash);
+        },
+      },
+        h('span', { class: 'nav-icon' }, item.icon),
+        h('span', { class: 'nav-label' }, ui(item.key)),
+      ),
+    ),
+  );
+}
+
+// --------------------------------------------------------------- first run
+
+function Onboarding() {
+  let name = '';
+  let goal = 5;
+  let lang = store.get().lang || 'en';
+
+  const el = h('div', { class: 'view onboard' },
+    h('div', { class: 'card hero onboard-hero' },
+      h('div', { class: 'big-emoji' }, '🏔️'),
+      h('h1', {}, 'AkylduuKodo'),
+      h('p', { class: 'muted' }, 'Smart code, one clear step at a time.'),
+    ),
+    h('div', { class: 'card' },
+      h('h3', {}, '🌍 ' + ui('lang')),
+      h('div', { class: 'chips' },
+        ...LANGS.map((l) =>
+          h('button', {
+            class: `chip chip-btn ${lang === l.id ? 'chip-on' : ''}`,
+            onclick: (e) => {
+              lang = l.id;
+              store.set({ lang });
+              [...e.target.parentElement.children].forEach((c) => c.classList.remove('chip-on'));
+              e.target.classList.add('chip-on');
+            },
+          }, `${l.flag} ${l.label}`),
+        ),
+      ),
+    ),
+    h('div', { class: 'card' },
+      h('h3', {}, '🙋 ' + ui('name_q')),
+      h('input', { class: 'text-input', placeholder: 'Aisuluu', oninput: (e) => (name = e.target.value) }),
+    ),
+    h('div', { class: 'card' },
+      h('h3', {}, '🎯 ' + ui('goal_q')),
+      h('p', { class: 'muted' }, ui('goal_note')),
+      h('div', { class: 'chips' },
+        ...[3, 5, 7, 10].map((n) =>
+          h('button', {
+            class: `chip chip-btn ${n === goal ? 'chip-on' : ''}`,
+            onclick: (e) => {
+              goal = n;
+              [...e.target.parentElement.children].forEach((c) => c.classList.remove('chip-on'));
+              e.target.classList.add('chip-on');
+            },
+          }, `${n} / week`),
+        ),
+      ),
+    ),
+    h('div', { class: 'card start-card' },
+      h('h3', {}, 'How it works'),
+      h('ul', { class: 'how' },
+        h('li', {}, '📖 Tiny explanations — then you try it immediately'),
+        h('li', {}, '🧩 Start with blocks if you like, switch to typing any time'),
+        h('li', {}, '🐛 Find bugs, 🔮 predict output, 🐃 route a robot yak'),
+        h('li', {}, '🌍 Offline quests away from the screen'),
+        h('li', {}, '🔥 Keep your streak and hit your weekly goal'),
+      ),
+      h('button', {
+        class: 'btn btn-primary btn-big',
+        onclick: () => {
+          store.set({ name: name.trim(), goalPerWeek: goal, onboarded: true, created: store.today() });
+          confetti(24);
+          go('#/home');
+          render();
+        },
+      }, "Let's code 🚀"),
+    ),
+  );
+  return el;
+}
+
+window.addEventListener('hashchange', render);
+store.subscribe(() => {
+  if (store.get().onboarded) paintChrome();
+});
+auth.onChange(() => {
+  if (store.get().onboarded) paintChrome();
+});
+
+// Restore a session (cloud or device) before the first paint, so a signed-in
+// learner never sees a flash of the signed-out dashboard.
+startBackdrop();
+
+// Ripples follow the pointer: the button reads where it was pressed.
+document.addEventListener('pointerdown', (e) => {
+  const btn = e.target.closest?.('.btn');
+  if (!btn) return;
+  const r = btn.getBoundingClientRect();
+  btn.style.setProperty('--rx', `${((e.clientX - r.left) / r.width) * 100}%`);
+  btn.style.setProperty('--ry', `${((e.clientY - r.top) / r.height) * 100}%`);
+});
+
+render();
+auth.init().then(render);
