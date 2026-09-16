@@ -25,7 +25,17 @@ ES modules; `npm start` is a 40-line static server.)
 
 The site is static — **no build step, nothing to compile**.
 
-### Firebase Hosting (akylduukodo.web.app)
+### Automatic (GitHub Actions)
+
+`.github/workflows/deploy.yml` publishes to `akylduukodo.web.app` on every push to
+`main` — so merging a pull request ships the site. It runs `npm test` first and refuses to
+deploy if any lesson has become unsolvable.
+
+It needs one repository secret, `FIREBASE_SERVICE_ACCOUNT_AKYLDUUKODO`, holding the JSON
+key from Firebase → Project settings → Service accounts → Generate new private key. Unlike
+the web config, **that JSON is a real secret** — it goes in GitHub Secrets, never in the repo.
+
+### By hand (Firebase CLI)
 
 ```bash
 npm i -g firebase-tools     # once
