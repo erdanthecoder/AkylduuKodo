@@ -214,7 +214,7 @@ export default {
           type: 'teach',
           title: 'Real programs are just decisions stacked up',
           text:
-            'A chatbot, a game, a bank app — underneath, they all look at values and choose a branch. You already know how to do that.\n\n' +
+            'A chatbot, a weather app, a bank app — underneath, they all look at values and choose a branch. You already know how to do that.\n\n' +
             'Today you build a bot that decides what drink to serve.',
           code: 'let hour = 8;\nlet drink = hour < 11 ? "chai" : "water";\nconsole.log(drink); // "chai"',
           tip: 'That `? :` is a shortcut if/else called a **ternary**. Nice to read, but use full if/else while learning.',

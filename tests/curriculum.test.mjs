@@ -2,7 +2,7 @@
 // If a lesson is impossible (or accidentally trivial), this fails loudly.
 
 import { UNITS, ALL_LESSONS } from '../src/data/index.js';
-import { GAMES, MAZES } from '../src/data/arcade.js';
+import { DRILLS, MAZES } from '../src/data/drills.js';
 import { runCode } from '../src/runner.js';
 import { runRobot } from '../src/robot.js';
 import { safeCheck } from '../src/data/checks.js';
@@ -95,16 +95,16 @@ for (const lesson of ALL_LESSONS) {
   });
 }
 
-// Arcade sanity
-for (const game of GAMES) {
-  ok(game.pool.length >= 5 || 'pool too small', `arcade ${game.id} pool`);
+// Practice-drill sanity
+for (const game of DRILLS) {
+  ok(game.pool.length >= 5 || 'pool too small', `drill ${game.id} pool`);
   if (game.kind === 'quiz') {
     game.pool.forEach((q, i) => {
-      ok(q.answer >= 0 && q.answer < q.options.length || 'answer out of range', `arcade ${game.id} q${i + 1}`);
+      ok(q.answer >= 0 && q.answer < q.options.length || 'answer out of range', `drill ${game.id} q${i + 1}`);
     });
   }
 }
-// Every arcade maze must be solvable by *some* route: check reachability by BFS.
+// Every practice maze must be solvable by *some* route: check reachability by BFS.
 MAZES.forEach((m, i) => {
   const blocked = new Set((m.walls || []).map(([x, y]) => `${x},${y}`));
   const seen = new Set([`${m.start.x},${m.start.y}`]);
@@ -122,7 +122,7 @@ MAZES.forEach((m, i) => {
   }
   const targets = [...(m.gems || []).map(([x, y]) => `${x},${y}`), `${m.goal.x},${m.goal.y}`];
   const unreachable = targets.filter((t) => !seen.has(t));
-  ok(unreachable.length === 0 || `unreachable: ${unreachable.join(' ')}`, `arcade maze ${i + 1} reachable`);
+  ok(unreachable.length === 0 || `unreachable: ${unreachable.join(' ')}`, `practice maze ${i + 1} reachable`);
 });
 
 console.log(`\n✅ ${pass} checks passed`);

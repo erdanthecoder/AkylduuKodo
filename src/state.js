@@ -1,6 +1,12 @@
 // state.js — everything the learner earns, kept in localStorage.
 
-const KEY = 'akylduukodo.save.v1';
+const BASE_KEY = 'akylduukodo.save.v1';
+
+// Each signed-in account gets its own save file; signed-out learners use the
+// plain key, so progress made before signing up is never lost.
+let KEY = BASE_KEY;
+let cloud = null;
+let pushTimer = null;
 
 const DEFAULT = {
   name: '',
@@ -19,9 +25,9 @@ const DEFAULT = {
 let state = load();
 const listeners = new Set();
 
-function load() {
+function load(key = KEY) {
   try {
-    const raw = globalThis.localStorage?.getItem(KEY);
+    const raw = globalThis.localStorage?.getItem(key);
     if (!raw) return { ...DEFAULT, created: today() };
     return { ...DEFAULT, ...JSON.parse(raw) };
   } catch {
@@ -35,7 +41,78 @@ export function save() {
   } catch {
     /* private mode — progress just won't persist */
   }
+  pushToCloud();
   listeners.forEach((fn) => fn(state));
+}
+
+/** Cloud writes are debounced: a burst of XP changes costs one write. */
+function pushToCloud() {
+  if (!cloud) return;
+  clearTimeout(pushTimer);
+  pushTimer = setTimeout(() => {
+    Promise.resolve(cloud.save(state)).catch((err) => console.warn('Cloud save failed:', err.message));
+  }, 800);
+}
+
+/** Point the save file at an account (or back at the signed-out one). */
+export function setProfile(uid, patch = {}) {
+  const guest = load(BASE_KEY);
+  KEY = uid ? `${BASE_KEY}:${uid}` : BASE_KEY;
+  state = load();
+  // The very first account created on this device adopts the signed-out
+  // progress, so nobody loses the lessons they did before signing up. It is
+  // claimed exactly once: on a shared school computer the next person to sign
+  // up starts from zero rather than inheriting a classmate's streak.
+  const unclaimed = guest.onboarded && !guest.claimedBy;
+  if (uid && !state.onboarded && unclaimed) {
+    state = { ...guest, ...state, done: { ...guest.done, ...state.done }, onboarded: true };
+    state.xp = Math.max(guest.xp || 0, state.xp || 0);
+    state.log = [...new Set([...(guest.log || []), ...(state.log || [])])].sort();
+    state.badges = [...new Set([...(guest.badges || []), ...(state.badges || [])])];
+    state.arcade = { ...guest.arcade, ...state.arcade };
+    delete state.claimedBy;
+    try {
+      globalThis.localStorage?.setItem(BASE_KEY, JSON.stringify({ ...guest, claimedBy: uid }));
+    } catch {
+      /* nothing to do — worst case the next account also adopts it */
+    }
+  }
+  if (patch.name && !state.name) state.name = patch.name;
+  if (uid) state.onboarded = true;
+  save();
+}
+
+export function setCloud(next) {
+  cloud = next;
+}
+
+/** Fold a cloud copy into the local one — the more advanced value always wins. */
+export function mergeRemote(remote) {
+  if (!remote || typeof remote !== 'object') return;
+  const done = { ...state.done };
+  for (const [id, rec] of Object.entries(remote.done || {})) {
+    const mine = done[id];
+    done[id] = !mine
+      ? rec
+      : { ...mine, xp: Math.max(mine.xp || 0, rec.xp || 0), stars: Math.max(mine.stars || 0, rec.stars || 0) };
+  }
+  const arcade = { ...state.arcade };
+  for (const [id, score] of Object.entries(remote.arcade || {})) {
+    arcade[id] = Math.max(arcade[id] || 0, score || 0);
+  }
+  state = {
+    ...state,
+    name: state.name || remote.name || '',
+    goalPerWeek: state.goalPerWeek || remote.goalPerWeek || 5,
+    xp: Math.max(state.xp || 0, remote.xp || 0),
+    done,
+    arcade,
+    log: [...new Set([...(state.log || []), ...(remote.log || [])])].sort(),
+    badges: [...new Set([...(state.badges || []), ...(remote.badges || [])])],
+    onboarded: state.onboarded || remote.onboarded || false,
+    created: remote.created || state.created,
+  };
+  save();
 }
 
 export function get() {
@@ -154,8 +231,8 @@ export const BADGES = [
   { id: 'streak-3', emoji: '🔥', name: 'Three in a Row', desc: 'Code three days in a row.', test: () => streak() >= 3 },
   { id: 'streak-7', emoji: '☄️', name: 'Week on Fire', desc: 'Code seven days in a row.', test: () => streak() >= 7 },
   { id: 'ten-lessons', emoji: '🎓', name: 'Double Digits', desc: 'Finish 10 lessons.', test: (s) => Object.keys(s.done).length >= 10 },
-  { id: 'arcade', emoji: '🕹️', name: 'Arcade Rookie', desc: 'Play any arcade game.', test: (s) => Object.keys(s.arcade).length >= 1 },
-  { id: 'maze', emoji: '🐃', name: 'Yak Whisperer', desc: 'Score 300+ in Robot Maze.', test: (s) => (s.arcade['maze'] || 0) >= 300 },
+  { id: 'arcade', emoji: '🕹️', name: 'Drill Starter', desc: 'Finish any practice drill.', test: (s) => Object.keys(s.arcade).length >= 1 },
+  { id: 'maze', emoji: '🐃', name: 'Yak Whisperer', desc: 'Score 300+ in Maze Logic.', test: (s) => (s.arcade['maze'] || 0) >= 300 },
   { id: 'level-4', emoji: '🔎', name: 'Bug Hunter', desc: 'Reach the Bug Hunter level.', test: (s) => level(s.xp).index >= 3 },
 ];
 

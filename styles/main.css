@@ -353,11 +353,11 @@ button { font-family: inherit; }
 .cell-bot { transition: transform 0.15s ease; filter: drop-shadow(0 2px 4px rgba(0, 0, 0, 0.4)); }
 .grid-legend { font-size: 0.75rem; color: var(--muted); font-family: var(--mono); text-align: center; }
 
-/* ------------------------------------------------------------- arcade */
-.game-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(230px, 1fr)); gap: 12px; }
-.game-card { text-align: left; cursor: pointer; color: var(--ink); }
-.game-card:hover { transform: translateY(-3px); border-color: var(--accent); }
-.game-emoji { font-size: 2.2rem; }
+/* ------------------------------------------------------------- practice */
+.drill-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(230px, 1fr)); gap: 12px; }
+.drill-card { text-align: left; cursor: pointer; color: var(--ink); }
+.drill-card:hover { transform: translateY(-3px); border-color: var(--accent); }
+.drill-emoji { font-size: 2.2rem; }
 .hud { display: flex; align-items: center; gap: 14px; }
 .hud-item { font-weight: 800; font-size: 1.1rem; }
 .hud-value { font-variant-numeric: tabular-nums; }

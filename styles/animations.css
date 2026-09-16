@@ -1,0 +1,273 @@
+/* animations.css — the motion layer. Loaded after main.css.
+   Every effect here is disabled wholesale by the reduced-motion block at the end. */
+
+/* ---------------------------------------------- living background */
+body::before {
+  content: "";
+  position: fixed;
+  inset: -20%;
+  z-index: -2;
+  background:
+    radial-gradient(38% 38% at 20% 25%, rgba(167, 139, 250, 0.35), transparent 60%),
+    radial-gradient(34% 34% at 80% 20%, rgba(94, 234, 212, 0.28), transparent 62%),
+    radial-gradient(40% 40% at 60% 85%, rgba(255, 143, 171, 0.24), transparent 60%);
+  filter: blur(30px);
+  animation: aurora 26s ease-in-out infinite alternate;
+  pointer-events: none;
+}
+@keyframes aurora {
+  0%   { transform: translate3d(-3%, -2%, 0) scale(1); }
+  50%  { transform: translate3d(3%, 2%, 0) scale(1.08); }
+  100% { transform: translate3d(-2%, 3%, 0) scale(1.03); }
+}
+
+.backdrop { position: fixed; inset: 0; z-index: -1; overflow: hidden; pointer-events: none; }
+.float-mark {
+  position: absolute;
+  bottom: -60px;
+  font-family: var(--mono);
+  color: color-mix(in srgb, var(--purple) 55%, transparent);
+  opacity: 0.22;
+  animation-name: drift;
+  animation-timing-function: linear;
+  animation-iteration-count: infinite;
+}
+@keyframes drift {
+  0%   { transform: translateY(0) rotate(0deg); opacity: 0; }
+  10%  { opacity: 0.26; }
+  90%  { opacity: 0.18; }
+  100% { transform: translateY(-115vh) rotate(220deg); opacity: 0; }
+}
+
+/* ---------------------------------------------- view + card entrances */
+.rise-in {
+  animation: riseIn 0.5s cubic-bezier(0.22, 1, 0.36, 1) backwards;
+}
+@keyframes riseIn {
+  from { opacity: 0; transform: translateY(18px) scale(0.985); }
+  to   { opacity: 1; transform: none; }
+}
+
+.reveal { opacity: 0; transform: translateY(14px) scale(0.97); transition: opacity 0.45s ease, transform 0.45s cubic-bezier(0.22, 1, 0.36, 1); }
+.revealed { opacity: 1; transform: none; }
+
+.pop-in { animation: popIn 0.45s cubic-bezier(0.34, 1.56, 0.64, 1) backwards; }
+@keyframes popIn {
+  from { opacity: 0; transform: scale(0.9) translateY(10px); }
+  to   { opacity: 1; transform: none; }
+}
+.pop-now { animation: popNow 0.4s cubic-bezier(0.34, 1.56, 0.64, 1); }
+@keyframes popNow {
+  0% { transform: scale(1); } 45% { transform: scale(1.12); } 100% { transform: scale(1); }
+}
+.shake-it { animation: shakeIt 0.4s ease; }
+@keyframes shakeIt {
+  20% { transform: translateX(-7px); } 45% { transform: translateX(6px); }
+  70% { transform: translateX(-4px); } 100% { transform: none; }
+}
+
+/* ---------------------------------------------- cards & buttons */
+.card {
+  transition: transform 0.25s cubic-bezier(0.22, 1, 0.36, 1), box-shadow 0.25s ease, border-color 0.25s ease;
+}
+.hero:hover, .next-card:hover { transform: translateY(-2px); }
+
+.btn { position: relative; overflow: hidden; }
+.btn::after {
+  content: "";
+  position: absolute; inset: 0;
+  background: radial-gradient(circle at var(--rx, 50%) var(--ry, 50%), rgba(255, 255, 255, 0.45), transparent 55%);
+  opacity: 0; transition: opacity 0.4s ease;
+}
+.btn:active::after { opacity: 1; transition: none; }
+.btn:active:not(:disabled) { transform: translateY(1px) scale(0.985); }
+
+.btn-primary { background-size: 200% 200%; animation: gradientShift 6s ease infinite; }
+.btn-run { background-size: 200% 200%; animation: gradientShift 7s ease infinite; }
+@keyframes gradientShift {
+  0%, 100% { background-position: 0% 50%; }
+  50% { background-position: 100% 50%; }
+}
+
+.lesson-card::before {
+  content: "";
+  position: absolute; inset: 0;
+  border-radius: inherit;
+  background: linear-gradient(135deg, rgba(255, 209, 102, 0.16), transparent 55%);
+  opacity: 0; transition: opacity 0.3s ease;
+  pointer-events: none;
+}
+.lesson-card { position: relative; }
+.lesson-card:hover:not(:disabled)::before { opacity: 1; }
+.lesson-card:hover:not(:disabled) { transform: translateY(-5px) scale(1.015); box-shadow: 0 14px 28px rgba(0, 0, 0, 0.3); }
+.drill-card:hover { transform: translateY(-5px) scale(1.015); }
+
+/* ---------------------------------------------- top bar & nav */
+.pill { transition: transform 0.2s ease, border-color 0.2s ease; }
+.pill:hover { transform: translateY(-1px); }
+.pill-level { animation: glowPill 4s ease-in-out infinite; }
+@keyframes glowPill {
+  0%, 100% { box-shadow: 0 0 0 0 rgba(255, 209, 102, 0); }
+  50% { box-shadow: 0 0 14px 0 rgba(255, 209, 102, 0.35); }
+}
+.xp-count.bump { animation: popNow 0.35s ease; display: inline-block; }
+.flame { display: inline-block; animation: flicker 1.6s ease-in-out infinite; transform-origin: bottom center; }
+@keyframes flicker {
+  0%, 100% { transform: scale(1) rotate(-3deg); }
+  50% { transform: scale(1.18) rotate(4deg); }
+}
+
+.nav-btn { transition: transform 0.2s cubic-bezier(0.34, 1.56, 0.64, 1), color 0.2s ease, background 0.2s ease; }
+.nav-btn:active { transform: scale(0.92); }
+.nav-on .nav-icon { animation: navPop 0.4s cubic-bezier(0.34, 1.56, 0.64, 1); }
+@keyframes navPop {
+  0% { transform: scale(0.8) translateY(3px); } 60% { transform: scale(1.25); } 100% { transform: scale(1); }
+}
+
+.brand-mark { display: inline-block; animation: float 5s ease-in-out infinite; }
+.float-y { display: inline-block; animation: float 4s ease-in-out infinite; }
+@keyframes float {
+  0%, 100% { transform: translateY(0) rotate(-2deg); }
+  50% { transform: translateY(-7px) rotate(3deg); }
+}
+
+/* ---------------------------------------------- progress + stats */
+.bar-fill { position: relative; overflow: hidden; }
+.bar-fill::after {
+  content: "";
+  position: absolute; inset: 0;
+  background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.55), transparent);
+  transform: translateX(-100%);
+  animation: sheen 2.6s ease-in-out infinite;
+}
+@keyframes sheen { to { transform: translateX(160%); } }
+
+.stat { transition: transform 0.25s cubic-bezier(0.34, 1.56, 0.64, 1); }
+.stat:hover { transform: translateY(-4px) rotate(-0.6deg); }
+.stat-emoji { display: inline-block; transition: transform 0.3s ease; }
+.stat:hover .stat-emoji { transform: scale(1.25) rotate(8deg); }
+
+.day-on .day-dot { animation: flicker 2s ease-in-out infinite; }
+.day-today { animation: todayPulse 2.4s ease-in-out infinite; }
+@keyframes todayPulse {
+  0%, 100% { outline-color: var(--accent); }
+  50% { outline-color: color-mix(in srgb, var(--accent) 35%, transparent); }
+}
+
+.badge-on { transition: transform 0.25s cubic-bezier(0.34, 1.56, 0.64, 1); }
+.badge-on:hover { transform: translateY(-4px) scale(1.06) rotate(-2deg); }
+.badge-on .badge-emoji { animation: float 6s ease-in-out infinite; }
+.badge-chip { animation: popIn 0.5s cubic-bezier(0.34, 1.56, 0.64, 1) backwards; }
+
+/* ---------------------------------------------- lesson interactions */
+.option { transition: transform 0.18s ease, border-color 0.2s ease, background 0.25s ease; }
+.option:hover:not(:disabled) { transform: translateX(4px); }
+.option-right { animation: popNow 0.45s cubic-bezier(0.34, 1.56, 0.64, 1); }
+.why { animation: riseIn 0.4s ease backwards; }
+.feedback.ok { animation: popNow 0.4s cubic-bezier(0.34, 1.56, 0.64, 1); }
+.dot { transition: transform 0.3s cubic-bezier(0.34, 1.56, 0.64, 1), background 0.3s ease; }
+.dot-now { animation: dotPulse 1.6s ease-in-out infinite; }
+@keyframes dotPulse {
+  0%, 100% { box-shadow: 0 0 0 0 rgba(255, 209, 102, 0.5); }
+  50% { box-shadow: 0 0 0 6px rgba(255, 209, 102, 0); }
+}
+.console-line { animation: lineIn 0.3s ease backwards; }
+@keyframes lineIn { from { opacity: 0; transform: translateX(-8px); } to { opacity: 1; transform: none; } }
+.block-placed { animation: popIn 0.35s cubic-bezier(0.34, 1.56, 0.64, 1) backwards; }
+.block-source:active { transform: scale(0.96); }
+.order-item { transition: transform 0.2s ease, box-shadow 0.2s ease; }
+.order-item:hover { transform: translateX(3px); box-shadow: 0 6px 14px rgba(0, 0, 0, 0.18); }
+.type-input:focus, .text-input:focus { outline: none; border-color: var(--accent); box-shadow: 0 0 0 4px color-mix(in srgb, var(--accent) 22%, transparent); }
+.text-input, .type-input { transition: border-color 0.2s ease, box-shadow 0.25s ease; }
+
+/* the yak breathes while it waits, and hops when it moves */
+.cell-bot { animation: idle 2.6s ease-in-out infinite; }
+@keyframes idle {
+  0%, 100% { filter: drop-shadow(0 2px 4px rgba(0, 0, 0, 0.4)); }
+  50% { filter: drop-shadow(0 6px 8px rgba(0, 0, 0, 0.45)); }
+}
+.cell-gem { animation: float 3.2s ease-in-out infinite; }
+.cell-goal { animation: float 4.5s ease-in-out infinite; }
+
+/* ---------------------------------------------- celebration */
+.celebrate .big-emoji { animation: cheer 1.2s cubic-bezier(0.34, 1.56, 0.64, 1); }
+@keyframes cheer {
+  0% { transform: scale(0.3) rotate(-25deg); opacity: 0; }
+  60% { transform: scale(1.2) rotate(8deg); }
+  100% { transform: scale(1) rotate(0); opacity: 1; }
+}
+.stars { display: inline-block; animation: popIn 0.6s 0.2s cubic-bezier(0.34, 1.56, 0.64, 1) backwards; }
+.xp-line { animation: popIn 0.6s 0.35s cubic-bezier(0.34, 1.56, 0.64, 1) backwards; }
+
+/* ---------------------------------------------- account screen */
+.auth-card { max-width: 440px; margin: 10px auto; text-align: center; }
+.auth-head { margin-bottom: 16px; }
+.auth-mark { font-size: 3rem; }
+.auth-tabs { justify-content: center; margin: 4px 0 14px; }
+.auth-form { display: flex; flex-direction: column; gap: 10px; text-align: left; }
+.field { display: flex; flex-direction: column; gap: 4px; }
+.field-label { font-size: 0.78rem; color: var(--muted); font-weight: 700; letter-spacing: 0.3px; }
+.field .text-input { margin-top: 0; }
+.auth-error:empty { display: none; }
+.auth-note {
+  margin-top: 14px; padding: 10px 12px; border-radius: 10px;
+  background: color-mix(in srgb, var(--warn) 12%, transparent);
+  border-left: 3px solid var(--warn); text-align: left;
+}
+.auth-or { position: relative; margin: 16px 0 6px; color: var(--muted); font-size: 0.8rem; }
+.auth-or::before, .auth-or::after {
+  content: ""; position: absolute; top: 50%; width: 38%; height: 1px; background: var(--line);
+}
+.auth-or::before { left: 0; }
+.auth-or::after { right: 0; }
+
+.btn-google {
+  width: 100%; display: flex; align-items: center; justify-content: center; gap: 10px;
+  background: #fff; color: #1f1f1f; border: 1px solid #dadce0; font-weight: 700;
+}
+.btn-google:hover:not(:disabled) { box-shadow: 0 4px 14px rgba(0, 0, 0, 0.18); filter: none; }
+.g-mark { display: inline-flex; }
+.is-busy { opacity: 0.7; pointer-events: none; position: relative; }
+.is-busy::before {
+  content: ""; position: absolute; left: 12px; top: 50%; width: 14px; height: 14px; margin-top: -7px;
+  border: 2px solid currentColor; border-right-color: transparent; border-radius: 50%;
+  animation: spin 0.7s linear infinite;
+}
+@keyframes spin { to { transform: rotate(360deg); } }
+
+.profile-card { text-align: center; max-width: 440px; margin: 10px auto; }
+.avatar-wrap { position: relative; display: inline-grid; place-items: center; margin-bottom: 8px; }
+.avatar {
+  width: 84px; height: 84px; border-radius: 50%; object-fit: cover;
+  background: var(--card-2); display: grid; place-items: center;
+  font-size: 2.2rem; font-weight: 800; color: var(--accent);
+}
+.avatar-letter { border: 2px solid var(--line); }
+.avatar-ring {
+  position: absolute; inset: -6px; border-radius: 50%;
+  border: 2px dashed var(--accent); animation: spin 14s linear infinite;
+}
+.sync-note { margin-top: 12px; }
+.pill-btn { cursor: pointer; display: inline-flex; align-items: center; gap: 6px; color: var(--ink); font-weight: 700; }
+.pill-signin { background: linear-gradient(135deg, var(--accent), var(--accent-2)); color: #23163a; border-color: transparent; }
+.pill-avatar { width: 20px; height: 20px; border-radius: 50%; object-fit: cover; }
+.pill-avatar-letter { display: grid; place-items: center; background: var(--purple); color: #fff; font-size: 0.7rem; }
+.pill-user-name { max-width: 90px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+
+.save-prompt {
+  display: flex; align-items: center; gap: 14px; flex-wrap: wrap;
+  border: 1px solid color-mix(in srgb, var(--accent) 45%, var(--line));
+  background: linear-gradient(135deg, color-mix(in srgb, var(--accent) 10%, var(--card)), var(--card));
+}
+.save-prompt .big-emoji { font-size: 2.2rem; animation: float 5s ease-in-out infinite; }
+
+/* ---------------------------------------------- opt out */
+@media (prefers-reduced-motion: reduce) {
+  body::before, .backdrop { animation: none !important; }
+  .float-mark { display: none; }
+  *, *::before, *::after {
+    animation: none !important;
+    transition-duration: 0.01ms !important;
+  }
+  .reveal { opacity: 1; transform: none; }
+}

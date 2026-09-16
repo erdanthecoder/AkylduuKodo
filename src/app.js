@@ -6,20 +6,36 @@ import * as store from './state.js';
 import { HomeView } from './views/home.js';
 import { JourneyView } from './views/journey.js';
 import { LessonView } from './views/lesson.js';
-import { ArcadeView } from './views/arcade.js';
-import { PlayView } from './views/play.js';
+import { PracticeView } from './views/practice.js';
+import { LabView } from './views/lab.js';
 import { SettingsView } from './views/settings.js';
+import { AccountView } from './views/account.js';
+import * as auth from './auth.js';
+import { animateIn, countUp, startBackdrop } from './anim.js';
 
 const NAV = [
   { hash: '#/home', icon: '🏠', key: 'nav_home' },
   { hash: '#/journey', icon: '🗺️', key: 'nav_journey' },
-  { hash: '#/arcade', icon: '🕹️', key: 'nav_arcade' },
-  { hash: '#/play', icon: '🧪', key: 'nav_play' },
+  { hash: '#/practice', icon: '🎯', key: 'nav_practice' },
+  { hash: '#/lab', icon: '🧪', key: 'nav_lab' },
   { hash: '#/settings', icon: '⚙️', key: 'nav_settings' },
 ];
 
-const root = document.getElementById('app');
 let currentView = null;
+let lastXp = 0;
+
+function accountButton() {
+  const u = auth.user();
+  if (!u) {
+    return h('button', { class: 'pill pill-btn pill-signin', onclick: () => go('#/account') }, '👤 Sign in');
+  }
+  return h('button', { class: 'pill pill-btn pill-user', onclick: () => go('#/account'), title: u.email || u.name },
+    u.photo
+      ? h('img', { class: 'pill-avatar', src: u.photo, alt: '', referrerpolicy: 'no-referrer' })
+      : h('span', { class: 'pill-avatar pill-avatar-letter' }, (u.name || '?').slice(0, 1).toUpperCase()),
+    h('span', { class: 'pill-user-name' }, (u.name || 'Account').split(' ')[0]),
+  );
+}
 
 function go(hash, force = false) {
   if (location.hash === hash && force) render();
@@ -32,6 +48,7 @@ function mount(node) {
   currentView = node;
   const main = document.getElementById('main');
   clear(main).append(node);
+  animateIn(node);
   window.scrollTo({ top: 0, behavior: 'instant' in window ? 'instant' : 'auto' });
 }
 
@@ -50,14 +67,17 @@ function render() {
     case 'lesson':
       mount(LessonView(path[1], go));
       break;
-    case 'arcade':
-      mount(ArcadeView(go, path[1]));
+    case 'practice':
+      mount(PracticeView(go, path[1]));
       break;
-    case 'play':
-      mount(PlayView());
+    case 'lab':
+      mount(LabView());
       break;
     case 'settings':
       mount(SettingsView(go, render));
+      break;
+    case 'account':
+      mount(AccountView(go, render));
       break;
     default:
       mount(HomeView(go));
@@ -71,18 +91,22 @@ function paintChrome() {
   const lvl = store.level();
   const week = store.weekProgress();
   const bar = document.getElementById('topbar');
+  const xpPill = h('span', { class: 'pill', title: ui('xp') }, '⚡ ', h('b', { class: 'xp-count' }, String(lastXp)));
   clear(bar).append(
     h('button', { class: 'brand', onclick: () => go('#/home') },
       h('span', { class: 'brand-mark' }, '🏔️'),
       h('span', { class: 'brand-name' }, 'Akyldu', h('em', {}, 'u'), 'Kodo'),
     ),
     h('div', { class: 'top-stats' },
-      h('span', { class: 'pill', title: ui('level') }, `${lvl.emoji} ${lvl.name}`),
-      h('span', { class: 'pill', title: ui('xp') }, `⚡ ${s.xp}`),
-      h('span', { class: 'pill', title: ui('streak') }, `🔥 ${store.streak()}`),
+      h('span', { class: 'pill pill-level', title: ui('level') }, `${lvl.emoji} ${lvl.name}`),
+      xpPill,
+      h('span', { class: 'pill', title: ui('streak') }, h('span', { class: 'flame' }, '🔥'), ` ${store.streak()}`),
       h('span', { class: 'pill', title: ui('this_week') }, `🎯 ${week.count}/${week.goal}`),
+      accountButton(),
     ),
   );
+  countUp(xpPill.querySelector('.xp-count'), lastXp, s.xp);
+  lastXp = s.xp;
 
   const nav = document.getElementById('nav');
   const active = (location.hash || '#/home').split('/').slice(0, 2).join('/');
@@ -113,7 +137,7 @@ function Onboarding() {
     h('div', { class: 'card hero onboard-hero' },
       h('div', { class: 'big-emoji' }, '🏔️'),
       h('h1', {}, 'AkylduuKodo'),
-      h('p', { class: 'muted' }, 'Smart code, one fun step at a time.'),
+      h('p', { class: 'muted' }, 'Smart code, one clear step at a time.'),
     ),
     h('div', { class: 'card' },
       h('h3', {}, '🌍 ' + ui('lang')),
@@ -156,7 +180,7 @@ function Onboarding() {
       h('ul', { class: 'how' },
         h('li', {}, '📖 Tiny explanations — then you try it immediately'),
         h('li', {}, '🧩 Start with blocks if you like, switch to typing any time'),
-        h('li', {}, '🐛 Hunt bugs, 🔮 predict output, 🐃 drive a robot yak'),
+        h('li', {}, '🐛 Find bugs, 🔮 predict output, 🐃 route a robot yak'),
         h('li', {}, '🌍 Offline quests away from the screen'),
         h('li', {}, '🔥 Keep your streak and hit your weekly goal'),
       ),
@@ -178,4 +202,22 @@ window.addEventListener('hashchange', render);
 store.subscribe(() => {
   if (store.get().onboarded) paintChrome();
 });
+auth.onChange(() => {
+  if (store.get().onboarded) paintChrome();
+});
+
+// Restore a session (cloud or device) before the first paint, so a signed-in
+// learner never sees a flash of the signed-out dashboard.
+startBackdrop();
+
+// Ripples follow the pointer: the button reads where it was pressed.
+document.addEventListener('pointerdown', (e) => {
+  const btn = e.target.closest?.('.btn');
+  if (!btn) return;
+  const r = btn.getBoundingClientRect();
+  btn.style.setProperty('--rx', `${((e.clientX - r.left) / r.width) * 100}%`);
+  btn.style.setProperty('--ry', `${((e.clientY - r.top) / r.height) * 100}%`);
+});
+
 render();
+auth.init().then(render);

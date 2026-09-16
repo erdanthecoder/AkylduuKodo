@@ -1,11 +1,11 @@
-// play.js — the Playground: a blank page and a Run button.
+// lab.js — the Code Lab: a blank page and a Run button.
 
 import { h, toast } from '../ui.js';
 import { ui } from '../i18n.js';
 import { createEditor, createConsole } from '../editor.js';
 import { runCode } from '../runner.js';
 
-const KEY = 'akylduukodo.playground';
+const KEY = 'akylduukodo.lab';
 
 const SNIPPETS = [
   {
@@ -30,7 +30,7 @@ const SNIPPETS = [
   },
 ];
 
-export function PlayView() {
+export function LabView() {
   const cons = createConsole();
   const editor = createEditor({
     value: localStorage.getItem(KEY) || '// Anything goes. Try me:\nconsole.log("Salam, " + "world!");\n',
@@ -50,8 +50,8 @@ export function PlayView() {
   return h(
     'div',
     { class: 'view' },
-    h('h1', { class: 'view-title' }, '🧪 ' + ui('play_title')),
-    h('p', { class: 'muted' }, ui('play_sub')),
+    h('h1', { class: 'view-title' }, '🧪 ' + ui('lab_title')),
+    h('p', { class: 'muted' }, ui('lab_sub')),
     h('div', { class: 'chips snippets' },
       ...SNIPPETS.map((s) =>
         h('button', {

@@ -1,49 +1,49 @@
-// arcade.js — short games. Same skills as the lessons, but with a clock.
+// practice.js — short drills. Same skills as the lessons, but with a clock.
 
 import { h, md, codeBlock, confetti, sfx, shuffle, toast } from '../ui.js';
 import { ui } from '../i18n.js';
 import * as store from '../state.js';
-import { GAMES } from '../data/arcade.js';
+import { DRILLS } from '../data/drills.js';
 import { createEditor, createConsole } from '../editor.js';
 import { runRobot } from '../robot.js';
 
-export function ArcadeView(go, gameId) {
-  if (gameId) {
-    const game = GAMES.find((g) => g.id === gameId);
-    if (!game) return h('div', { class: 'card' }, 'Unknown game.');
-    return game.kind === 'maze' ? mazeGame(game, go) : quizGame(game, go);
+export function PracticeView(go, drillId) {
+  if (drillId) {
+    const drill = DRILLS.find((d) => d.id === drillId);
+    if (!drill) return h('div', { class: 'card' }, 'Unknown drill.');
+    return drill.kind === 'maze' ? mazeDrill(drill, go) : quizDrill(drill, go);
   }
 
   const s = store.get();
   return h(
     'div',
     { class: 'view' },
-    h('h1', { class: 'view-title' }, '🕹️ ' + ui('arcade_title')),
-    h('p', { class: 'muted' }, ui('arcade_sub')),
-    h('div', { class: 'game-grid' },
-      ...GAMES.map((g) =>
-        h('button', { class: 'card game-card', onclick: () => go(`#/arcade/${g.id}`) },
-          h('div', { class: 'game-emoji' }, g.emoji),
+    h('h1', { class: 'view-title' }, '🕹️ ' + ui('practice_title')),
+    h('p', { class: 'muted' }, ui('practice_sub')),
+    h('div', { class: 'drill-grid' },
+      ...DRILLS.map((g) =>
+        h('button', { class: 'card drill-card', onclick: () => go(`#/practice/${g.id}`) },
+          h('div', { class: 'drill-emoji' }, g.emoji),
           h('h3', {}, g.name),
           h('p', { class: 'muted' }, g.desc),
           h('div', { class: 'chips' },
             h('span', { class: 'chip' }, `🏆 ${ui('best')}: ${s.arcade[g.id] || 0}`),
-            g.seconds ? h('span', { class: 'chip' }, `⏱️ ${g.seconds}s`) : h('span', { class: 'chip' }, `${g.pool.length} mazes`),
+            g.seconds ? h('span', { class: 'chip' }, `⏱️ ${g.seconds}s`) : h('span', { class: 'chip' }, `${g.pool.length} levels`),
           ),
-          h('span', { class: 'lesson-cta' }, ui('play') + ' →'),
+          h('span', { class: 'lesson-cta' }, ui('begin') + ' →'),
         ),
       ),
     ),
   );
 }
 
-// ------------------------------------------------------------- timed quizzes
+// ------------------------------------------------------------- timed drills
 
-function quizGame(game, go) {
+function quizDrill(drill, go) {
   let score = 0;
   let streak = 0;
-  let left = game.seconds;
-  let queue = shuffle(game.pool);
+  let left = drill.seconds;
+  let queue = shuffle(drill.pool);
   let qi = 0;
 
   const scoreEl = h('span', { class: 'hud-value' }, '0');
@@ -55,8 +55,8 @@ function quizGame(game, go) {
     h('button', { class: 'btn btn-ghost', onclick: () => stop(true) }, '✕'),
   );
 
-  const el = h('div', { class: 'view game-view' },
-    h('h1', { class: 'view-title' }, `${game.emoji} ${game.name}`),
+  const el = h('div', { class: 'view drill-view' },
+    h('h1', { class: 'view-title' }, `${drill.emoji} ${drill.name}`),
     hud,
     stage,
   );
@@ -70,14 +70,14 @@ function quizGame(game, go) {
 
   function ask() {
     if (qi >= queue.length) {
-      queue = shuffle(game.pool);
+      queue = shuffle(drill.pool);
       qi = 0;
     }
     const q = queue[qi++];
     const opts = h('div', { class: 'options' });
     stage.replaceChildren(
       h('div', { class: 'card' },
-        h('h3', {}, game.id === 'bughunt' ? '🐛 What is wrong here?' : '🔮 What does this print?'),
+        h('h3', {}, drill.id === 'bughunt' ? '🐛 What is wrong here?' : '🔮 What does this print?'),
         codeBlock(q.code),
         opts,
       ),
@@ -112,17 +112,17 @@ function quizGame(game, go) {
 
   function stop(quit) {
     clearInterval(timer);
-    const res = store.recordArcade(game.id, score);
+    const res = store.recordArcade(drill.id, score);
     if (!quit) confetti(24);
     stage.replaceChildren(
       h('div', { class: 'card celebrate' },
         h('div', { class: 'big-emoji' }, res.isBest ? '🏆' : '🎮'),
-        h('h2', {}, res.isBest ? 'New personal best!' : 'Good run!'),
+        h('h2', {}, res.isBest ? 'New personal best!' : 'Nice work!'),
         h('p', { class: 'xp-line' }, `${ui('score')}: ${score} · ${ui('best')}: ${res.best}`),
         res.earned.length ? h('div', { class: 'badge-pop' }, ...res.earned.map((b) => h('div', { class: 'badge-chip' }, `${b.emoji} ${b.name}`))) : null,
         h('div', { class: 'row gap' },
-          h('button', { class: 'btn btn-primary', onclick: () => go(`#/arcade/${game.id}`, true) }, ui('again')),
-          h('button', { class: 'btn btn-ghost', onclick: () => go('#/arcade') }, ui('nav_arcade')),
+          h('button', { class: 'btn btn-primary', onclick: () => go(`#/practice/${drill.id}`, true) }, ui('again')),
+          h('button', { class: 'btn btn-ghost', onclick: () => go('#/practice') }, ui('nav_practice')),
         ),
       ),
     );
@@ -135,18 +135,18 @@ function quizGame(game, go) {
 
 // ------------------------------------------------------------------ the maze
 
-function mazeGame(game, go) {
+function mazeDrill(drill, go) {
   let level = 0;
   let score = 0;
   const scoreEl = h('span', { class: 'hud-value' }, '0');
   const stage = h('div', { class: 'stage' });
   let timer = null;
 
-  const el = h('div', { class: 'view game-view' },
-    h('h1', { class: 'view-title' }, `${game.emoji} ${game.name}`),
+  const el = h('div', { class: 'view drill-view' },
+    h('h1', { class: 'view-title' }, `${drill.emoji} ${drill.name}`),
     h('div', { class: 'hud' },
       h('span', { class: 'hud-item' }, '⚡ ', scoreEl),
-      h('button', { class: 'btn btn-ghost', onclick: () => go('#/arcade') }, '✕'),
+      h('button', { class: 'btn btn-ghost', onclick: () => go('#/practice') }, '✕'),
     ),
     stage,
   );
@@ -173,8 +173,8 @@ function mazeGame(game, go) {
   }
 
   function playLevel() {
-    if (level >= game.pool.length) return finish();
-    const spec = game.pool[level];
+    if (level >= drill.pool.length) return finish();
+    const spec = drill.pool[level];
     const grid = h('div', { class: 'grid' });
     const status = h('div', { class: 'feedback' });
     const cons = createConsole();
@@ -213,8 +213,8 @@ function mazeGame(game, go) {
 
     stage.replaceChildren(
       h('div', { class: 'card' },
-        h('h3', {}, `Maze ${level + 1} / ${game.pool.length}`),
-        h('p', { class: 'muted' }, 'Collect every 🍎 and park Kodo on the 🏠. Fewer lines = more points.'),
+        h('h3', {}, `Level ${level + 1} / ${drill.pool.length}`),
+        h('p', { class: 'muted' }, 'Collect every 🍎 and route Kodo to the 🏠. Fewer lines = more points.'),
         h('div', { class: 'grid-wrap' }, grid, h('div', { class: 'grid-legend' }, 'forward() · turnLeft() · turnRight() · collect() · canMove()')),
         editor.el,
         h('div', { class: 'row gap tools' },
@@ -229,16 +229,16 @@ function mazeGame(game, go) {
 
   function finish() {
     clearInterval(timer);
-    const res = store.recordArcade(game.id, score);
+    const res = store.recordArcade(drill.id, score);
     confetti(30);
     stage.replaceChildren(
       h('div', { class: 'card celebrate' },
         h('div', { class: 'big-emoji' }, '🐃'),
-        h('h2', {}, 'All mazes cleared!'),
+        h('h2', {}, 'All levels cleared!'),
         h('p', { class: 'xp-line' }, `${ui('score')}: ${score} · ${ui('best')}: ${res.best}`),
         h('div', { class: 'row gap' },
-          h('button', { class: 'btn btn-primary', onclick: () => go(`#/arcade/${game.id}`, true) }, ui('again')),
-          h('button', { class: 'btn btn-ghost', onclick: () => go('#/arcade') }, ui('nav_arcade')),
+          h('button', { class: 'btn btn-primary', onclick: () => go(`#/practice/${drill.id}`, true) }, ui('again')),
+          h('button', { class: 'btn btn-ghost', onclick: () => go('#/practice') }, ui('nav_practice')),
         ),
       ),
     );

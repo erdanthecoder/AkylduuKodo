@@ -1,7 +1,13 @@
 # 🏔️ AkylduuKodo
 
-**Learn to code the fun way.** An interactive, zero-dependency web app that teaches real
-JavaScript through tiny lessons, blocks, bug hunts, a robot yak and an arcade.
+**Learn programming, one clear step at a time.** An interactive, zero-dependency web app
+that teaches real JavaScript through short lessons, guided practice and a weekly study goal.
+
+Live at **[akylduukodo.web.app](https://akylduukodo.web.app)**
+
+> **Named and worded for school networks.** There is no "game", "arcade" or "play" wording
+> anywhere in the app, its URLs or its metadata — the timed exercises are *Practice Drills*
+> and the sandbox is the *Code Lab*. It presents as what it is: a programming course.
 
 ![no build step](https://img.shields.io/badge/build-none-brightgreen) ![deps](https://img.shields.io/badge/dependencies-0-blue)
 
@@ -15,21 +21,59 @@ npm test           # checks every lesson is solvable
 No installs, no bundler — plain ES modules, one CSS file. (It needs a server because of
 ES modules; `npm start` is a 40-line static server.)
 
-## Deploying it as a website
+## Deploying
 
-It is already a static site — **no build step, nothing to compile**. Publish the repository
-root as-is and it works:
+The site is static — **no build step, nothing to compile**.
 
-- Every asset path is relative, so it runs fine from a subpath like
-  `https://<user>.github.io/AkylduuKodo/`.
-- Routing is hash-based (`#/lesson/u1l1`), so deep links survive a reload with no server
-  rewrites needed. `404.html` sends stray paths back to the app anyway.
-- `.nojekyll` stops Pages from swallowing anything; `manifest.webmanifest` + `icon.svg`
-  make it installable to a phone home screen.
+### Firebase Hosting (akylduukodo.web.app)
 
-If you wire up a GitHub Actions Pages workflow, the artifact to upload is simply the
-repository root (`path: '.'`) — no `npm ci`, no build job required. `npm test` is worth
-running in CI, though: it refuses any lesson that isn't solvable.
+```bash
+npm i -g firebase-tools     # once
+firebase login
+firebase deploy             # uses firebase.json + .firebaserc in this repo
+```
+
+`firebase.json` is already set up: it serves the repo root, skips `tests/`, `server.mjs`
+and the tooling files, and caches assets sensibly. `.firebaserc` points at the
+`akylduukodo` project, so the deploy lands on `akylduukodo.web.app`.
+
+### GitHub Pages (alternative)
+
+Every asset path is relative and routing is hash-based (`#/lesson/u1l1`), so deep links
+survive a reload with no rewrites. Publish the repo root — the artifact path is just `.`,
+no build job. `.nojekyll` and `404.html` are already in place.
+
+## Accounts and cloud save
+
+Learners can work signed-out forever; signing in just makes progress follow them between
+the school computer and home.
+
+**To switch real accounts on**, paste your Firebase web config into `src/firebase-config.js`
+(that file explains each step). Then in the Firebase console:
+
+1. **Authentication → Sign-in method** → enable **Google** and **Email/Password**
+2. **Authentication → Settings → Authorized domains** → add `akylduukodo.web.app`
+3. **Firestore Database** → create it; the rules in `firestore.rules` (deployed with
+   `firebase deploy`) let each learner read and write only their own row:
+
+```
+match /learners/{uid} {
+  allow read, write: if request.auth != null && request.auth.uid == uid;
+}
+```
+
+A Firebase web config is **not a secret** — it is meant to be public. What protects the
+data is those rules.
+
+**Until the config is added**, the app runs in *device mode*: sign-up and sign-in work, but
+accounts stay in that browser, and the sign-in screen says so plainly. Passwords in device
+mode are never stored — only a salted SHA-256 hash.
+
+Progress handling is built for shared computers: the first account created on a device
+adopts whatever the signed-out learner had already done, and it is claimed exactly once, so
+the next person to sign up starts from zero instead of inheriting a classmate's streak.
+When a cloud account has progress on two devices, the two are merged and the further-along
+value wins.
 
 ## What's inside
 
@@ -69,9 +113,9 @@ course is real typing, by design.
 - 🔥 Daily streak + a weekly goal ring (your pace, your choice)
 - ⭐ Stars per lesson — peeking at the solution costs you stars, not progress
 - 🏅 8 badges
-- 🕹️ **Arcade**: Output Sprint (60s), Bug Hunt Blitz (75s), and 5-level Robot Maze where
-  *shorter code scores higher*
-- 🧪 **Playground**: a blank editor with example programs, saved in your browser
+- 🎯 **Practice Drills**: Output Sprint (60s), Bug Hunt (75s), and 5-level Maze Logic where
+  *shorter, smarter code scores higher*
+- 🧪 **Code Lab**: a blank editor with example programs, saved in your browser
 
 ## How it is built
 
@@ -85,9 +129,18 @@ src/blocks.js         block workspace → JavaScript compiler
 src/state.js          XP, streak, weekly goal, badges (localStorage)
 src/i18n.js           UI in English + Kyrgyz
 src/data/u1..u5.js    the curriculum
-src/views/            home, journey, lesson, arcade, playground, settings
+src/auth.js           accounts: Firebase (Google + email) or device fallback
+src/anim.js           motion helpers, all reduced-motion aware
+src/firebase-config.js  paste your Firebase config here to enable cloud accounts
+src/views/            home, journey, lesson, practice, lab, account, settings
+styles/animations.css the motion layer
 tests/                runs every reference solution through its own checker
 ```
+
+**Motion:** the interface animates throughout — an aurora background with drifting code
+marks, staggered card entrances, scroll reveals, XP that counts up, a flickering streak
+flame, springy buttons and nav, a breathing yak. All of it is switched off in one block for
+anyone with `prefers-reduced-motion` set.
 
 **Safety rails for learners:** an infinite loop throws a friendly error instead of freezing
 the tab; error messages get a 💡 hint appended; a checker that crashes on odd output says so

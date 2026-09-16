@@ -1,4 +1,5 @@
-// arcade.js — quick games built from the same step ingredients as lessons.
+// drills.js — short practice exercises built from the same step ingredients
+// as the lessons, with a timer for focus.
 
 export const OUTPUT_SPRINT = [
   { code: 'console.log(2 + 3 * 2);', options: ['10', '8', '12', '7'], answer: 1 },
@@ -92,12 +93,12 @@ export const MAZES = [
   { w: 6, h: 4, start: { x: 0, y: 0, dir: 1 }, walls: [[1, 1], [2, 1], [3, 1], [4, 1], [1, 3], [2, 3], [3, 3]], gems: [[0, 3], [5, 3], [5, 0]], goal: { x: 4, y: 3 } },
 ];
 
-export const GAMES = [
+export const DRILLS = [
   {
     id: 'sprint',
     emoji: '⚡',
     name: 'Output Sprint',
-    desc: 'Guess what the code prints. 60 seconds, as many as you can.',
+    desc: 'Read code and predict its output. 60 seconds, as many as you can.',
     kind: 'quiz',
     pool: OUTPUT_SPRINT,
     seconds: 60,
@@ -106,7 +107,7 @@ export const GAMES = [
     id: 'bughunt',
     emoji: '🐛',
     name: 'Bug Hunt Blitz',
-    desc: 'Spot what is wrong before the timer runs out.',
+    desc: 'Find the mistake before the timer runs out.',
     kind: 'quiz',
     pool: BUG_HUNT,
     seconds: 75,
@@ -114,8 +115,8 @@ export const GAMES = [
   {
     id: 'maze',
     emoji: '🐃',
-    name: 'Robot Maze',
-    desc: 'Five mazes, one yak. Shorter code scores higher.',
+    name: 'Maze Logic',
+    desc: 'Five routing problems. Shorter, smarter code scores higher.',
     kind: 'maze',
     pool: MAZES,
   },

@@ -4,6 +4,7 @@ import { h, md } from '../ui.js';
 import { ui, t } from '../i18n.js';
 import * as store from '../state.js';
 import { ALL_LESSONS, nextUpFor, UNITS } from '../data/index.js';
+import * as auth from '../auth.js';
 
 const DAY_LETTERS = ['M', 'T', 'W', 'T', 'F', 'S', 'S'];
 
@@ -90,12 +91,23 @@ export function HomeView(go) {
       : h('section', { class: 'card celebrate' },
           h('div', { class: 'big-emoji' }, '🏔️'),
           h('h2', {}, 'You finished every lesson!'),
-          h('p', {}, 'Now the real fun: build something of your own in the Playground, or chase a high score in the Arcade.'),
+          h('p', {}, 'Now the real work: build something of your own in the Code Lab, or beat your best score in Practice.'),
           h('div', { class: 'row gap' },
-            h('button', { class: 'btn btn-primary', onclick: () => go('#/play') }, ui('nav_play')),
-            h('button', { class: 'btn btn-ghost', onclick: () => go('#/arcade') }, ui('nav_arcade')),
+            h('button', { class: 'btn btn-primary', onclick: () => go('#/lab') }, ui('nav_lab')),
+            h('button', { class: 'btn btn-ghost', onclick: () => go('#/practice') }, ui('nav_practice')),
           ),
         ),
+
+    !auth.user()
+      ? h('section', { class: 'card save-prompt' },
+          h('div', { class: 'big-emoji' }, '☁️'),
+          h('div', { class: 'next-body' },
+            h('h3', {}, 'Keep your progress safe'),
+            h('p', { class: 'muted' }, 'Sign in with Google or an email address and your lessons, streak and XP follow you to any computer.'),
+          ),
+          h('button', { class: 'btn btn-primary', onclick: () => go('#/account') }, 'Sign in'),
+        )
+      : null,
 
     h('section', { class: 'card' },
       h('h3', {}, '🏅 ' + ui('badges')),
