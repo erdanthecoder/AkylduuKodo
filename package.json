@@ -1,0 +1,13 @@
+{
+  "name": "akylduukodo",
+  "version": "1.0.0",
+  "description": "AkylduuKodo — a fun, interactive app for learning to code, with blocks, real typing, robot mazes and an arcade.",
+  "type": "module",
+  "scripts": {
+    "start": "node server.mjs",
+    "dev": "node server.mjs",
+    "test": "node tests/curriculum.test.mjs"
+  },
+  "license": "MIT",
+  "private": true
+}
