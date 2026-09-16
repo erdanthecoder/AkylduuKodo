@@ -1,0 +1,15 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <title>AkylduuKodo</title>
+    <script>
+      // GitHub Pages serves this for unknown paths. The app itself routes on the
+      // hash, so send everyone back to the app root of this deployment.
+      var parts = location.pathname.split('/').filter(Boolean);
+      var base = location.hostname.endsWith('github.io') && parts.length ? '/' + parts[0] + '/' : '/';
+      location.replace(base + (location.hash || '#/home'));
+    </script>
+  </head>
+  <body>Redirecting to <a href="/">AkylduuKodo</a>…</body>
+</html>

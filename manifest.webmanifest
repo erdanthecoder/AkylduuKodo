@@ -1,0 +1,15 @@
+{
+  "name": "AkylduuKodo — learn to code the fun way",
+  "short_name": "AkylduuKodo",
+  "description": "Learn real JavaScript through short playful lessons, blocks, bug hunts and a robot yak.",
+  "start_url": "./",
+  "scope": "./",
+  "display": "standalone",
+  "orientation": "portrait-primary",
+  "background_color": "#0d1024",
+  "theme_color": "#0d1024",
+  "categories": ["education", "games"],
+  "icons": [
+    { "src": "icon.svg", "sizes": "any", "type": "image/svg+xml", "purpose": "any maskable" }
+  ]
+}

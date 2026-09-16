@@ -15,6 +15,22 @@ npm test           # checks every lesson is solvable
 No installs, no bundler — plain ES modules, one CSS file. (It needs a server because of
 ES modules; `npm start` is a 40-line static server.)
 
+## Deploying it as a website
+
+It is already a static site — **no build step, nothing to compile**. Publish the repository
+root as-is and it works:
+
+- Every asset path is relative, so it runs fine from a subpath like
+  `https://<user>.github.io/AkylduuKodo/`.
+- Routing is hash-based (`#/lesson/u1l1`), so deep links survive a reload with no server
+  rewrites needed. `404.html` sends stray paths back to the app anyway.
+- `.nojekyll` stops Pages from swallowing anything; `manifest.webmanifest` + `icon.svg`
+  make it installable to a phone home screen.
+
+If you wire up a GitHub Actions Pages workflow, the artifact to upload is simply the
+repository root (`path: '.'`) — no `npm ci`, no build job required. `npm test` is worth
+running in CI, though: it refuses any lesson that isn't solvable.
+
 ## What's inside
 
 **19 lessons across 5 units**, 97 steps — roughly 4 weeks at the default pace of
