@@ -2,7 +2,7 @@
 
 import { h, toast } from '../ui.js';
 import { ui } from '../i18n.js';
-import { createEditor, createConsole } from '../editor.js';
+import { createEditor, createScreen } from '../editor.js';
 import { runCode } from '../runner.js';
 
 const KEY = 'akylduukodo.lab';
@@ -31,12 +31,14 @@ const SNIPPETS = [
 ];
 
 export function LabView() {
-  const cons = createConsole();
+  const cons = createScreen({ title: 'What your code shows' });
   const editor = createEditor({
     value: localStorage.getItem(KEY) || '// Anything goes. Try me:\nconsole.log("Salam, " + "world!");\n',
     onRun: run,
     minRows: 14,
   });
+
+  cons.clear('Write anything, then press Run ▶.');
 
   function run() {
     const code = editor.value;
@@ -64,12 +66,14 @@ export function LabView() {
       ),
     ),
     h('div', { class: 'card' },
-      editor.el,
+      h('div', { class: 'bench-split' },
+        h('div', { class: 'bench-code' }, h('span', { class: 'bench-label' }, '✍️ Your code'), editor.el),
+        h('div', { class: 'bench-out' }, cons.el),
+      ),
       h('div', { class: 'row gap tools' },
         h('button', { class: 'btn btn-run', onclick: run }, '▶ ' + ui('run')),
         h('button', { class: 'btn btn-ghost', onclick: () => { editor.value = ''; cons.clear(); } }, '↺ ' + ui('reset_code')),
       ),
-      cons.el,
       h('p', { class: 'muted small' }, ui('run_hint') + ' · your code is saved in this browser'),
     ),
   );

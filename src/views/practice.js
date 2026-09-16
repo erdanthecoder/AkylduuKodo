@@ -4,7 +4,7 @@ import { h, md, codeBlock, confetti, sfx, shuffle, toast } from '../ui.js';
 import { ui } from '../i18n.js';
 import * as store from '../state.js';
 import { DRILLS } from '../data/drills.js';
-import { createEditor, createConsole } from '../editor.js';
+import { createEditor, createScreen } from '../editor.js';
 import { runRobot } from '../robot.js';
 
 export function PracticeView(go, drillId) {
@@ -177,7 +177,7 @@ function mazeDrill(drill, go) {
     const spec = drill.pool[level];
     const grid = h('div', { class: 'grid' });
     const status = h('div', { class: 'feedback' });
-    const cons = createConsole();
+    const cons = createScreen({ title: 'Kodo world' });
     const editor = createEditor({ value: '', onRun: () => run(), minRows: 7 });
 
     paint(grid, { x: spec.start.x, y: spec.start.y, dir: spec.start.dir ?? 0, gems: (spec.gems || []).map(([x, y]) => `${x},${y}`) }, spec);
