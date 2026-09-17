@@ -11,6 +11,7 @@ const robotBlocks = [
 
 export default {
   id: 'u3',
+  level: 'intermediate',
   icon: 'reset',
   title: { en: 'Loops & Patterns', ky: 'Циклдер жана үлгүлөр' },
   blurb: 'Stop repeating yourself. Let the computer do the boring part.',

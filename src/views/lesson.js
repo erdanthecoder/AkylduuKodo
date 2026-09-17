@@ -19,7 +19,9 @@ export function LessonView(lessonId, go) {
   let stars = 3;
   let solved = false;
 
-  const dots = h('div', { class: 'step-dots' });
+  const progressFill = h('span', { class: 'lesson-progress-fill', style: 'width:0%' });
+  const stepCount = h('span', { class: 'lesson-step-count' });
+  const dots = h('div', { class: 'lesson-progress' }, progressFill);
   const body = h('div', { class: 'step-body' });
   const nextBtn = h('button', { class: 'btn btn-primary', disabled: true, onclick: () => advance() }, ui('next') + ' →');
   const backBtn = h(
@@ -42,6 +44,7 @@ export function LessonView(lessonId, go) {
         h('span', {}, t(lesson.title)),
       ),
       dots,
+      stepCount,
     ),
     body,
     h('div', { class: 'lesson-foot' }, backBtn, h('span', { class: 'spacer' }), nextBtn),
@@ -106,7 +109,8 @@ export function LessonView(lessonId, go) {
       ),
     );
     if (result.earned.length) sfx('badge', store.get().sound);
-    dots.replaceChildren();
+    progressFill.style.width = '100%';
+    stepCount.textContent = 'done';
     el.querySelector('.lesson-foot').style.display = 'none';
   }
 
@@ -117,11 +121,8 @@ export function LessonView(lessonId, go) {
     const step = lesson.steps[index];
     nextBtn.textContent = index === lesson.steps.length - 1 ? 'Finish' : ui('next');
 
-    dots.replaceChildren(
-      ...lesson.steps.map((s, i) =>
-        h('span', { class: 'dot ' + (i < index ? 'dot-done' : i === index ? 'dot-now' : ''), title: s.type }),
-      ),
-    );
+    progressFill.style.width = Math.round((index / lesson.steps.length) * 100) + '%';
+    stepCount.textContent = `${index + 1} / ${lesson.steps.length}`;
 
     clear(body);
     body.append(renderStepBody(step, { markSolved, useHint: () => (stars = Math.max(1, stars - 1)), useSolution: () => (stars = 1) }));
@@ -149,6 +150,8 @@ function renderStepBody(step, api) {
       return unpluggedStep(step, api);
     case 'robot':
       return robotStep(step, api);
+    case 'web':
+      return webStep(step, api);
     case 'code':
     case 'bug':
     default:
@@ -164,6 +167,7 @@ function teachStep(step, api) {
     h('h2', {}, t(step.title)),
     h('div', { class: 'prose', html: md(t(step.text)) }),
     step.code ? exampleWithOutput(t(step.code)) : null,
+    step.web ? exampleWithPage(t(step.web)) : null,
     step.tip ? h('div', { class: 'tip' }, icon('bulb', { size: 17 }), h('div', { html: md(t(step.tip)) })) : null,
   );
 }
@@ -195,6 +199,41 @@ function exampleWithOutput(code) {
     pane.classList.add('example-split');
   }
   return pane;
+}
+
+/** A teaching example for HTML: the markup beside the page it produces. */
+function exampleWithPage(code) {
+  const frame = pageFrame(code, 190);
+  return h('div', { class: 'example example-split' },
+    h('div', { class: 'example-code' }, h('span', { class: 'example-label' }, 'The code'), codeBlock(code)),
+    h('div', { class: 'example-out' }, h('span', { class: 'example-label' }, 'The page it makes'), frame),
+  );
+}
+
+/**
+ * The learner's HTML, rendered for real in a sandboxed iframe. No
+ * allow-same-origin, so the page cannot reach back into the app; scripts are
+ * allowed so that buttons and alerts actually work.
+ */
+function pageFrame(html, minHeight = 240) {
+  const frame = h('iframe', {
+    class: 'page-frame',
+    sandbox: 'allow-scripts allow-modals',
+    title: 'Your page',
+    loading: 'lazy',
+  });
+  frame.style.minHeight = minHeight + 'px';
+  frame.srcdoc = pageDoc(html);
+  return frame;
+}
+
+const PAGE_RESET =
+  '<meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">' +
+  '<style>html{color-scheme:light}body{font-family:system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;' +
+  'margin:16px;line-height:1.5;color:#1a1c2e;background:#fff}</style>';
+
+function pageDoc(html) {
+  return `<!doctype html><html><head>${PAGE_RESET}</head><body>${html}</body></html>`;
 }
 
 function quizStep(step, api) {
@@ -533,6 +572,101 @@ function codeStep(step, api) {
     bench.el,
     feedback,
     h('p', { class: 'muted small' }, ui('run_hint')),
+  );
+}
+
+// --------------------------------------------------------------------- web
+
+function webStep(step, api) {
+  const feedback = h('div', { class: 'feedback' });
+  const frame = pageFrame(step.starter || '', 300);
+  let timer = null;
+
+  const editor = createEditor({
+    value: step.starter || '',
+    minRows: 10,
+    onRun: () => runIt(),
+    // The page follows your typing: that instant feedback is the whole appeal
+    // of building for the web, so there is no need to press anything first.
+    onChange: (code) => {
+      clearTimeout(timer);
+      timer = setTimeout(() => {
+        frame.srcdoc = pageDoc(code);
+      }, 350);
+    },
+  });
+
+  function runIt() {
+    const code = editor.value;
+    frame.srcdoc = pageDoc(code);
+    if (step.__hinted) api.useHint();
+    if (step.__peeked) api.useSolution();
+    const verdict = safeCheck(step, { html: code, code, logs: [], vars: {}, value: undefined });
+    if (verdict === true) {
+      feedback.className = 'feedback ok';
+      feedback.innerHTML = md('**' + ui('correct') + '** Press Next to keep going.');
+      confetti(14);
+      api.markSolved();
+    } else {
+      feedback.className = 'feedback bad';
+      feedback.innerHTML = md(`${ui('not_yet')} ${verdict}`);
+      sfx('bad', store.get().sound);
+    }
+  }
+
+  const tools = h('div', { class: 'row gap tools' },
+    h('button', { class: 'btn btn-run', onclick: runIt }, icon('check', { size: 16 }), ui('check')),
+    step.hint
+      ? h('button', {
+          class: 'btn btn-ghost',
+          onclick: (e) => {
+            feedback.className = 'feedback';
+            feedback.textContent = 'Hint: ' + t(step.hint);
+            e.target.disabled = true;
+            step.__hinted = true;
+          },
+        }, icon('bulb', { size: 16 }), ui('hint'))
+      : null,
+    step.solution
+      ? h('button', {
+          class: 'btn btn-ghost',
+          onclick: (e) => {
+            if (!confirm('Show the solution? You will still earn one star for finishing.')) return;
+            editor.value = step.solution;
+            frame.srcdoc = pageDoc(step.solution);
+            e.target.disabled = true;
+            step.__peeked = true;
+          },
+        }, icon('key', { size: 16 }), ui('solution'))
+      : null,
+    h('button', {
+      class: 'btn btn-ghost',
+      onclick: () => {
+        editor.value = step.starter || '';
+        frame.srcdoc = pageDoc(step.starter || '');
+      },
+    }, icon('reset', { size: 16 }), ui('reset_code')),
+  );
+
+  return h(
+    'div',
+    { class: 'card' },
+    h('h2', {}, icon('globe', { size: 22 }), 'Build the page'),
+    h('div', { class: 'prose', html: md(t(step.prompt)) }),
+    h('div', { class: 'workbench' },
+      h('div', { class: 'bench-split' },
+        h('div', { class: 'bench-code' }, h('span', { class: 'bench-label' }, 'Your HTML'), editor.el),
+        h('div', { class: 'bench-out' },
+          h('span', { class: 'bench-label' }, 'Your page, live'),
+          h('div', { class: 'page-shell' },
+            h('div', { class: 'page-bar' }, h('span', { class: 'dots' }, h('i', {}), h('i', {}), h('i', {})), h('span', {}, 'preview')),
+            frame,
+          ),
+        ),
+      ),
+      tools,
+    ),
+    feedback,
   );
 }
 

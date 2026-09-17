@@ -9,6 +9,7 @@ const ifBlocks = [
 
 export default {
   id: 'u2',
+  level: 'beginner',
   icon: 'scale',
   title: { en: 'Making Choices', ky: 'Чечим кабыл алуу' },
   blurb: 'Teach your program to look at the situation and decide.',

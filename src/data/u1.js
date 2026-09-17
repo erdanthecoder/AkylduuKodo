@@ -9,6 +9,7 @@ const sayBlocks = [
 
 export default {
   id: 'u1',
+  level: 'beginner',
   icon: 'sparkle',
   title: { en: 'First Words', ky: 'Алгачкы сөздөр' },
   blurb: 'Make the computer talk, then teach it to remember things.',

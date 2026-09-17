@@ -6,7 +6,7 @@ import { h, starRow } from '../ui.js';
 import { icon, mascot } from '../icons.js';
 import { ui, t } from '../i18n.js';
 import * as store from '../state.js';
-import { UNITS, ALL_LESSONS, isUnlocked } from '../data/index.js';
+import { UNITS, ALL_LESSONS, LEVELS, isUnlocked } from '../data/index.js';
 
 const STEP_ICON = {
   teach: 'book',
@@ -18,6 +18,7 @@ const STEP_ICON = {
   bug: 'bug',
   robot: 'rover',
   unplugged: 'globe',
+  web: 'globe',
 };
 
 /** Nodes swing left and right down the page, like a mountain trail. */
@@ -30,15 +31,31 @@ export function JourneyView(go) {
 
   const path = h('div', { class: 'path' });
 
+  let shownLevel = null;
+
   UNITS.forEach((unit, unitIndex) => {
     const done = unit.lessons.filter((l) => s.done[l.id]).length;
+
+    // A banner announces each difficulty tier the first time it appears, so the
+    // jump from "tiny steps" to "real problems" is never a surprise.
+    if (unit.level !== shownLevel) {
+      shownLevel = unit.level;
+      const meta = LEVELS.find((l) => l.id === unit.level);
+      path.append(
+        h('div', { class: `level-divider level-${unit.level}` },
+          h('span', { class: 'level-chip' }, meta?.label || unit.level),
+          h('span', { class: 'level-blurb' }, meta?.blurb || ''),
+        ),
+      );
+    }
+
     const band = h('section', { class: `band band-${(unitIndex % 7) + 1}` });
 
     band.append(
       h('header', { class: 'band-head' },
         h('span', { class: 'band-mark' }, icon(unit.icon, { size: 22 })),
         h('div', { class: 'band-text' },
-          h('span', { class: 'band-kicker' }, `Part ${unitIndex + 1}`),
+          h('span', { class: 'band-kicker' }, `Part ${unitIndex + 1} · ${unit.level}`),
           h('h2', {}, t(unit.title)),
           h('p', {}, t(unit.blurb)),
         ),

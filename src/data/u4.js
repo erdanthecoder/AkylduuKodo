@@ -2,6 +2,7 @@ import { all, said, linesAre, uses, avoids } from './checks.js';
 
 export default {
   id: 'u4',
+  level: 'intermediate',
   icon: 'wand',
   title: { en: 'Your Own Commands', ky: 'Өз буйруктарың' },
   blurb: 'Functions: wrap up an idea, give it a name, use it forever.',
