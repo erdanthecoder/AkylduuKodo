@@ -1,8 +1,11 @@
 // anim.js — motion helpers. Everything here checks prefers-reduced-motion first,
 // so the app stays usable for people who get motion sick.
 
+// Calm mode (Settings -> Movement) is written onto <html> by prefs.js, and the
+// system preference still counts on its own.
 export const reduced = () =>
-  globalThis.matchMedia?.('(prefers-reduced-motion: reduce)').matches ?? false;
+  globalThis.document?.documentElement.dataset.motion === 'calm'
+  || (globalThis.matchMedia?.('(prefers-reduced-motion: reduce)').matches ?? false);
 
 /** Stagger the children of a freshly mounted view so the page assembles itself. */
 export function animateIn(node) {

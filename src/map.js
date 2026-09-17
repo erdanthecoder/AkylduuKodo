@@ -303,7 +303,8 @@ function flatFlight(unitId, onDone) {
   trail.style.strokeDasharray = String(total);
   trail.style.strokeDashoffset = String(total);
 
-  const reduced = globalThis.matchMedia?.('(prefers-reduced-motion: reduce)').matches;
+  const reduced = globalThis.document?.documentElement.dataset.motion === 'calm'
+    || globalThis.matchMedia?.('(prefers-reduced-motion: reduce)').matches;
   const duration = reduced ? 10 : 2600;
   const start = performance.now();
   let raf = 0;

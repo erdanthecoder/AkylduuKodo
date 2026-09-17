@@ -20,6 +20,12 @@ const DEFAULT = {
   mode: 'code',          // preferred step mode: 'blocks' | 'code'
   sound: true,
   created: null,
+
+  // look and feel — see prefs.js, which writes these onto <html>
+  theme: 'auto',         // 'auto' | 'dark' | 'light'
+  motion: 'full',        // 'full' | 'calm'
+  textSize: 'normal',    // 'normal' | 'large' | 'xl'
+  codeSize: 'md',        // 'sm' | 'md' | 'lg'
 };
 
 let state = load();

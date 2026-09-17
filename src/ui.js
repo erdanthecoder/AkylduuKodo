@@ -99,6 +99,9 @@ const CONFETTI_COLORS = ['var(--accent)', 'var(--accent-2)', 'var(--blue)', 'var
 const CONFETTI_SHAPES = ['sq', 'circ', 'bar'];
 
 export function confetti(count = 28) {
+  // Calm mode and prefers-reduced-motion both mean: no falling paper.
+  if (document.documentElement.dataset.motion === 'calm'
+    || globalThis.matchMedia?.('(prefers-reduced-motion: reduce)').matches) return;
   const layer = h('div', { class: 'confetti-layer' });
   for (let i = 0; i < count; i++) {
     const shape = CONFETTI_SHAPES[i % CONFETTI_SHAPES.length];

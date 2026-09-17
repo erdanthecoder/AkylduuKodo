@@ -30,7 +30,10 @@ export function createEditor({ value = '', onRun = () => {}, onChange = () => {}
     gutter.textContent = Array.from({ length: Math.max(lines, minRows) }, (_, i) => i + 1).join('\n');
     // A trailing newline needs a spacer or the last line has nothing to sit on.
     hl.innerHTML = highlight(text) + (text.endsWith('\n') ? ' ' : '');
-    const height = Math.max(lines, minRows) * 22 + 24;
+    // The line height is a preference (Settings -> code size), so read it back
+    // from the stylesheet rather than assuming it.
+    const lh = parseFloat(getComputedStyle(area).lineHeight) || 22;
+    const height = Math.max(lines, minRows) * lh + 24;
     area.style.height = height + 'px';
     hl.style.height = height + 'px';
     onChange(text);

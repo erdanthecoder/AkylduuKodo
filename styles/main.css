@@ -63,8 +63,10 @@
   --mono: "JetBrains Mono", ui-monospace, "SF Mono", Menlo, Consolas, monospace;
 }
 
+/* Daylight. Chosen in Settings, or followed from the device when the learner
+   has not chosen at all. Both routes land on the same tokens. */
 @media (prefers-color-scheme: light) {
-  :root {
+  :root:not([data-theme="dark"]) {
     --bg: #f4f5fa;
     --bg-2: #eceef7;
     --bg-3: #e3e6f3;
@@ -83,6 +85,41 @@
     --sh-2: 0 6px 16px -8px rgba(20, 24, 60, 0.28);
     --sh-3: 0 18px 40px -22px rgba(20, 24, 60, 0.38), 0 1px 3px rgba(20, 24, 60, 0.08);
   }
+}
+:root[data-theme="light"] {
+  --bg: #f4f5fa;
+  --bg-2: #eceef7;
+  --bg-3: #e3e6f3;
+  --card: rgba(255, 255, 255, 0.86);
+  --card-2: rgba(16, 20, 45, 0.045);
+  --card-solid: #ffffff;
+  --line: rgba(16, 20, 45, 0.1);
+  --line-strong: rgba(16, 20, 45, 0.18);
+  --ink: #10142d;
+  --ink-2: #333a5c;
+  --muted: #5c648a;
+  --faint: #8d94b3;
+  --accent: #f59422;
+  --accent-2: #ef5c7f;
+  --code-bg: #0c1020;
+  --sh-2: 0 6px 16px -8px rgba(20, 24, 60, 0.28);
+  --sh-3: 0 18px 40px -22px rgba(20, 24, 60, 0.38), 0 1px 3px rgba(20, 24, 60, 0.08);
+}
+
+/* ------------------------------------------------- reading and code size */
+:root[data-text="large"] { font-size: 18px; }
+:root[data-text="xl"] { font-size: 20px; }
+:root { --code-size: 0.875rem; --code-line: 22px; }
+:root[data-code="sm"] { --code-size: 0.78rem; --code-line: 20px; }
+:root[data-code="lg"] { --code-size: 1.02rem; --code-line: 26px; }
+
+/* Calm motion: the same app, standing still. */
+:root[data-motion="calm"] *,
+:root[data-motion="calm"] *::before,
+:root[data-motion="calm"] *::after {
+  animation-duration: 0.001s !important;
+  animation-iteration-count: 1 !important;
+  transition-duration: 0.001s !important;
 }
 
 * { box-sizing: border-box; }
@@ -417,7 +454,7 @@ button, input, textarea { font-family: inherit; font-size: inherit; color: inher
 .code-sample, .md-pre {
   margin: 12px 0; padding: 14px 16px; overflow-x: auto;
   background: var(--code-bg); border: 1px solid var(--line); border-radius: var(--r-md);
-  font-family: var(--mono); font-size: 0.86rem; line-height: 1.6; color: #e6eaff;
+  font-family: var(--mono); font-size: var(--code-size); line-height: 1.6; color: #e6eaff;
 }
 .tok-kw { color: #ff8fc5; }
 .tok-str { color: #8ef0bd; }
@@ -485,6 +522,20 @@ button, input, textarea { font-family: inherit; font-size: inherit; color: inher
 }
 .small-input { width: 110px; margin: 0; }
 .switch-row { display: flex; align-items: center; gap: 11px; cursor: pointer; }
+.switch {
+  appearance: none; -webkit-appearance: none; flex: none; position: relative;
+  width: 46px; height: 27px; margin: 0; border-radius: 999px; cursor: pointer;
+  background: var(--card-2); border: 1px solid var(--line-strong);
+  transition: background var(--t-med), border-color var(--t-med);
+}
+.switch::after {
+  content: ""; position: absolute; top: 2px; left: 2px; width: 21px; height: 21px;
+  border-radius: 50%; background: var(--muted);
+  transition: transform var(--t-med) var(--ease-spring), background var(--t-med);
+}
+.switch:checked { background: color-mix(in srgb, var(--accent) 34%, transparent); border-color: color-mix(in srgb, var(--accent) 55%, transparent); }
+.switch:checked::after { transform: translateX(19px); background: var(--accent); }
+.btn-inline { justify-self: start; width: auto; }
 .field { display: flex; flex-direction: column; gap: 5px; }
 .field-label { font-size: 0.76rem; font-weight: 700; letter-spacing: 0.06em; text-transform: uppercase; color: var(--muted); }
 .field .text-input { margin-top: 0; }
@@ -522,7 +573,7 @@ button, input, textarea { font-family: inherit; font-size: inherit; color: inher
 .editor-scroll { position: relative; flex: 1; min-width: 0; }
 .hl-layer, .code-area {
   margin: 0; padding: 14px 16px; border: 0;
-  font-family: var(--mono); font-size: 0.875rem; line-height: 22px;
+  font-family: var(--mono); font-size: var(--code-size); line-height: var(--code-line);
   white-space: pre; tab-size: 2;
 }
 .hl-layer { position: absolute; inset: 0; overflow: hidden; pointer-events: none; color: #e6eaff; }
@@ -535,7 +586,7 @@ button, input, textarea { font-family: inherit; font-size: inherit; color: inher
   padding: 14px 12px 14px 16px; text-align: right; user-select: none; white-space: pre;
   color: var(--faint); opacity: 0.55; background: rgba(255, 255, 255, 0.02);
   border-right: 1px solid var(--line);
-  font-family: var(--mono); font-size: 0.875rem; line-height: 22px;
+  font-family: var(--mono); font-size: var(--code-size); line-height: var(--code-line);
 }
 
 .screen, .page-shell {
@@ -559,7 +610,7 @@ button, input, textarea { font-family: inherit; font-size: inherit; color: inher
 .screen-status { margin-left: auto; font-family: var(--mono); font-size: 0.7rem; color: var(--faint); }
 .screen-status.is-ok { color: var(--mint); }
 .screen-status.is-bad { color: var(--bad); }
-.screen-body { flex: 1; padding: 14px 16px; max-height: 340px; min-height: 150px; overflow: auto; font-family: var(--mono); font-size: 0.87rem; color: #dde3ff; }
+.screen-body { flex: 1; padding: 14px 16px; max-height: 340px; min-height: 150px; overflow: auto; font-family: var(--mono); font-size: var(--code-size); color: #dde3ff; }
 .screen-line { display: flex; gap: 12px; padding: 3px 0; white-space: pre-wrap; word-break: break-word; }
 .screen-num { min-width: 1.2em; text-align: right; color: var(--faint); opacity: 0.6; font-size: 0.8em; padding-top: 2px; user-select: none; }
 .screen-text { flex: 1; }
@@ -781,3 +832,32 @@ h1 > .icon, h2 > .icon { color: var(--accent); flex: none; }
 .journey-head h1 { margin-bottom: 6px; }
 .journey-head p { margin: 0; font-size: 0.95rem; }
 .band-progress .mini-bar { width: 92px; height: 8px; }
+
+/* The code surfaces stay dark in both themes, so the inline chips inside them
+   cannot follow --ink — it flips with the theme and disappears. */
+.code-sample code, .md-pre code, .screen code, .setting-sample code {
+  background: color-mix(in srgb, var(--violet) 30%, transparent);
+  color: #e9ecff;
+}
+
+/* ============================================================== settings */
+.view-lede { margin: -6px 0 4px; max-width: 60ch; }
+.setting-card { display: grid; gap: 14px; }
+.setting-head { display: flex; gap: 13px; align-items: flex-start; }
+.setting-head h3 { margin: 0 0 3px; }
+.setting-head p { margin: 0; max-width: 60ch; }
+.setting-mark {
+  flex: none; display: grid; place-items: center; width: 34px; height: 34px;
+  border-radius: var(--r-sm); color: var(--accent);
+  background: color-mix(in srgb, var(--accent) 13%, transparent);
+  border: 1px solid color-mix(in srgb, var(--accent) 24%, transparent);
+}
+.setting-mark.mark-danger {
+  color: var(--bad);
+  background: color-mix(in srgb, var(--bad) 13%, transparent);
+  border-color: color-mix(in srgb, var(--bad) 26%, transparent);
+}
+.setting-extra { margin-top: 2px; }
+.setting-sample { margin: 2px 0 0; }
+.wrap { flex-wrap: wrap; }
+.hidden-file { display: none; }

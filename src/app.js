@@ -14,6 +14,9 @@ import { AccountView } from './views/account.js';
 import { WelcomeView } from './views/welcome.js';
 import * as auth from './auth.js';
 import { animateIn, countUp, startBackdrop } from './anim.js';
+// Preferences write themselves onto <html> as soon as this module loads, so the
+// first paint is already the right theme and the right text size.
+import './prefs.js';
 
 const NAV = [
   { hash: '#/home', icon: 'home', key: 'nav_home' },
