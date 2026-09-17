@@ -192,10 +192,12 @@ export function webglAvailable() {
  * Builds the planet inside `container`.
  * Returns handles for spinning it, flying between cities and tearing it down.
  */
-export async function createGlobe(container, { stops = [], doneUnits = new Set(), interactive = true, quality = 1, offsetY = 0, distance = 3.2 } = {}) {
+export async function createGlobe(container, { stops = [], doneUnits = new Set(), interactive = true, quality = 1, offsetY = 0, distance = 3.2, cameraY = 0.5 } = {}) {
   const scene = new THREE.Scene();
   const camera = new THREE.PerspectiveCamera(38, 1, 0.1, 100);
-  camera.position.set(0, 0.5, distance);
+  // Lifting the camera and looking straight ahead drops the planet low in the
+  // frame — an earthrise. cameraY 0 centres it instead.
+  camera.position.set(0, cameraY, distance);
 
   const renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true, powerPreference: 'high-performance' });
   renderer.setPixelRatio(Math.min(window.devicePixelRatio || 1, 1.6 * quality));
@@ -303,7 +305,8 @@ export async function createGlobe(container, { stops = [], doneUnits = new Set()
   });
 
   // --- interaction ------------------------------------------------------
-  let spin = 0.0012;
+  // Calm mode (Settings -> Movement) leaves the planet where you put it.
+  let spin = globalThis.document?.documentElement.dataset.motion === 'calm' ? 0 : 0.0012;
   let dragging = false;
   let last = { x: 0, y: 0 };
   const velocity = { x: 0, y: 0 };

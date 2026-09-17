@@ -1,84 +1,76 @@
-// welcome.js — the front door. A layered mountain scene with real depth: six
-// ridges on different parallax planes, drifting cloud, falling snow, and a sun
-// that sits behind the peaks. Then it explains itself, then it asks two
-// questions and lets you in.
+// welcome.js — the front door.
+//
+// The entrance is a photograph of Issyk-Kul at sunset: the place the whole
+// route ends. It is built in depth rather than pasted flat — the water and sky
+// sit on one plane, the beach on a nearer one, and both drift against the
+// pointer while the frame slowly pushes in. Then the page explains itself,
+// shows what can be changed, and asks two questions.
 
 import { h, confetti } from '../ui.js';
 import { icon, mascot } from '../icons.js';
 import { routeMap, STOPS } from '../map.js';
 import { createGlobe, webglAvailable } from '../globe.js';
+import { calmMotion } from '../prefs.js';
 import * as store from '../state.js';
 
-const reduced = () => globalThis.matchMedia?.('(prefers-reduced-motion: reduce)').matches ?? false;
+const HERO = 'assets/hero.jpg';
+const HERO_SMALL = 'assets/hero-small.jpg';
 
-/** Ridge silhouettes, back to front. Depth comes from how far each one moves. */
-const RIDGES = [
-  { d: 'M0 300 L120 190 L210 250 L300 150 L420 240 L520 170 L640 260 L760 160 L880 240 L1000 190 L1100 250 L1200 200 L1200 400 L0 400 Z', depth: 0.1, fill: '#2b3a6b' },
-  { d: 'M0 330 L100 250 L190 300 L300 210 L400 290 L520 230 L620 300 L740 220 L860 300 L980 250 L1100 310 L1200 260 L1200 400 L0 400 Z', depth: 0.2, fill: '#243059' },
-  { d: 'M0 350 L140 270 L240 330 L360 250 L470 330 L600 260 L720 340 L840 270 L960 340 L1090 280 L1200 330 L1200 400 L0 400 Z', depth: 0.34, fill: '#1c2647' },
-  { d: 'M0 370 L120 310 L260 360 L380 300 L500 365 L640 305 L780 370 L900 315 L1040 370 L1160 320 L1200 350 L1200 400 L0 400 Z', depth: 0.5, fill: '#151d38' },
-  { d: 'M0 392 L160 350 L320 385 L460 345 L620 390 L780 350 L940 390 L1100 355 L1200 380 L1200 400 L0 400 Z', depth: 0.72, fill: '#0f1529' },
-];
-
-/** Snow caps sit on the two front-most ridges only. */
-const CAPS = [
-  { d: 'M300 150 L330 186 L312 180 L300 190 L288 180 L270 186 Z', depth: 0.1 },
-  { d: 'M520 170 L548 206 L532 200 L520 210 L508 200 L492 206 Z', depth: 0.1 },
-  { d: 'M760 160 L790 196 L772 190 L760 200 L748 190 L730 196 Z', depth: 0.1 },
-];
+// A 24px-wide version of the photograph, inline, so the frame is never empty
+// and never flashes: it is painted blurred on the first frame and the real
+// photograph fades over it once decoded.
+const HERO_LQIP = 'data:image/jpeg;base64,/9j/2wBDABQODxIPDRQSEBIXFRQYHjIhHhwcHj0sLiQySUBMS0dARkVQWnNiUFVtVkVGZIhlbXd7gYKBTmCNl4x9lnN+gXz/2wBDARUXFx4aHjshITt8U0ZTfHx8fHx8fHx8fHx8fHx8fHx8fHx8fHx8fHx8fHx8fHx8fHx8fHx8fHx8fHx8fHx8fHz/wAARCAASABgDASIAAhEBAxEB/8QAGQABAAMBAQAAAAAAAAAAAAAAAAEDBQQG/8QAIBAAAgICAQUBAAAAAAAAAAAAAAECAxESBAUUIVFhcf/EABcBAAMBAAAAAAAAAAAAAAAAAAABAwL/xAAWEQEBAQAAAAAAAAAAAAAAAAAAEgH/2gAMAwEAAhEDEQA/ALq+K2XdvheWjL6jzbVNKmxJfDinzb5QS3efZS9ThtzojnGyyDzkrL9tla8/oC9EITJAMKIAAyf/2Q==';
 
 export function WelcomeView(go, rerender) {
-  const scene = h('div', { class: 'scene' });
+  const calm = calmMotion();
+  const scene = h('div', { class: 'scene scene-photo' });
   const layers = [];
 
-  const sky = h('div', { class: 'scene-sky' });
-  const sun = h('div', { class: 'scene-sun' });
-  scene.append(sky, sun);
+  // --- the photograph, in two planes ------------------------------------
+  // Each plane is a frame that the parallax moves, holding an image that does
+  // the slow push-in. Two elements, so the two transforms never fight.
+  const farImg = h('div', { class: 'photo-img' });
+  const nearImg = h('div', { class: 'photo-img' });
+  const far = h('div', { class: 'photo-plane photo-far' }, farImg);
+  const near = h('div', { class: 'photo-plane photo-near' }, nearImg);
+  farImg.style.backgroundImage = `url("${HERO_LQIP}")`;
+  nearImg.style.backgroundImage = `url("${HERO_LQIP}")`;
 
-  // clouds drift on their own plane, between the far ridges
-  const clouds = h('div', { class: 'scene-clouds' });
-  for (let i = 0; i < 5; i++) {
-    const c = h('span', { class: 'cloud' });
-    c.style.top = 12 + i * 9 + '%';
-    c.style.left = -30 + i * 26 + '%';
-    c.style.animationDuration = 70 + i * 22 + 's';
-    c.style.animationDelay = -i * 19 + 's';
-    c.style.transform = `scale(${0.6 + i * 0.22})`;
-    clouds.append(c);
+  const src = window.innerWidth <= 900 ? HERO_SMALL : HERO;
+  const full = new Image();
+  full.decoding = 'async';
+  full.src = src;
+  const paintFull = () => {
+    farImg.style.backgroundImage = `url("${src}")`;
+    nearImg.style.backgroundImage = `url("${src}")`;
+    scene.classList.add('is-loaded');
+  };
+  if (full.complete) paintFull();
+  else full.addEventListener('load', paintFull, { once: true });
+
+  const glow = h('div', { class: 'photo-glow' });
+  const grade = h('div', { class: 'photo-grade' });
+  scene.append(far, glow, near, grade);
+  layers.push({ el: far, depth: 0.08 }, { el: near, depth: 0.3 });
+
+  // --- birds over the water ---------------------------------------------
+  if (!calm) {
+    const birds = h('div', { class: 'photo-birds', 'aria-hidden': 'true' });
+    for (let i = 0; i < 3; i++) {
+      const b = h('span', { class: 'bird' });
+      b.innerHTML =
+        '<svg viewBox="0 0 40 16" aria-hidden="true"><path d="M1 12c6 0 9-3 11-8 0 0 3 6 7 6 4 0 5-5 5-5 2 5 5 7 11 7" ' +
+        'fill="none" stroke="#141a26" stroke-width="1.6" stroke-linecap="round"/></svg>';
+      b.style.top = 16 + i * 7 + '%';
+      b.style.animationDuration = 46 + i * 15 + 's';
+      b.style.animationDelay = -i * 17 + 's';
+      b.style.opacity = String(0.5 - i * 0.1);
+      b.style.scale = String(0.9 - i * 0.2);
+      birds.append(b);
+    }
+    scene.append(birds);
+    layers.push({ el: birds, depth: 0.14 });
   }
-  scene.append(clouds);
-  layers.push({ el: clouds, depth: 0.06 });
-
-  RIDGES.forEach((ridge, i) => {
-    const layer = h('div', { class: 'ridge' });
-    layer.innerHTML =
-      `<svg viewBox="0 0 1200 400" preserveAspectRatio="none" aria-hidden="true">` +
-      `<path d="${ridge.d}" fill="${ridge.fill}"/>` +
-      (i === 0 ? CAPS.map((c) => `<path d="${c.d}" fill="#dfe8ff" opacity="0.92"/>`).join('') : '') +
-      `</svg>`;
-    scene.append(layer);
-    layers.push({ el: layer, depth: ridge.depth });
-  });
-
-  // The planet sits behind the ridges: a real sphere, lit by one sun, that you
-  // can grab and spin. If WebGL is missing the drawn sky carries the scene.
-  const globeWrap = h('div', { class: 'scene-globe' });
-  scene.prepend(globeWrap);
-  let globe = null;
-  if (webglAvailable()) {
-    scene.classList.add('has-globe');
-    createGlobe(globeWrap, { stops: STOPS, interactive: true, offsetY: -0.62, distance: 3.5 })
-      .then((g) => {
-        globe = g;
-        // Face the middle of the route, so Europe and Central Asia are what you
-        // see first — the journey, not a random ocean.
-        g.lookAt(40, 44, 2800);
-      })
-      .catch(() => scene.classList.remove('has-globe'));
-  }
-
-  const snow = h('canvas', { class: 'scene-snow', 'aria-hidden': 'true' });
-  scene.append(snow);
 
   const title = h('div', { class: 'scene-title' },
     h('span', { class: 'scene-kicker' }, 'London to Bishkek, one lesson at a time'),
@@ -87,7 +79,7 @@ export function WelcomeView(go, rerender) {
       h('span', { class: 'word accent' }, 'u'),
       h('span', { class: 'word' }, 'Kodo'),
     ),
-    h('p', {}, 'Learn to build real things on the web. You write the code, you watch it run, and every unit you finish flies you one city further east. Spin the planet — that is the whole route.'),
+    h('p', {}, 'Learn to build real things on the web. You write the code, you watch it run, and every unit you finish carries you one city further east — until you land here.'),
     h('div', { class: 'scene-cta' },
       h('button', { class: 'btn btn-primary btn-lift', onclick: () => document.getElementById('start-card')?.scrollIntoView({ behavior: 'smooth', block: 'center' }) },
         'Start the journey', icon('arrowRight', { size: 18 })),
@@ -95,21 +87,25 @@ export function WelcomeView(go, rerender) {
         'How it works'),
     ),
   );
-  scene.append(title, h('div', { class: 'globe-hint' }, 'drag the planet'), h('div', { class: 'scene-fade' }));
+  scene.append(
+    title,
+    h('div', { class: 'photo-credit' }, icon('mountain', { size: 14 }), 'Issyk-Kul, Kyrgyzstan'),
+    h('div', { class: 'scene-fade' }),
+  );
   layers.push({ el: title, depth: 0.16 });
 
   // ---------------------------------------------------------------- parallax
   let ticking = false;
   const move = (nx, ny, scroll) => {
     layers.forEach(({ el, depth }) => {
-      const x = nx * depth * 42;
-      const y = ny * depth * 26 + scroll * depth * 0.35;
+      const x = nx * depth * 30;
+      const y = ny * depth * 18 + scroll * depth * 0.3;
       el.style.transform = `translate3d(${x}px, ${y}px, 0)`;
     });
-    sun.style.transform = `translate3d(${nx * -14}px, ${ny * -8 + scroll * 0.12}px, 0)`;
+    glow.style.transform = `translate3d(${nx * -12}px, ${ny * -7 + scroll * 0.1}px, 0)`;
   };
   const onPointer = (e) => {
-    if (reduced() || ticking) return;
+    if (calm || ticking) return;
     ticking = true;
     requestAnimationFrame(() => {
       const nx = (e.clientX / window.innerWidth - 0.5) * 2;
@@ -119,61 +115,18 @@ export function WelcomeView(go, rerender) {
     });
   };
   const onScroll = () => {
-    if (reduced()) return;
+    if (calm) return;
     move(0, 0, window.scrollY);
   };
   window.addEventListener('pointermove', onPointer);
   window.addEventListener('scroll', onScroll, { passive: true });
-
-  // -------------------------------------------------------------------- snow
-  let snowRaf = 0;
-  function startSnow() {
-    if (reduced()) return;
-    const ctx = snow.getContext('2d');
-    const flakes = [];
-    const resize = () => {
-      snow.width = scene.clientWidth;
-      snow.height = scene.clientHeight;
-    };
-    resize();
-    window.addEventListener('resize', resize);
-    for (let i = 0; i < 90; i++) {
-      flakes.push({
-        x: Math.random() * snow.width,
-        y: Math.random() * snow.height,
-        r: 0.7 + Math.random() * 2.1,
-        vy: 0.25 + Math.random() * 0.75,
-        drift: Math.random() * 2 * Math.PI,
-      });
-    }
-    const tick = () => {
-      ctx.clearRect(0, 0, snow.width, snow.height);
-      for (const f of flakes) {
-        f.y += f.vy;
-        f.drift += 0.008;
-        const x = f.x + Math.sin(f.drift) * 14;
-        if (f.y > snow.height) {
-          f.y = -8;
-          f.x = Math.random() * snow.width;
-        }
-        ctx.globalAlpha = 0.18 + f.r / 7;
-        ctx.fillStyle = '#eaf1ff';
-        ctx.beginPath();
-        ctx.arc(x, f.y, f.r, 0, Math.PI * 2);
-        ctx.fill();
-      }
-      snowRaf = requestAnimationFrame(tick);
-    };
-    tick();
-  }
-  setTimeout(startSnow, 60);
 
   // ------------------------------------------------------------- explanation
   const steps = [
     ['pencil', 'You type, the page appears', 'Write one tag and a real web page shows up beside your code. Nothing to install, nothing to set up.'],
     ['code', 'Then you make it think', 'Buttons that react, loops that repeat, programs that decide. Real JavaScript, in tiny steps.'],
     ['bug', 'You break things on purpose', 'Hunt bugs, guess what code prints, program a rover through a maze. Practice that does not feel like practice.'],
-    ['map', 'And you travel', 'Every unit is a city. Finish one and you fly east — London, Paris, Rome, Istanbul, Tbilisi, Samarkand, Almaty, and home to Bishkek.'],
+    ['map', 'And you travel', 'Every unit is a city. Finish one and you move east — London, Paris, Rome, Istanbul, Tbilisi, Samarkand, Almaty, and home to Bishkek.'],
   ];
 
   const how = h('section', { class: 'how-section', id: 'how-it-works' },
@@ -192,13 +145,59 @@ export function WelcomeView(go, rerender) {
     ),
   );
 
+  // -------------------------------------------------------------- the route
+  // The planet lives here now: a real globe you can spin, with the route drawn
+  // on it. Without WebGL the flat map carries the same information.
+  const routeFrame = h('div', { class: 'route-frame' });
+  let globe = null;
+  if (webglAvailable()) {
+    routeFrame.classList.add('route-frame-3d');
+    const stage = h('div', { class: 'route-globe' });
+    routeFrame.append(stage, h('span', { class: 'globe-hint' }, 'drag to spin'));
+    createGlobe(stage, { stops: STOPS, interactive: true, distance: 3.3, cameraY: 0 })
+      .then((g) => {
+        globe = g;
+        g.lookAt(40, 44, 2600);
+        if (calm) g.setSpin(0);
+      })
+      .catch(() => routeFrame.append(routeMap({ compact: true })));
+  } else {
+    routeFrame.append(routeMap({ compact: true }));
+  }
+
   const routePreview = h('section', { class: 'route-section' },
     h('div', { class: 'section-lede' },
       h('span', { class: 'eyebrow' }, 'The route'),
       h('h2', {}, `${STOPS.length} cities, west to east`),
-      h('p', { class: 'muted' }, 'You start where the web was invented and finish at home. The plane moves when you do.'),
+      h('p', { class: 'muted' }, 'You start where the web was invented and finish at home. The marker moves when you do.'),
     ),
-    h('div', { class: 'route-frame' }, routeMap({ compact: true })),
+    routeFrame,
+  );
+
+  // ------------------------------------------------------- what you control
+  const controls = [
+    ['calendar', 'Your pace', 'Three lessons a week, or ten. Change it whenever life changes.'],
+    ['eye', 'Your view', 'Night or daylight, bigger text, bigger code, and a calm mode with the movement turned off.'],
+    ['puzzle', 'Blocks or typing', 'Drag blocks while it is new, switch to writing the code the moment you are ready.'],
+    ['globe', 'Your language', 'The app speaks English and Kyrgyz.'],
+    ['cloud', 'Your progress', 'Sign in and it follows you to any device. Or keep it on this one and export it as a file.'],
+    ['sound', 'Your sound', 'Little clicks and chimes, on or off.'],
+  ];
+
+  const settingsPreview = h('section', { class: 'control-section' },
+    h('div', { class: 'section-lede' },
+      h('span', { class: 'eyebrow' }, 'Yours to adjust'),
+      h('h2', {}, 'Everything here bends to you'),
+      h('p', { class: 'muted' }, 'All of it lives in Settings, and none of it is locked away.'),
+    ),
+    h('div', { class: 'control-grid' },
+      ...controls.map(([ic, head, body], i) =>
+        h('article', { class: 'control-card', style: `--i:${i}` },
+          h('span', { class: 'control-mark' }, icon(ic, { size: 18 })),
+          h('div', {}, h('h3', {}, head), h('p', {}, body)),
+        ),
+      ),
+    ),
   );
 
   // ------------------------------------------------------------- the sign-up
@@ -231,20 +230,19 @@ export function WelcomeView(go, rerender) {
       class: 'btn btn-primary btn-big',
       onclick: () => {
         store.set({ name: name.trim(), goalPerWeek: goal, onboarded: true, created: store.today() });
-        confetti(26);
+        if (!calm) confetti(26);
         go('#/journey');
         rerender();
       },
     }, 'Fly to London', icon('arrowRight', { size: 18 })),
-    h('p', { class: 'muted small center' }, 'No account needed to start. You can sign in later to keep your progress.'),
+    h('p', { class: 'muted small center' }, 'No account needed to start. You can sign in later to keep your progress, and change every setting after that.'),
   );
 
-  const view = h('div', { class: 'view welcome' }, scene, how, routePreview, startCard);
+  const view = h('div', { class: 'view welcome' }, scene, how, routePreview, settingsPreview, startCard);
   view.addEventListener('view-destroy', () => {
     globe?.destroy();
     window.removeEventListener('pointermove', onPointer);
     window.removeEventListener('scroll', onScroll);
-    cancelAnimationFrame(snowRaf);
   });
   return view;
 }

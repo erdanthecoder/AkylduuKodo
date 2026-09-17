@@ -11,57 +11,100 @@
   isolation: isolate;
   display: grid;
   align-items: center;
+  background: #0a1020;
 }
-.scene-sky {
-  position: absolute; inset: 0; z-index: -6;
+
+/* The photograph, split into two planes so the beach travels further than the
+   lake behind it. Both carry the same picture; the near one is clipped to the
+   sand and pushed slightly forward. */
+.photo-plane {
+  position: absolute; inset: -7%; z-index: -6;
+  will-change: transform;
+}
+.photo-img {
+  position: absolute; inset: 0;
+  background-position: 50% 52%;
+  background-size: cover;
+  background-repeat: no-repeat;
+  filter: blur(16px);
+  transform: scale(1.04);
+  transition: filter 0.9s var(--ease-out);
+}
+.scene.is-loaded .photo-img { filter: none; }
+.scene.is-loaded .photo-far .photo-img { animation: heroPush 30s var(--ease-out) forwards; }
+.scene.is-loaded .photo-near .photo-img { animation: heroPushNear 30s var(--ease-out) forwards; }
+@keyframes heroPush { from { transform: scale(1.1); } to { transform: scale(1.015); } }
+@keyframes heroPushNear { from { transform: scale(1.13); } to { transform: scale(1.04); } }
+
+/* The near plane is the same photograph, masked down to the beach and moved a
+   little further. The mask is a soft band, so the two planes meet invisibly. */
+.photo-near {
+  z-index: -4;
+  -webkit-mask-image: linear-gradient(to bottom, transparent 56%, #000 70%);
+  mask-image: linear-gradient(to bottom, transparent 56%, #000 70%);
+}
+
+/* the sun sits in the gap in the treeline — this lifts it */
+.photo-glow {
+  position: absolute; left: 46%; top: 60%; z-index: -5;
+  width: 46vw; height: 46vw; max-width: 620px; max-height: 620px;
+  margin: -23vw 0 0 -23vw; border-radius: 50%; pointer-events: none;
+  background: radial-gradient(circle, rgba(255, 216, 150, 0.5) 0%, rgba(255, 158, 84, 0.26) 34%, rgba(255, 140, 80, 0) 68%);
+  mix-blend-mode: screen;
+  opacity: 0; animation: glowIn 2.6s 0.5s var(--ease-out) forwards;
+}
+@keyframes glowIn { to { opacity: 1; } }
+
+/* the grade: dark enough at the top to read white type on a bright sky */
+.photo-grade {
+  position: absolute; inset: 0; z-index: -2; pointer-events: none;
   background:
-    linear-gradient(180deg, #060a18 0%, #0d1733 38%, #23305c 66%, #6a4a72 84%, #c9744f 100%);
+    linear-gradient(180deg, rgba(5, 9, 20, 0.68) 0%, rgba(5, 9, 20, 0.28) 28%, rgba(5, 9, 20, 0) 50%, rgba(9, 6, 16, 0.18) 84%, rgba(7, 10, 22, 0.7) 100%),
+    radial-gradient(130% 95% at 50% 42%, transparent 48%, rgba(4, 7, 16, 0.42) 100%);
 }
-.scene-sun {
-  position: absolute; left: 50%; top: 56%; z-index: -5;
-  width: 320px; height: 320px; margin: -160px 0 0 -160px; border-radius: 50%;
-  background: radial-gradient(circle, #ffd9a0 0%, #ff9f5a 38%, rgba(255, 140, 80, 0) 70%);
-  filter: blur(2px);
-  animation: sunRise 3.4s cubic-bezier(0.22, 1, 0.36, 1) backwards;
+
+.photo-birds { position: absolute; inset: 0; z-index: -3; pointer-events: none; }
+.bird {
+  position: absolute; left: -12%; width: 40px; height: 16px;
+  animation: birdCross linear infinite;
 }
-@keyframes sunRise { from { transform: translateY(90px) scale(0.85); opacity: 0; } to { opacity: 1; } }
+.bird svg { display: block; width: 100%; height: 100%; animation: birdFlap 1.9s ease-in-out infinite; }
+@keyframes birdCross { from { transform: translate(0, 0); } to { transform: translate(128vw, -6vh); } }
+@keyframes birdFlap { 0%, 100% { transform: scaleY(1); } 50% { transform: scaleY(0.55); } }
 
-.scene-clouds { position: absolute; inset: 0; z-index: -4; pointer-events: none; }
-.cloud {
-  position: absolute; width: 260px; height: 46px; border-radius: 999px;
-  background: radial-gradient(60% 100% at 30% 50%, rgba(255, 255, 255, 0.16), transparent 70%),
-              radial-gradient(50% 100% at 70% 40%, rgba(255, 255, 255, 0.12), transparent 70%);
-  filter: blur(6px);
-  animation: drift linear infinite;
+.photo-credit {
+  position: absolute; right: 18px; bottom: 16px; z-index: 2;
+  display: inline-flex; align-items: center; gap: 6px;
+  font-family: var(--mono); font-size: 0.66rem; letter-spacing: 0.14em; text-transform: uppercase;
+  color: rgba(238, 244, 255, 0.62); text-shadow: 0 1px 6px rgba(0, 0, 0, 0.7);
+  opacity: 0; animation: riseFade 1s 1.6s var(--ease-out) forwards;
 }
-@keyframes drift { from { margin-left: -40vw; } to { margin-left: 140vw; } }
 
-.ridge { position: absolute; inset: auto 0 -2% 0; z-index: -3; will-change: transform; }
-.ridge:nth-of-type(4) { bottom: -6%; }
-.ridge svg { display: block; width: 104%; height: clamp(220px, 46vh, 420px); margin-left: -2%; }
-.ridge:nth-of-type(5) svg { height: clamp(150px, 30vh, 300px); }
-.ridge:nth-of-type(6) svg { height: clamp(120px, 24vh, 240px); }
-
-.scene-snow { position: absolute; inset: 0; z-index: -2; pointer-events: none; }
 .scene-fade {
   position: absolute; left: 0; right: 0; bottom: 0; height: 180px; z-index: -1; pointer-events: none;
   background: linear-gradient(180deg, transparent, var(--bg));
 }
 
+/* a soft scrim under the words, so type stays readable over a bright sky */
+.scene-title::before {
+  content: ""; position: absolute; inset: -16% -14%; z-index: -1; pointer-events: none;
+  background: radial-gradient(56% 58% at 50% 48%, rgba(5, 9, 20, 0.66), rgba(5, 9, 20, 0.2) 62%, transparent 78%);
+}
 .scene-title {
   position: relative; z-index: 2;
-  max-width: 660px; margin: 0 auto; padding: 0 20px; text-align: center;
+  max-width: 680px; margin: 0 auto; padding: 0 20px 13vh; text-align: center;
   will-change: transform;
 }
 .scene-kicker {
   display: inline-block; margin-bottom: 14px;
   font-family: var(--mono); font-size: 0.72rem; letter-spacing: 0.16em; text-transform: uppercase;
-  color: #ffd8a8; opacity: 0; animation: riseFade 0.9s 0.25s var(--ease-out) forwards;
+  color: #ffd8a8; text-shadow: 0 2px 10px rgba(4, 8, 20, 0.9);
+  opacity: 0; animation: riseFade 0.9s 0.25s var(--ease-out) forwards;
 }
 .scene-title h1 {
   display: block; margin: 0 0 16px;
   font-size: clamp(2.8rem, 9vw, 5.4rem); font-weight: 800; letter-spacing: -0.045em; line-height: 0.95;
-  color: #fff; text-shadow: 0 10px 40px rgba(0, 0, 0, 0.55);
+  color: #fff; text-shadow: 0 10px 40px rgba(0, 0, 0, 0.6), 0 2px 10px rgba(0, 0, 0, 0.5);
 }
 .scene-title .word { display: inline-block; opacity: 0; animation: wordUp 1s var(--ease-out) forwards; }
 .scene-title .word:nth-child(1) { animation-delay: 0.35s; }
@@ -73,7 +116,8 @@
 }
 @keyframes wordUp { from { opacity: 0; transform: translateY(26px) rotate(-2deg); } to { opacity: 1; transform: none; } }
 .scene-title p {
-  margin: 0 auto 26px; max-width: 46ch; color: #dbe4ff; font-size: 1.06rem;
+  margin: 0 auto 26px; max-width: 46ch; color: #e4ebff; font-size: 1.06rem;
+  text-shadow: 0 2px 14px rgba(4, 8, 20, 0.9);
   opacity: 0; animation: riseFade 1s 0.7s var(--ease-out) forwards;
 }
 @keyframes riseFade { from { opacity: 0; transform: translateY(16px); } to { opacity: 1; transform: none; } }
@@ -82,8 +126,8 @@
   opacity: 0; animation: riseFade 1s 0.9s var(--ease-out) forwards;
 }
 .btn-lift { padding: 14px 26px; font-size: 1.02rem; }
-.btn-clear { color: #e7ecff; border-color: rgba(255, 255, 255, 0.28); background: rgba(255, 255, 255, 0.06); }
-.btn-clear:hover:not(:disabled) { background: rgba(255, 255, 255, 0.12); }
+.btn-clear { color: #f2f5ff; border-color: rgba(255, 255, 255, 0.32); background: rgba(10, 16, 32, 0.34); backdrop-filter: blur(6px); }
+.btn-clear:hover:not(:disabled) { background: rgba(10, 16, 32, 0.52); }
 
 /* ============================================================== explainer */
 .how-section, .route-section { padding: 74px 0 10px; }
@@ -195,11 +239,21 @@
 
 @media (max-width: 860px) {
   .scene { height: min(80vh, 620px); margin-inline: -14px; }
-  .how-section, .route-section { padding-top: 54px; }
+  /* portrait crops the lake away, so favour the treeline and the sun */
+  .photo-img { background-position: 54% 34%; }
+  .how-section, .route-section, .control-section { padding-top: 54px; }
+  .photo-credit { right: 14px; bottom: 12px; }
+}
+@media (prefers-reduced-motion: reduce), (max-width: 520px) {
+  .photo-birds { display: none; }
 }
 @media (prefers-reduced-motion: reduce) {
-  .scene-sun, .cloud, .scene-title .word, .scene-kicker, .scene-title p, .scene-cta,
-  .how-card, .flight-skip, .lesson-enter, .step-body > * { animation: none !important; opacity: 1 !important; transform: none !important; }
+  .photo-img, .photo-glow, .bird, .scene-title .word, .scene-kicker,
+  .scene-title p, .scene-cta, .photo-credit, .how-card, .control-card,
+  .flight-skip, .lesson-enter, .step-body > * {
+    animation: none !important; opacity: 1 !important;
+  }
+  .photo-img { transform: scale(1.02) !important; }
 }
 
 /* The entrance is a full-bleed film frame: no rail, no top bar, no chrome. */
@@ -209,38 +263,38 @@ body[data-view="welcome"] .nav { display: none; }
 body[data-view="welcome"] .main { max-width: none; padding: 0 0 40px; }
 body[data-view="welcome"] .how-section,
 body[data-view="welcome"] .route-section,
+body[data-view="welcome"] .control-section,
 body[data-view="welcome"] .start-card { max-width: 1060px; margin-inline: auto; padding-inline: 20px; }
 body[data-view="welcome"] .scene { margin: 0; height: min(96vh, 900px); }
 
-/* the sun belongs behind the words, not through them */
-.scene-sun { top: 74%; width: 420px; height: 420px; margin: -210px 0 0 -210px; opacity: 0.85; }
-.scene-title::before {
-  content: ""; position: absolute; inset: -12% -18%; z-index: -1;
-  background: radial-gradient(60% 60% at 50% 45%, rgba(6, 10, 24, 0.72), transparent 72%);
-}
-.scene-title p { text-shadow: 0 2px 14px rgba(4, 8, 20, 0.85); }
-
-/* grander peaks */
-.ridge svg { height: clamp(260px, 54vh, 520px); }
-.ridge:nth-of-type(5) svg { height: clamp(190px, 38vh, 360px); }
-.ridge:nth-of-type(6) svg { height: clamp(150px, 30vh, 290px); }
-
 /* ============================================================== the planet */
-.scene-globe {
-  position: absolute; inset: 0; z-index: -4;
-  display: grid; place-items: center;
-  pointer-events: auto;
-}
 .globe-canvas { display: block; width: 100%; height: 100%; touch-action: none; }
-/* with a planet behind it, the painted sky steps back and the ridges become
-   a dark foreground silhouette rather than the subject */
-.has-globe .scene-sky { opacity: 0.55; }
-.has-globe .scene-sun { opacity: 0.35; }
-.has-globe .ridge svg path { fill: #05070f; }
-.has-globe .ridge:nth-of-type(3) svg path { fill: #070a16; }
-.has-globe .scene-clouds { opacity: 0.35; }
-.has-globe .scene-title { pointer-events: none; }
-.has-globe .scene-title .btn { pointer-events: auto; }
+.route-frame-3d { position: relative; background: radial-gradient(70% 70% at 50% 42%, #0a1226, #04070f); }
+.route-globe { width: 100%; aspect-ratio: 16 / 10; }
+.route-globe .globe-canvas { cursor: grab; }
+.route-globe .globe-canvas:active { cursor: grabbing; }
+@media (max-width: 700px) { .route-globe { aspect-ratio: 4 / 3; } }
+
+/* ==================================================== what you can change */
+.control-section { padding: 74px 0 10px; }
+.control-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(270px, 1fr)); gap: 14px; }
+.control-card {
+  display: flex; gap: 14px; padding: 18px;
+  border-radius: var(--r-lg); background: var(--card); border: 1px solid var(--line);
+  opacity: 0; transform: translateY(18px);
+  animation: riseFade 0.6s var(--ease-out) forwards;
+  animation-delay: calc(var(--i) * 80ms + 80ms);
+  transition: border-color var(--t-med), transform var(--t-med) var(--ease-out);
+}
+.control-card:hover { transform: translateY(-3px); border-color: var(--line-strong); }
+.control-mark {
+  flex: none; display: grid; place-items: center; width: 36px; height: 36px;
+  border-radius: var(--r-sm); color: var(--sky);
+  background: color-mix(in srgb, var(--sky) 14%, transparent);
+  border: 1px solid color-mix(in srgb, var(--sky) 24%, transparent);
+}
+.control-card h3 { margin: 0 0 4px; font-size: 1rem; }
+.control-card p { margin: 0; color: var(--muted); font-size: 0.9rem; }
 
 .flight-overlay-3d .flight-inner { gap: 10px; }
 .flight-globe {
@@ -252,7 +306,7 @@ body[data-view="welcome"] .scene { margin: 0; height: min(96vh, 900px); }
 .flight-globe .globe-canvas { cursor: grab; }
 
 .globe-hint {
-  position: absolute; left: 50%; bottom: 18px; transform: translateX(-50%);
+  position: absolute; right: 16px; top: 14px;
   font-family: var(--mono); font-size: 0.68rem; letter-spacing: 0.14em;
   text-transform: uppercase; color: rgba(220, 232, 255, 0.55);
   pointer-events: none;
