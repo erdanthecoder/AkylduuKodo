@@ -1,10 +1,10 @@
 // home.js — the dashboard: where you are, what is next, how the week is going.
 
 import { h } from '../ui.js';
-import { icon } from '../icons.js';
+import { icon, mascot } from '../icons.js';
 import { ui, t } from '../i18n.js';
 import * as store from '../state.js';
-import { nextUpFor, UNITS } from '../data/index.js';
+import { nextUpFor, UNITS, ALL_LESSONS } from '../data/index.js';
 import * as auth from '../auth.js';
 
 const DAY_LETTERS = ['M', 'T', 'W', 'T', 'F', 'S', 'S'];
@@ -15,6 +15,7 @@ export function HomeView(go) {
   const lvl = store.level();
   const streak = store.streak();
   const next = nextUpFor(s.done);
+  const lessonNumber = next ? ALL_LESSONS.findIndex((l) => l.id === next.id) + 1 : 0;
   const doneCount = Object.keys(s.done).length;
 
   const weekDays = h('div', { class: 'week-strip' });
@@ -41,6 +42,7 @@ export function HomeView(go) {
     h(
       'section',
       { class: 'card hero' },
+      h('div', { class: 'hero-mascot' }, mascot(110, 'happy')),
       h('div', { class: 'hero-text' },
         h('h1', {}, s.name ? `${ui('welcome')}, ${s.name}!` : ui('welcome_new')),
         h('p', { class: 'muted' }, ui('tagline')),
@@ -78,7 +80,7 @@ export function HomeView(go) {
       ? h('section', { class: 'card next-card' },
           h('div', { class: 'next-mark' }, icon(next.icon, { size: 26 })),
           h('div', { class: 'next-body' },
-            h('small', { class: 'muted' }, t(next.unitTitle)),
+            h('small', { class: 'muted' }, `${t(next.unitTitle)} · Lesson ${lessonNumber}`),
             h('h3', {}, t(next.title)),
             h('p', { class: 'muted' }, t(next.blurb)),
             h('div', { class: 'chips' },

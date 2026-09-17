@@ -1,7 +1,7 @@
 // app.js — router, top bar, bottom nav, and the first-run welcome.
 
 import { h, clear, sfx, confetti } from './ui.js';
-import { icon } from './icons.js';
+import { icon, mascot } from './icons.js';
 import { ui, LANGS } from './i18n.js';
 import * as store from './state.js';
 import { HomeView } from './views/home.js';
@@ -61,6 +61,8 @@ function render() {
   void route;
   const path = (location.hash || '#/home').replace('#/', '').split('/');
 
+  document.body.dataset.view = path[0] || 'home';
+
   switch (path[0]) {
     case 'journey':
       mount(JourneyView(go));
@@ -95,7 +97,7 @@ function paintChrome() {
   const xpPill = h('span', { class: 'pill', title: ui('xp') }, icon('bolt', { size: 15 }), h('b', { class: 'xp-count' }, String(lastXp)));
   clear(bar).append(
     h('button', { class: 'brand', onclick: () => go('#/home') },
-      h('span', { class: 'brand-mark' }, icon('mountain', { size: 22 })),
+      h('span', { class: 'brand-mark' }, '\u{1F3D4}\uFE0F'),
       h('span', { class: 'brand-name' }, 'Akyldu', h('em', {}, 'u'), 'Kodo'),
     ),
     h('div', { class: 'top-stats' },
@@ -136,7 +138,7 @@ function Onboarding() {
 
   const el = h('div', { class: 'view onboard' },
     h('div', { class: 'card hero onboard-hero' },
-      h('div', { class: 'big-mark' }, icon('mountain', { size: 54 })),
+      h('div', { class: 'onboard-mascot' }, mascot(140, 'happy')),
       h('h1', {}, 'AkylduuKodo'),
       h('p', { class: 'muted' }, 'Learn to write real code, one clear step at a time.'),
     ),

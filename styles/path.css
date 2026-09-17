@@ -1,0 +1,208 @@
+/* path.css — the lesson trail: numbered 3D nodes, one clear next step,
+   and a different backdrop for every part of the course. */
+
+.journey-head {
+  display: flex; align-items: center; justify-content: space-between; gap: 16px; flex-wrap: wrap;
+  margin-bottom: 4px;
+}
+.btn-jump { padding: 13px 22px; font-size: 1rem; }
+
+.path { display: flex; flex-direction: column; gap: 22px; }
+
+/* ------------------------------------------------ part bands (backgrounds) */
+.band {
+  position: relative;
+  border-radius: 26px;
+  padding: 24px 18px 40px;
+  border: 1px solid var(--line);
+  overflow: hidden;
+  isolation: isolate;
+}
+.band::before {
+  content: ""; position: absolute; inset: 0; z-index: -1; opacity: 0.9;
+}
+.band::after {
+  content: ""; position: absolute; inset: 0; z-index: -1; opacity: 0.5;
+  background-size: 26px 26px;
+}
+
+/* Each part gets its own sky and its own pattern. */
+.band-1::before { background: linear-gradient(160deg, #1b2450, #121a3c 60%, #0d1330); }
+.band-1::after  { background-image: radial-gradient(rgba(255, 255, 255, 0.12) 1px, transparent 1px); }
+
+.band-2::before { background: linear-gradient(160deg, #2a1d4d, #1a1440 60%, #120f30); }
+.band-2::after  { background-image: repeating-linear-gradient(45deg, rgba(255,255,255,.05) 0 2px, transparent 2px 14px); }
+
+.band-3::before { background: linear-gradient(160deg, #10323c, #0f2436 60%, #0b1a2c); }
+.band-3::after  { background-image: repeating-linear-gradient(90deg, rgba(255,255,255,.055) 0 1px, transparent 1px 22px); }
+
+.band-4::before { background: linear-gradient(160deg, #3a2340, #251a3c 60%, #16122e); }
+.band-4::after  { background-image: radial-gradient(rgba(255,255,255,.1) 1.4px, transparent 1.4px); background-size: 34px 34px; }
+
+.band-5::before { background: linear-gradient(160deg, #122f33, #102a3a 60%, #0c1c30); }
+.band-5::after  { background-image: repeating-linear-gradient(-45deg, rgba(255,255,255,.05) 0 2px, transparent 2px 16px); }
+
+.band-6::before { background: linear-gradient(160deg, #35203a, #221741 60%, #141031); }
+.band-6::after  { background-image: radial-gradient(circle at 50% 0, rgba(255,255,255,.1), transparent 60%); background-size: auto; }
+
+.band-7::before { background: linear-gradient(160deg, #1d2a52, #17203f 60%, #0e1430); }
+.band-7::after  { background-image: repeating-linear-gradient(0deg, rgba(255,255,255,.05) 0 1px, transparent 1px 20px); }
+
+@media (prefers-color-scheme: light) {
+  .band-1::before { background: linear-gradient(160deg, #e8edff, #f6f8ff); }
+  .band-2::before { background: linear-gradient(160deg, #f1e9ff, #faf6ff); }
+  .band-3::before { background: linear-gradient(160deg, #e2f5f4, #f3fbfa); }
+  .band-4::before { background: linear-gradient(160deg, #fae9f6, #fdf5fb); }
+  .band-5::before { background: linear-gradient(160deg, #e5f3ec, #f5fbf8); }
+  .band-6::before { background: linear-gradient(160deg, #f6ecff, #fbf7ff); }
+  .band-7::before { background: linear-gradient(160deg, #e9eeff, #f7f9ff); }
+  .band::after { opacity: 0.35; }
+}
+
+.band-head { display: flex; align-items: flex-start; gap: 14px; margin-bottom: 26px; }
+.band-mark {
+  display: inline-flex; align-items: center; justify-content: center;
+  width: 44px; height: 44px; border-radius: 14px; color: var(--accent);
+  background: color-mix(in srgb, var(--accent) 16%, transparent);
+  border: 1px solid color-mix(in srgb, var(--accent) 30%, transparent);
+}
+.band-kicker {
+  font-size: 0.7rem; font-weight: 800; letter-spacing: 0.14em; text-transform: uppercase; color: var(--accent);
+}
+.band-text h2 { margin: 2px 0 4px; }
+.band-text p { color: var(--muted); margin: 0; font-size: 0.92rem; }
+.band-progress { margin-left: auto; padding-top: 12px; }
+
+/* ------------------------------------------------ the trail */
+.trail { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; align-items: center; gap: 30px; }
+.trail-item {
+  position: relative;
+  display: flex; flex-direction: column; align-items: center; gap: 9px;
+  transform: translateX(var(--shift, 0));
+  transition: transform 0.3s ease;
+}
+
+/* the dotted trail between nodes */
+.trail-item::before {
+  content: ""; position: absolute; top: -34px; left: 50%; width: 4px; height: 34px;
+  background: repeating-linear-gradient(var(--line) 0 5px, transparent 5px 10px);
+  transform: translateX(-50%);
+}
+.trail-item:first-child::before { display: none; }
+
+/* 3D pressable node, Duolingo-style: a solid rim underneath that the face
+   sinks into when pressed. */
+.node {
+  width: 78px; height: 78px; border-radius: 50%;
+  border: 0; padding: 0; cursor: pointer; position: relative;
+  background: var(--node-rim, #2b3566);
+  box-shadow: 0 8px 0 0 var(--node-rim-dark, #1a2049), 0 12px 22px rgba(0, 0, 0, 0.42);
+  transition: transform 0.12s ease, box-shadow 0.12s ease;
+}
+.node-face {
+  position: absolute; inset: 4px 4px 10px;
+  border-radius: 50%;
+  display: grid; place-items: center;
+  background: var(--node-face, #3a4680);
+  color: #fff; font-weight: 900;
+  box-shadow: inset 0 -3px 0 rgba(0, 0, 0, 0.18), inset 0 3px 0 rgba(255, 255, 255, 0.16);
+}
+.node-num { font-size: 1.5rem; letter-spacing: -0.02em; }
+.node:not(:disabled):hover { transform: translateY(-2px); box-shadow: 0 10px 0 0 var(--node-rim-dark), 0 16px 26px rgba(0,0,0,.45); }
+.node:not(:disabled):active { transform: translateY(6px); box-shadow: 0 2px 0 0 var(--node-rim-dark), 0 6px 12px rgba(0,0,0,.4); }
+
+.node-done { --node-rim: #2f9e63; --node-rim-dark: #1d6b43; }
+.node-done .node-face { --node-face: #48d18a; color: #06301c; }
+.node-open { --node-rim: #4a3f8f; --node-rim-dark: #302963; }
+.node-open .node-face { --node-face: #6f5fd6; }
+.node-locked { --node-rim: #232a4d; --node-rim-dark: #1a2040; cursor: not-allowed; opacity: 0.75; }
+.node-locked .node-face { --node-face: #2c3459; color: var(--muted); }
+
+.node-next {
+  --node-rim: #d99a23; --node-rim-dark: #a06d10;
+  width: 96px; height: 96px;
+  animation: nodeBob 2.4s ease-in-out infinite;
+}
+.node-next .node-face { --node-face: var(--accent); color: #2c1c04; }
+.node-next .node-num { font-size: 1.9rem; }
+@keyframes nodeBob {
+  0%, 100% { transform: translateY(0); }
+  50% { transform: translateY(-6px); }
+}
+
+/* the "Start" speech bubble above the current node */
+.node-callout {
+  position: relative;
+  background: var(--accent); color: #2c1c04;
+  font-weight: 900; font-size: 0.8rem; letter-spacing: 0.1em; text-transform: uppercase;
+  padding: 7px 16px; border-radius: 999px;
+  box-shadow: 0 4px 0 0 #a06d10;
+  animation: calloutPop 2.4s ease-in-out infinite;
+}
+.node-callout::after {
+  content: ""; position: absolute; bottom: -8px; left: 50%; transform: translateX(-50%);
+  border: 6px solid transparent; border-top-color: var(--accent);
+}
+@keyframes calloutPop {
+  0%, 100% { transform: translateY(0) scale(1); }
+  50% { transform: translateY(-4px) scale(1.04); }
+}
+
+.node-label { text-align: center; display: flex; flex-direction: column; align-items: center; gap: 3px; max-width: 240px; }
+.node-label strong { font-size: 0.74rem; letter-spacing: 0.12em; text-transform: uppercase; color: var(--muted); }
+.node-label > span { font-weight: 700; font-size: 0.98rem; }
+.node-meta { display: inline-flex; align-items: center; gap: 6px; font-size: 0.76rem; color: var(--muted); }
+.node-kinds { display: inline-flex; gap: 3px; opacity: 0.8; margin-left: 2px; }
+.trail-locked .node-label > span { color: var(--muted); }
+
+/* the mascot stands next to whatever you should do next */
+.trail-mascot {
+  position: absolute; left: calc(50% + 78px); top: 4px;
+  animation: mascotIdle 3.4s ease-in-out infinite;
+  pointer-events: none;
+}
+.trail-item:nth-child(even) .trail-mascot { left: auto; right: calc(50% + 78px); transform: scaleX(-1); }
+@keyframes mascotIdle {
+  0%, 100% { transform: translateY(0) rotate(-2deg); }
+  50% { transform: translateY(-8px) rotate(2deg); }
+}
+.trail-item:nth-child(even) .trail-mascot { animation-name: mascotIdleFlip; }
+@keyframes mascotIdleFlip {
+  0%, 100% { transform: scaleX(-1) translateY(0) rotate(2deg); }
+  50% { transform: scaleX(-1) translateY(-8px) rotate(-2deg); }
+}
+.mascot .pupil { animation: look 5s ease-in-out infinite; }
+@keyframes look {
+  0%, 40%, 100% { transform: translateX(0); }
+  50%, 70% { transform: translateX(2px); }
+}
+
+@media (max-width: 720px) {
+  .trail-item { transform: translateX(calc(var(--shift, 0) * 0.45)); }
+  .trail-mascot { display: none; }
+  .node { width: 66px; height: 66px; }
+  .node-next { width: 82px; height: 82px; }
+  .band { padding: 20px 10px 32px; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .node-next, .node-callout, .trail-mascot, .mascot .pupil { animation: none !important; }
+}
+
+/* ------------------------------------------------ mascot placements */
+.hero { position: relative; }
+.hero-mascot { flex: none; margin-right: 4px; animation: mascotIdle 4s ease-in-out infinite; }
+.onboard-mascot { display: flex; justify-content: center; animation: mascotIdle 4s ease-in-out infinite; }
+.celebrate .mascot { animation: cheer 1s cubic-bezier(0.34, 1.56, 0.64, 1); }
+
+/* ------------------------------------------------ a backdrop per section */
+body[data-view="journey"] { --tint: var(--purple); }
+body[data-view="practice"] { --tint: var(--accent-2); }
+body[data-view="lab"] { --tint: var(--blue); }
+body[data-view="settings"], body[data-view="account"] { --tint: var(--muted); }
+body[data-view="home"] { --tint: var(--accent); }
+body::after {
+  content: ""; position: fixed; inset: 0; z-index: -3; pointer-events: none;
+  background: radial-gradient(60% 50% at 50% 0%, color-mix(in srgb, var(--tint, var(--accent)) 16%, transparent), transparent 70%);
+  transition: background 0.6s ease;
+}

@@ -1,10 +1,12 @@
-// journey.js — the map of units and lessons.
+// journey.js — the path. One node per lesson, numbered, walked from the top
+// down. Exactly one node is "next", it is the biggest thing on screen, and the
+// mascot stands beside it, so there is never a question about what to do.
 
 import { h, starRow } from '../ui.js';
-import { icon } from '../icons.js';
+import { icon, mascot } from '../icons.js';
 import { ui, t } from '../i18n.js';
 import * as store from '../state.js';
-import { UNITS, isUnlocked } from '../data/index.js';
+import { UNITS, ALL_LESSONS, isUnlocked } from '../data/index.js';
 
 const STEP_ICON = {
   teach: 'book',
@@ -18,59 +20,99 @@ const STEP_ICON = {
   unplugged: 'globe',
 };
 
+/** Nodes swing left and right down the page, like a mountain trail. */
+const OFFSETS = [0, 62, 88, 62, 0, -62, -88, -62];
+
 export function JourneyView(go) {
   const s = store.get();
+  const nextUp = ALL_LESSONS.find((l) => !s.done[l.id]);
+  let number = 0;
+
+  const path = h('div', { class: 'path' });
+
+  UNITS.forEach((unit, unitIndex) => {
+    const done = unit.lessons.filter((l) => s.done[l.id]).length;
+    const band = h('section', { class: `band band-${(unitIndex % 7) + 1}` });
+
+    band.append(
+      h('header', { class: 'band-head' },
+        h('span', { class: 'band-mark' }, icon(unit.icon, { size: 22 })),
+        h('div', { class: 'band-text' },
+          h('span', { class: 'band-kicker' }, `Part ${unitIndex + 1}`),
+          h('h2', {}, t(unit.title)),
+          h('p', {}, t(unit.blurb)),
+        ),
+        h('span', { class: 'band-progress' },
+          h('span', { class: 'mini-bar' },
+            h('span', { class: 'mini-bar-fill', style: `width:${Math.round((done / unit.lessons.length) * 100)}%` })),
+        ),
+      ),
+    );
+
+    const trail = h('ol', { class: 'trail' });
+
+    unit.lessons.forEach((lesson) => {
+      number += 1;
+      const record = s.done[lesson.id];
+      const open = isUnlocked(lesson.id, s.done);
+      const isNext = nextUp && nextUp.id === lesson.id;
+      const state = record ? 'done' : isNext ? 'next' : open ? 'open' : 'locked';
+
+      const node = h(
+        'button',
+        {
+          class: `node node-${state}`,
+          disabled: !open,
+          title: open ? t(lesson.title) : ui('locked'),
+          onclick: () => open && go(`#/lesson/${lesson.id}`),
+        },
+        h('span', { class: 'node-face' },
+          record ? icon('check', { size: 30 }) : open ? h('span', { class: 'node-num' }, String(number)) : icon('lock', { size: 22 }),
+        ),
+      );
+
+      const item = h(
+        'li',
+        { class: `trail-item trail-${state}` },
+        isNext ? h('span', { class: 'node-callout' }, ui('start')) : null,
+        node,
+        h('div', { class: 'node-label' },
+          h('strong', {}, `Lesson ${number}`),
+          h('span', {}, t(lesson.title)),
+          record
+            ? starRow(record.stars, 3, 13)
+            : h('span', { class: 'node-meta' },
+                icon('clock', { size: 12 }), `${lesson.minutes} min`,
+                h('span', { class: 'node-kinds' },
+                  ...[...new Set(lesson.steps.map((st) => STEP_ICON[st.type] || 'code'))].slice(0, 5)
+                    .map((n) => icon(n, { size: 13 })),
+                ),
+              ),
+        ),
+        isNext ? h('span', { class: 'trail-mascot' }, mascot(92, 'happy')) : null,
+      );
+      item.style.setProperty('--shift', OFFSETS[(number - 1) % OFFSETS.length] + 'px');
+      trail.append(item);
+    });
+
+    band.append(trail);
+    path.append(band);
+  });
 
   return h(
     'div',
     { class: 'view journey' },
-    h('h1', { class: 'view-title' }, ui('nav_journey')),
-    ...UNITS.map((unit, ui_i) => {
-      const done = unit.lessons.filter((l) => s.done[l.id]).length;
-      return h(
-        'section',
-        { class: `card unit unit-${ui_i + 1}` },
-        h('div', { class: 'unit-head' },
-          h('span', { class: 'unit-mark' }, icon(unit.icon, { size: 24 })),
-          h('div', {},
-            h('h2', {}, t(unit.title)),
-            h('p', { class: 'muted' }, t(unit.blurb)),
-          ),
-          h('span', { class: 'unit-progress' },
-            h('span', { class: 'mini-bar' }, h('span', { class: 'mini-bar-fill', style: `width:${Math.round((done / unit.lessons.length) * 100)}%` })),
-          ),
-        ),
-        h('div', { class: 'lesson-grid' },
-          ...unit.lessons.map((lesson) => {
-            const record = s.done[lesson.id];
-            const open = isUnlocked(lesson.id, s.done);
-            const card = h(
-              'button',
-              {
-                class: `lesson-card ${record ? 'lesson-done' : ''} ${open ? '' : 'lesson-locked'}`,
-                disabled: !open,
-                title: open ? '' : ui('locked'),
-                onclick: () => open && go(`#/lesson/${lesson.id}`),
-              },
-              h('div', { class: 'lesson-card-top' },
-                h('span', { class: 'lesson-card-mark' }, icon(open ? lesson.icon : 'lock', { size: 22 })),
-                record ? starRow(record.stars, 3, 13) : null,
-              ),
-              h('strong', {}, t(lesson.title)),
-              h('small', { class: 'muted' }, t(lesson.blurb)),
-              h('div', { class: 'lesson-card-foot' },
-                h('span', { class: 'chip' }, icon('clock', { size: 12 }), `${lesson.minutes}m`),
-                h('span', { class: 'chip' }, icon('bolt', { size: 12 }), String(lesson.xp)),
-                h('span', { class: 'kinds' },
-                  ...[...new Set(lesson.steps.map((st) => STEP_ICON[st.type] || 'code'))].map((n) => icon(n, { size: 14 })),
-                ),
-              ),
-              h('span', { class: 'lesson-cta' }, record ? ui('replay') : ui('start')),
-            );
-            return card;
-          }),
-        ),
-      );
-    }),
+    h('div', { class: 'journey-head' },
+      h('div', {},
+        h('h1', { class: 'view-title' }, ui('nav_journey')),
+        h('p', { class: 'muted' },
+          nextUp ? `Next up: Lesson ${ALL_LESSONS.indexOf(nextUp) + 1} — ${t(nextUp.title)}` : 'Every lesson finished. Try the practice drills.'),
+      ),
+      nextUp
+        ? h('button', { class: 'btn btn-primary btn-jump', onclick: () => go(`#/lesson/${nextUp.id}`) },
+            ui('continue'), icon('arrowRight', { size: 17 }))
+        : null,
+    ),
+    path,
   );
 }

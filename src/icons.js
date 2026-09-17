@@ -103,3 +103,59 @@ export function rover(size = 30) {
     <rect x="17" y="23" width="4" height="3" rx="1.4" fill="currentColor" opacity=".7"/>`;
   return el;
 }
+
+/**
+ * Taka, the mountain who teaches here: a peak with a face, arms and legs.
+ * Moods change the eyes and mouth so the same character can cheer, think or
+ * sleep next to a locked lesson.
+ */
+export function mascot(size = 96, mood = 'happy') {
+  const el = document.createElementNS(SVG_NS, 'svg');
+  el.setAttribute('viewBox', '0 0 120 120');
+  el.setAttribute('width', String(size));
+  el.setAttribute('height', String(size));
+  el.setAttribute('class', `mascot mascot-${mood}`);
+  el.setAttribute('aria-hidden', 'true');
+
+  const face = {
+    happy: '<path d="M50 74 Q60 84 70 74" stroke="#2a1c46" stroke-width="4" stroke-linecap="round" fill="none"/>',
+    cheer: '<path d="M48 72 Q60 88 72 72 Z" fill="#2a1c46"/><path d="M50 74 Q60 82 70 74" fill="#ff8fb0"/>',
+    think: '<path d="M52 78 Q60 72 68 78" stroke="#2a1c46" stroke-width="4" stroke-linecap="round" fill="none"/>',
+    sleep: '<path d="M52 76 h16" stroke="#2a1c46" stroke-width="4" stroke-linecap="round"/>',
+  }[mood] || '';
+
+  const eyes =
+    mood === 'sleep'
+      ? '<path d="M42 62 q6 5 12 0M66 62 q6 5 12 0" stroke="#2a1c46" stroke-width="3.4" stroke-linecap="round" fill="none"/>'
+      : '<ellipse cx="48" cy="62" rx="7.5" ry="8.5" fill="#fff"/><ellipse cx="72" cy="62" rx="7.5" ry="8.5" fill="#fff"/>' +
+        '<circle class="pupil" cx="49" cy="63" r="3.6" fill="#2a1c46"/><circle class="pupil" cx="73" cy="63" r="3.6" fill="#2a1c46"/>' +
+        '<circle cx="50.4" cy="61.4" r="1.2" fill="#fff"/><circle cx="74.4" cy="61.4" r="1.2" fill="#fff"/>';
+
+  el.innerHTML = `
+    <defs>
+      <linearGradient id="rock" x1="0" y1="0" x2="0" y2="1">
+        <stop offset="0" stop-color="#8f7bf5"/><stop offset="1" stop-color="#5b46c4"/>
+      </linearGradient>
+    </defs>
+    <g class="mascot-legs">
+      <path d="M46 96v10M74 96v10" stroke="#5b46c4" stroke-width="7" stroke-linecap="round"/>
+      <ellipse cx="44" cy="109" rx="10" ry="6" fill="#2a1c46"/>
+      <ellipse cx="76" cy="109" rx="10" ry="6" fill="#2a1c46"/>
+    </g>
+    <g class="mascot-arms">
+      <path class="arm-left" d="M26 74q-10-6-12-18" stroke="#5b46c4" stroke-width="7" stroke-linecap="round" fill="none"/>
+      <path class="arm-right" d="M94 74q10-6 12-18" stroke="#5b46c4" stroke-width="7" stroke-linecap="round" fill="none"/>
+      <circle cx="13" cy="54" r="5.4" fill="#8f7bf5"/>
+      <circle cx="107" cy="54" r="5.4" fill="#8f7bf5"/>
+    </g>
+    <g class="mascot-body">
+      <path d="M60 14 L100 88 Q104 98 94 98 H26 Q16 98 20 88 Z" fill="url(#rock)"/>
+      <path d="M60 14 L76 44 Q68 38 60 44 Q52 50 44 44 Z" fill="#f4f7ff"/>
+      <path d="M60 14 L68 29 Q63 26 60 29 Z" fill="#d9e2ff"/>
+      ${eyes}
+      ${face}
+      <ellipse cx="36" cy="76" rx="6" ry="4" fill="#ff8fb0" opacity=".55"/>
+      <ellipse cx="84" cy="76" rx="6" ry="4" fill="#ff8fb0" opacity=".55"/>
+    </g>`;
+  return el;
+}
