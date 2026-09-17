@@ -2,6 +2,7 @@ import { all, said, linesAre, uses, avoids, varIs, saidContains } from './checks
 
 export default {
   id: 'u6',
+  level: 'expert',
   icon: 'wand',
   title: { en: 'Text Workshop', ky: 'Текст устаканасы' },
   blurb: 'Cut, join and rebuild words. This is how chat apps, search boxes and secret codes work.',

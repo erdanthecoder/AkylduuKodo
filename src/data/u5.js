@@ -2,6 +2,7 @@ import { all, said, linesAre, uses, avoids, varIs, saidContains } from './checks
 
 export default {
   id: 'u5',
+  level: 'intermediate',
   icon: 'layers',
   title: { en: 'Lists & Things', ky: 'Тизмелер жана нерселер' },
   blurb: 'Handle many values at once — then build your final project.',

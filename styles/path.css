@@ -206,3 +206,20 @@ body::after {
   background: radial-gradient(60% 50% at 50% 0%, color-mix(in srgb, var(--tint, var(--accent)) 16%, transparent), transparent 70%);
   transition: background 0.6s ease;
 }
+
+/* ------------------------------------------------ difficulty tiers */
+.level-divider {
+  display: flex; align-items: center; gap: 12px; flex-wrap: wrap;
+  margin: 10px 2px -6px;
+}
+.level-chip {
+  font-size: 0.74rem; font-weight: 900; letter-spacing: 0.14em; text-transform: uppercase;
+  padding: 7px 16px; border-radius: 999px; color: #12162b;
+  box-shadow: 0 4px 0 0 rgba(0, 0, 0, 0.35);
+}
+.level-beginner .level-chip { background: linear-gradient(135deg, #7ff0b0, #35c47f); }
+.level-intermediate .level-chip { background: linear-gradient(135deg, var(--accent), #f0a93c); }
+.level-expert .level-chip { background: linear-gradient(135deg, var(--accent-2), #c05fa6); }
+.level-blurb { color: var(--muted); font-size: 0.88rem; }
+.level-divider::after { content: ""; flex: 1; height: 1px; background: var(--line); min-width: 20px; }
+.band-kicker { text-transform: uppercase; }

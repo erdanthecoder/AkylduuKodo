@@ -20,7 +20,7 @@
   --radius-sm: 12px;
   --shadow: 0 18px 40px -18px rgba(0, 0, 0, 0.75), 0 2px 6px rgba(0, 0, 0, 0.3);
   --mono: ui-monospace, "SF Mono", "Cascadia Code", "JetBrains Mono", Menlo, Consolas, monospace;
-  --sans: system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", sans-serif;
+  --sans: "Nunito", system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", sans-serif;
 }
 
 @media (prefers-color-scheme: light) {
@@ -637,3 +637,59 @@ h2 .icon, h1 .icon { color: var(--accent); vertical-align: -0.16em; margin-right
 .day { padding: 10px 2px; border-radius: 14px; }
 .badge { padding: 14px 8px; border-radius: 16px; }
 .screen-body { min-height: 140px; }
+
+/* ============================================================ live page preview */
+.page-shell {
+  border: 1px solid var(--line); border-radius: var(--radius-sm); overflow: hidden;
+  background: #fff; box-shadow: 0 10px 30px -14px rgba(0, 0, 0, 0.6);
+}
+.page-bar {
+  display: flex; align-items: center; gap: 10px; padding: 7px 12px;
+  background: var(--card-2); border-bottom: 1px solid var(--line);
+  font-size: 0.72rem; color: var(--muted); font-weight: 700; letter-spacing: 0.04em;
+}
+.page-frame { display: block; width: 100%; border: 0; background: #fff; }
+.example .page-frame { border-radius: var(--radius-sm); border: 1px solid var(--line); }
+
+/* ============================================================ chunky buttons
+   Every important button is a physical object: a coloured face sitting on a
+   darker rim that it presses into. Same language as the lesson nodes. */
+.btn-primary, .btn-run, .btn-danger, .btn-big {
+  border: 0;
+  font-weight: 800;
+  letter-spacing: 0.01em;
+  padding: 12px 20px;
+  box-shadow: 0 4px 0 0 var(--btn-rim, rgba(0, 0, 0, 0.35));
+  transition: transform 0.08s ease, box-shadow 0.08s ease, filter 0.2s ease;
+}
+.btn-primary { --btn-rim: #b87d18; color: #2c1c04; }
+.btn-run { --btn-rim: #1f8b5b; color: #04281a; }
+.btn-danger { --btn-rim: #a3384a; }
+.btn-primary:active:not(:disabled),
+.btn-run:active:not(:disabled),
+.btn-danger:active:not(:disabled) {
+  transform: translateY(4px);
+  box-shadow: 0 0 0 0 var(--btn-rim);
+}
+.btn-ghost { border: 1.5px solid var(--line); font-weight: 700; }
+.btn-ghost:hover:not(:disabled) { border-color: color-mix(in srgb, var(--accent) 55%, var(--line)); }
+.option { border-width: 1.5px; box-shadow: 0 3px 0 0 rgba(0, 0, 0, 0.22); }
+.option:active:not(:disabled) { transform: translateY(3px); box-shadow: none; }
+.chip-on { box-shadow: 0 3px 0 0 #b87d18; }
+
+/* ============================================================ lesson header */
+.lesson-progress {
+  flex: 1; min-width: 120px; height: 12px; border-radius: 999px;
+  background: var(--bg-2); border: 1px solid var(--line); overflow: hidden;
+}
+.lesson-progress-fill {
+  display: block; height: 100%; border-radius: 999px;
+  background: linear-gradient(90deg, var(--ok), var(--blue));
+  transition: width 0.45s cubic-bezier(0.22, 1, 0.36, 1);
+}
+.lesson-step-count { font-size: 0.78rem; font-weight: 800; color: var(--muted); white-space: nowrap; }
+.lesson-head { gap: 14px; }
+
+/* headings get the display weight of the new face */
+h1, h2, .view-title, .stat-value, .node-num { font-weight: 900; }
+.btn, .chip, .tab, .nav-label { font-weight: 800; }

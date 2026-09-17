@@ -1,3 +1,4 @@
+import u0 from './u0.js';
 import u1 from './u1.js';
 import u2 from './u2.js';
 import u3 from './u3.js';
@@ -6,7 +7,13 @@ import u5 from './u5.js';
 import u6 from './u6.js';
 import u7 from './u7.js';
 
-export const UNITS = [u1, u2, u3, u4, u5, u6, u7];
+export const UNITS = [u0, u1, u2, u3, u4, u5, u6, u7];
+
+export const LEVELS = [
+  { id: 'beginner', label: 'Beginner', blurb: 'Tiny steps. Nothing assumed.' },
+  { id: 'intermediate', label: 'Intermediate', blurb: 'You can read code now — start building.' },
+  { id: 'expert', label: 'Expert', blurb: 'Real problems, fewer hints.' },
+];
 
 export const ALL_LESSONS = UNITS.flatMap((u) =>
   u.lessons.map((l) => ({ ...l, unitId: u.id, unitIcon: u.icon, unitTitle: u.title })),

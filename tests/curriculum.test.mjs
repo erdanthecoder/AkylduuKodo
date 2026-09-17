@@ -17,12 +17,14 @@ function ok(cond, label) {
 }
 
 const CODE_TYPES = new Set(['code', 'bug']);
+const LEVEL_IDS = new Set(['beginner', 'intermediate', 'expert']);
 const ids = new Set();
 
 for (const unit of UNITS) {
   ok(typeof unit.id === 'string' && !ids.has(unit.id) || 'duplicate unit id', `unit ${unit.id} id`);
   ids.add(unit.id);
   ok(unit.lessons.length > 0 || 'no lessons', `unit ${unit.id} has lessons`);
+  ok(LEVEL_IDS.has(unit.level) || `bad level: ${unit.level}`, `unit ${unit.id} level`);
 }
 
 for (const lesson of ALL_LESSONS) {
@@ -50,6 +52,19 @@ for (const lesson of ALL_LESSONS) {
           const s = runCode(step.starter, { capture: step.capture || [] });
           const verdict = s.error ? 'errored' : safeCheck(step, { ...s, code: step.starter });
           if (verdict === true) warnings.push(`${at}: starter code already passes the check`);
+        }
+      }
+    }
+
+    if (step.type === 'web') {
+      ok(typeof step.solution === 'string' && step.solution.includes('<') || 'no HTML solution', `${at} solution`);
+      ok(typeof step.check === 'function' || 'no check', `${at} has check`);
+      if (typeof step.check === 'function') {
+        const verdict = safeCheck(step, { html: step.solution, code: step.solution, logs: [], vars: {} });
+        ok(verdict === true ? true : `check rejected the official solution: ${verdict}`, `${at} solution passes check`);
+        if (typeof step.starter === 'string') {
+          const start = safeCheck(step, { html: step.starter, code: step.starter, logs: [], vars: {} });
+          if (start === true) warnings.push(`${at}: starter HTML already passes the check`);
         }
       }
     }
