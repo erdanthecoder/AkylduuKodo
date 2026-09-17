@@ -106,7 +106,7 @@ export function runCode(code, options = {}) {
   let steps = 0;
   const __guard = () => {
     if (++steps > maxSteps) {
-      throw new Error('Your loop ran forever 🌀 — check the condition so it can stop.');
+      throw new Error('Your loop ran forever — check the condition so it can stop.');
     }
   };
 
@@ -165,5 +165,5 @@ const ERROR_HINTS = [
 export function friendlyError(err) {
   const msg = err && err.message ? err.message : String(err);
   const hit = ERROR_HINTS.find(([re]) => re.test(msg));
-  return hit ? `${msg}\n💡 ${hit[1]}` : msg;
+  return hit ? `${msg}\nHint: ${hit[1]}` : msg;
 }

@@ -9,13 +9,13 @@ const ifBlocks = [
 
 export default {
   id: 'u2',
-  emoji: '🔀',
+  icon: 'scale',
   title: { en: 'Making Choices', ky: 'Чечим кабыл алуу' },
   blurb: 'Teach your program to look at the situation and decide.',
   lessons: [
     {
       id: 'u2l1',
-      emoji: '⚖️',
+      icon: 'scale',
       title: { en: 'True or False', ky: 'Чын же жалган' },
       minutes: 9,
       xp: 45,
@@ -58,7 +58,7 @@ export default {
         },
         {
           type: 'unplugged',
-          title: 'Offline quest: human boolean 🙋',
+          title: 'Offline quest: human boolean',
           text:
             'Stand up with a friend or family member. Take turns shouting a claim: "It is raining", "I am taller than you", "This chai is hot".\n\n' +
             'The other person may answer **only** `true` or `false` — no "kind of", no "maybe". That restriction is exactly what your program lives with.',
@@ -67,7 +67,7 @@ export default {
     },
     {
       id: 'u2l2',
-      emoji: '🚦',
+      icon: 'target',
       title: { en: 'If This, Then That', ky: 'Эгер... болсо' },
       minutes: 11,
       xp: 50,
@@ -147,7 +147,7 @@ export default {
     },
     {
       id: 'u2l3',
-      emoji: '🧠',
+      icon: 'puzzle',
       title: { en: 'And, Or, Not', ky: 'Жана, же, эмес' },
       minutes: 11,
       xp: 50,
@@ -188,7 +188,7 @@ export default {
         {
           type: 'code',
           prompt:
-            'Grade machine 📝 with `else if`. For the score in `points`, print:\n\n- `A` for 90 and above\n- `B` for 75–89\n- `C` for 60–74\n- `Keep practising` below 60',
+            'Grade machine with`else if`. For the score in`points`, print:\n\n- `A`for 90 and above\n- `B`for 75–89\n- `C`for 60–74\n- `Keep practising`below 60',
           starter: 'let points = 82;\n\n',
           hint: 'Check the biggest range first, then let `else if` handle what is left over.',
           solution:
@@ -204,7 +204,7 @@ export default {
     },
     {
       id: 'u2l4',
-      emoji: '🤖',
+      icon: 'rover',
       title: { en: 'Project: Chai Bot', ky: 'Долбоор: Чай бот' },
       minutes: 12,
       xp: 65,
@@ -222,11 +222,11 @@ export default {
         {
           type: 'code',
           prompt:
-            'Chai Bot, part 1. Based on `hour` (0–23), print:\n\n- `Morning chai ☕` before 11\n- `Afternoon chai 🍵` from 11 to 17\n- `Evening water 💧` after 17',
+            'Chai Bot, part 1. Based on`hour` (0–23), print:\n\n- `Morning chai`before 11\n- `Afternoon chai`from 11 to 17\n- `Evening water`after 17',
           starter: 'let hour = 14;\n\n',
           hint: 'Three branches: if (hour < 11) … else if (hour <= 17) … else …',
           solution:
-            'let hour = 14;\n\nif (hour < 11) {\n  console.log("Morning chai ☕");\n} else if (hour <= 17) {\n  console.log("Afternoon chai 🍵");\n} else {\n  console.log("Evening water 💧");\n}',
+            'let hour = 14;\n\nif (hour < 11) {\nconsole.log("Morning chai");\n} else if (hour <= 17) {\nconsole.log("Afternoon chai");\n} else {\nconsole.log("Evening water");\n}',
           check: (ctx) =>
             all(
               uses(ctx, /else\s+if/, 'Use an `else if` for the middle range.'),
@@ -239,10 +239,10 @@ export default {
           prompt:
             'Chai Bot has a logic bug: with `hour = 20` it still offers morning chai. Fix the conditions so every hour gets the right drink.',
           starter:
-            'let hour = 20;\n\nif (hour > 0) {\n  console.log("Morning chai ☕");\n} else if (hour > 17) {\n  console.log("Evening water 💧");\n} else {\n  console.log("Afternoon chai 🍵");\n}',
+            'let hour = 20;\n\nif (hour > 0) {\nconsole.log("Morning chai");\n} else if (hour > 17) {\nconsole.log("Evening water");\n} else {\nconsole.log("Afternoon chai");\n}',
           hint: 'The first condition is true for almost every hour, so nothing else ever gets a turn. Order your ranges from narrow to wide, or from big number to small.',
           solution:
-            'let hour = 20;\n\nif (hour > 17) {\n  console.log("Evening water 💧");\n} else if (hour < 11) {\n  console.log("Morning chai ☕");\n} else {\n  console.log("Afternoon chai 🍵");\n}',
+            'let hour = 20;\n\nif (hour > 17) {\nconsole.log("Evening water");\n} else if (hour < 11) {\nconsole.log("Morning chai");\n} else {\nconsole.log("Afternoon chai");\n}',
           check: (ctx) =>
             all(
               ctx.logs.length === 1 ? true : 'Exactly one line should be printed.',
@@ -252,11 +252,11 @@ export default {
         {
           type: 'code',
           prompt:
-            'Chai Bot, final form 🏁. The bot also checks the cupboard.\n\nIf `teaLeft` is `false`, print `Sorry, no tea left` no matter the hour. Otherwise use the hour rules from before.\n\nTest values: `hour = 9`, `teaLeft = false` → `Sorry, no tea left`.',
+            'Chai Bot, final form. The bot also checks the cupboard.\n\nIf`teaLeft`is`false`, print`Sorry, no tea left`no matter the hour. Otherwise use the hour rules from before.\n\nTest values:`hour = 9`,`teaLeft = false` → `Sorry, no tea left`.',
           starter: 'let hour = 9;\nlet teaLeft = false;\n\n',
           hint: 'Check the cupboard first with `if (!teaLeft) { ... } else { ...the hour rules... }`',
           solution:
-            'let hour = 9;\nlet teaLeft = false;\n\nif (!teaLeft) {\n  console.log("Sorry, no tea left");\n} else if (hour < 11) {\n  console.log("Morning chai ☕");\n} else if (hour <= 17) {\n  console.log("Afternoon chai 🍵");\n} else {\n  console.log("Evening water 💧");\n}',
+            'let hour = 9;\nlet teaLeft = false;\n\nif (!teaLeft) {\nconsole.log("Sorry, no tea left");\n} else if (hour < 11) {\nconsole.log("Morning chai");\n} else if (hour <= 17) {\nconsole.log("Afternoon chai");\n} else {\nconsole.log("Evening water");\n}',
           check: (ctx) =>
             all(
               saidSomething(ctx),

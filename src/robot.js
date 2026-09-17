@@ -47,12 +47,12 @@ export function runRobot(code, spec, options = {}) {
 
   const api = {
     forward() {
-      if (++world.steps > maxMoves) throw new Error('Kodo is dizzy — too many moves! 🌀');
+      if (++world.steps > maxMoves) throw new Error('Kodo is dizzy — too many moves!');
       const d = DIRS[world.dir];
       const nx = world.x + d.dx;
       const ny = world.y + d.dy;
       if (nx < 0 || ny < 0 || nx >= world.w || ny >= world.h || world.walls.has(`${nx},${ny}`)) {
-        crash = crash || 'Bonk! 🪨 Kodo walked into a wall.';
+        crash = crash || 'Bonk! Kodo walked into a wall.';
         record('bonk');
         throw new Error(crash);
       }
@@ -71,7 +71,7 @@ export function runRobot(code, spec, options = {}) {
     collect() {
       const key = `${world.x},${world.y}`;
       if (!world.gems.has(key)) {
-        crash = crash || 'Nothing to collect here 🤔 — no apple on this square.';
+        crash = crash || 'Nothing to collect here — no apple on this square.';
         throw new Error(crash);
       }
       world.gems.delete(key);
@@ -97,8 +97,8 @@ export function runRobot(code, spec, options = {}) {
   const allGems = world.gems.size === 0;
   let reason = null;
   if (res.error) reason = res.error;
-  else if (!allGems) reason = `Still ${world.gems.size} apple(s) left to collect 🍎`;
-  else if (!atGoal) reason = 'Kodo did not reach the yurt 🏠';
+  else if (!allGems) reason = `Still ${world.gems.size} apple(s) left to collect`;
+  else if (!atGoal) reason = 'Kodo did not reach the yurt';
 
   return {
     frames,

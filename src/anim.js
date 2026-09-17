@@ -28,10 +28,23 @@ function revealOnScroll(node) {
     },
     { rootMargin: '0px 0px -40px 0px', threshold: 0.05 },
   );
-  node.querySelectorAll('.badge, .lesson-card, .drill-card, .unit-pill').forEach((el) => {
+  const watched = [...node.querySelectorAll('.badge, .lesson-card, .drill-card, .unit-pill')];
+  const viewport = globalThis.innerHeight || 800;
+  watched.forEach((el) => {
     el.classList.add('reveal');
+    // Anything already on screen appears at once — only content further down
+    // gets the reveal-on-scroll treatment.
+    if (el.getBoundingClientRect().top < viewport) {
+      requestAnimationFrame(() => el.classList.add('revealed'));
+      return;
+    }
     io.observe(el);
   });
+  // Safety net: an observer that never fires must not leave content invisible.
+  setTimeout(() => {
+    watched.forEach((el) => el.classList.add('revealed'));
+    io.disconnect();
+  }, 600);
 }
 
 /** Roll a number up instead of snapping it — small, but it makes XP feel earned. */

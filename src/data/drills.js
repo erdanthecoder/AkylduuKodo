@@ -96,7 +96,7 @@ export const MAZES = [
 export const DRILLS = [
   {
     id: 'sprint',
-    emoji: '⚡',
+    icon: 'bolt',
     name: 'Output Sprint',
     desc: 'Read code and predict its output. 60 seconds, as many as you can.',
     kind: 'quiz',
@@ -105,7 +105,7 @@ export const DRILLS = [
   },
   {
     id: 'bughunt',
-    emoji: '🐛',
+    icon: 'bug',
     name: 'Bug Hunt Blitz',
     desc: 'Find the mistake before the timer runs out.',
     kind: 'quiz',
@@ -114,7 +114,7 @@ export const DRILLS = [
   },
   {
     id: 'maze',
-    emoji: '🐃',
+    icon: 'rover',
     name: 'Maze Logic',
     desc: 'Five routing problems. Shorter, smarter code scores higher.',
     kind: 'maze',

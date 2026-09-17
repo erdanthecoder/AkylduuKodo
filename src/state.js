@@ -199,14 +199,14 @@ export function streak() {
 }
 
 export const LEVELS = [
-  { xp: 0, name: 'Spark', emoji: '✨' },
-  { xp: 120, name: 'Tinkerer', emoji: '🔧' },
-  { xp: 320, name: 'Loop Rider', emoji: '🔁' },
-  { xp: 640, name: 'Bug Hunter', emoji: '🔎' },
-  { xp: 1100, name: 'Function Smith', emoji: '⚒️' },
-  { xp: 1700, name: 'Data Wrangler', emoji: '📦' },
-  { xp: 2500, name: 'Code Nomad', emoji: '🐎' },
-  { xp: 3600, name: 'Akyl Master', emoji: '🏔️' },
+  { xp: 0, name: 'Spark', icon: 'sparkle' },
+  { xp: 120, name: 'Tinkerer', icon: 'wand' },
+  { xp: 320, name: 'Loop Rider', icon: 'reset' },
+  { xp: 640, name: 'Bug Hunter', icon: 'eye' },
+  { xp: 1100, name: 'Function Smith', icon: 'puzzle' },
+  { xp: 1700, name: 'Data Wrangler', icon: 'layers' },
+  { xp: 2500, name: 'Code Nomad', icon: 'rover' },
+  { xp: 3600, name: 'Akyl Master', icon: 'mountain' },
 ];
 
 export function level(xp = state.xp) {
@@ -226,14 +226,14 @@ export function level(xp = state.xp) {
 }
 
 export const BADGES = [
-  { id: 'first-run', emoji: '🚀', name: 'First Run', desc: 'Finish your very first lesson.', test: (s) => Object.keys(s.done).length >= 1 },
-  { id: 'five-a-week', emoji: '🗓️', name: 'Weekly Goal', desc: 'Hit your weekly lesson goal.', test: () => weekProgress().count >= state.goalPerWeek },
-  { id: 'streak-3', emoji: '🔥', name: 'Three in a Row', desc: 'Code three days in a row.', test: () => streak() >= 3 },
-  { id: 'streak-7', emoji: '☄️', name: 'Week on Fire', desc: 'Code seven days in a row.', test: () => streak() >= 7 },
-  { id: 'ten-lessons', emoji: '🎓', name: 'Double Digits', desc: 'Finish 10 lessons.', test: (s) => Object.keys(s.done).length >= 10 },
-  { id: 'arcade', emoji: '🕹️', name: 'Drill Starter', desc: 'Finish any practice drill.', test: (s) => Object.keys(s.arcade).length >= 1 },
-  { id: 'maze', emoji: '🐃', name: 'Yak Whisperer', desc: 'Score 300+ in Maze Logic.', test: (s) => (s.arcade['maze'] || 0) >= 300 },
-  { id: 'level-4', emoji: '🔎', name: 'Bug Hunter', desc: 'Reach the Bug Hunter level.', test: (s) => level(s.xp).index >= 3 },
+  { id: 'first-run', icon: 'play', name: 'First Run', desc: 'Finish your very first lesson.', test: (s) => Object.keys(s.done).length >= 1 },
+  { id: 'five-a-week', icon: 'calendar', name: 'Weekly Goal', desc: 'Hit your weekly lesson goal.', test: () => weekProgress().count >= state.goalPerWeek },
+  { id: 'streak-3', icon: 'flame', name: 'Three in a Row', desc: 'Code three days in a row.', test: () => streak() >= 3 },
+  { id: 'streak-7', icon: 'flame', name: 'Week on Fire', desc: 'Code seven days in a row.', test: () => streak() >= 7 },
+  { id: 'ten-lessons', icon: 'medal', name: 'Double Digits', desc: 'Finish 10 lessons.', test: (s) => Object.keys(s.done).length >= 10 },
+  { id: 'arcade', icon: 'target', name: 'Drill Starter', desc: 'Finish any practice drill.', test: (s) => Object.keys(s.arcade).length >= 1 },
+  { id: 'maze', icon: 'rover', name: 'Yak Whisperer', desc: 'Score 300+ in Maze Logic.', test: (s) => (s.arcade['maze'] || 0) >= 300 },
+  { id: 'level-4', icon: 'eye', name: 'Bug Hunter', desc: 'Reach the Bug Hunter level.', test: (s) => level(s.xp).index >= 3 },
 ];
 
 function checkBadges() {

@@ -1,7 +1,7 @@
 {
   "name": "AkylduuKodo — learn programming step by step",
   "short_name": "AkylduuKodo",
-  "description": "An interactive JavaScript course: 19 lessons, guided practice and a weekly study goal.",
+  "description": "An interactive JavaScript course with guided practice and a weekly study goal.",
   "start_url": "./",
   "scope": "./",
   "display": "standalone",

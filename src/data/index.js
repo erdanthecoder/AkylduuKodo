@@ -3,11 +3,13 @@ import u2 from './u2.js';
 import u3 from './u3.js';
 import u4 from './u4.js';
 import u5 from './u5.js';
+import u6 from './u6.js';
+import u7 from './u7.js';
 
-export const UNITS = [u1, u2, u3, u4, u5];
+export const UNITS = [u1, u2, u3, u4, u5, u6, u7];
 
 export const ALL_LESSONS = UNITS.flatMap((u) =>
-  u.lessons.map((l) => ({ ...l, unitId: u.id, unitEmoji: u.emoji, unitTitle: u.title })),
+  u.lessons.map((l) => ({ ...l, unitId: u.id, unitIcon: u.icon, unitTitle: u.title })),
 );
 
 export function lessonById(id) {

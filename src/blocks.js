@@ -7,7 +7,7 @@ import { h } from './ui.js';
 let uid = 0;
 
 /**
- * palette: [{ id, label: 'say {0}', tpl: 'console.log({0});', slots: [{kind:'str'|'num'|'raw', value}] }]
+ * palette: [{ id, label: 'say {0}', tpl: 'console.log({0});', slots: [{kind: 'str'|'num'|'raw', value}] }]
  */
 export function createBlocks({ palette = [], onChange = () => {} } = {}) {
   let placed = [];
@@ -17,14 +17,14 @@ export function createBlocks({ palette = [], onChange = () => {} } = {}) {
   const el = h(
     'div',
     { class: 'blocks' },
-    h('div', { class: 'blocks-col' }, h('h4', {}, '🧩 Blocks'), paletteEl),
+    h('div', { class: 'blocks-col' }, h('h4', {}, 'Blocks'), paletteEl),
     h(
       'div',
       { class: 'blocks-col' },
       h(
         'h4',
         {},
-        '🏗️ Your program',
+        'Your program',
         h('button', { class: 'mini-btn', onclick: () => { placed = []; render(); } }, 'clear'),
       ),
       stackEl,
@@ -79,9 +79,9 @@ export function createBlocks({ palette = [], onChange = () => {} } = {}) {
           emit();
         }),
         h('span', { class: 'block-tools' },
-          h('button', { class: 'mini-btn', title: 'move up', onclick: () => move(index, -1) }, '↑'),
-          h('button', { class: 'mini-btn', title: 'move down', onclick: () => move(index, 1) }, '↓'),
-          h('button', { class: 'mini-btn', title: 'remove', onclick: () => { placed.splice(index, 1); render(); } }, '✕'),
+          h('button', { class: 'mini-btn', title: 'move up', onclick: () => move(index, -1) }, 'up'),
+          h('button', { class: 'mini-btn', title: 'move down', onclick: () => move(index, 1) }, 'down'),
+          h('button', { class: 'mini-btn', title: 'remove', onclick: () => { placed.splice(index, 1); render(); } }, 'x'),
         ),
       );
       stackEl.append(row);

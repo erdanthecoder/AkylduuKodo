@@ -1,10 +1,11 @@
 // practice.js — short drills. Same skills as the lessons, but with a clock.
 
-import { h, md, codeBlock, confetti, sfx, shuffle, toast } from '../ui.js';
+import { h, codeBlock, confetti, sfx, shuffle, toast } from '../ui.js';
+import { icon, rover } from '../icons.js';
 import { ui } from '../i18n.js';
 import * as store from '../state.js';
 import { DRILLS } from '../data/drills.js';
-import { createEditor, createConsole } from '../editor.js';
+import { createEditor, createScreen } from '../editor.js';
 import { runRobot } from '../robot.js';
 
 export function PracticeView(go, drillId) {
@@ -18,17 +19,19 @@ export function PracticeView(go, drillId) {
   return h(
     'div',
     { class: 'view' },
-    h('h1', { class: 'view-title' }, '🕹️ ' + ui('practice_title')),
+    h('h1', { class: 'view-title' }, ui('practice_title')),
     h('p', { class: 'muted' }, ui('practice_sub')),
     h('div', { class: 'drill-grid' },
       ...DRILLS.map((g) =>
         h('button', { class: 'card drill-card', onclick: () => go(`#/practice/${g.id}`) },
-          h('div', { class: 'drill-emoji' }, g.emoji),
+          h('div', { class: 'drill-mark' }, icon(g.icon, { size: 26 })),
           h('h3', {}, g.name),
           h('p', { class: 'muted' }, g.desc),
           h('div', { class: 'chips' },
-            h('span', { class: 'chip' }, `🏆 ${ui('best')}: ${s.arcade[g.id] || 0}`),
-            g.seconds ? h('span', { class: 'chip' }, `⏱️ ${g.seconds}s`) : h('span', { class: 'chip' }, `${g.pool.length} levels`),
+            h('span', { class: 'chip' }, icon('trophy', { size: 13 }), `${ui('best')}: ${s.arcade[g.id] || 0}`),
+            g.seconds
+              ? h('span', { class: 'chip' }, icon('clock', { size: 13 }), `${g.seconds}s`)
+              : h('span', { class: 'chip' }, `${g.pool.length} levels`),
           ),
           h('span', { class: 'lesson-cta' }, ui('begin') + ' →'),
         ),
@@ -50,13 +53,13 @@ function quizDrill(drill, go) {
   const timeEl = h('span', { class: 'hud-value' }, String(left));
   const stage = h('div', { class: 'stage' });
   const hud = h('div', { class: 'hud' },
-    h('span', { class: 'hud-item' }, '⚡ ', scoreEl),
-    h('span', { class: 'hud-item' }, '⏱️ ', timeEl),
-    h('button', { class: 'btn btn-ghost', onclick: () => stop(true) }, '✕'),
+    h('span', { class: 'hud-item' }, icon('bolt', { size: 17 }), scoreEl),
+    h('span', { class: 'hud-item' }, icon('clock', { size: 17 }), timeEl),
+    h('button', { class: 'btn btn-ghost', onclick: () => stop(true) }, icon('close', { size: 17 })),
   );
 
   const el = h('div', { class: 'view drill-view' },
-    h('h1', { class: 'view-title' }, `${drill.emoji} ${drill.name}`),
+    h('h1', { class: 'view-title' }, icon(drill.icon, { size: 24 }), drill.name),
     hud,
     stage,
   );
@@ -77,7 +80,7 @@ function quizDrill(drill, go) {
     const opts = h('div', { class: 'options' });
     stage.replaceChildren(
       h('div', { class: 'card' },
-        h('h3', {}, drill.id === 'bughunt' ? '🐛 What is wrong here?' : '🔮 What does this print?'),
+        h('h3', {}, drill.id === 'bughunt' ? 'What is wrong here?' : 'What does this print?'),
         codeBlock(q.code),
         opts,
       ),
@@ -93,7 +96,7 @@ function quizDrill(drill, go) {
               score += points;
               scoreEl.textContent = String(score);
               sfx('good', store.get().sound);
-              toast(`+${points}${streak > 1 ? ` · ${streak}x streak 🔥` : ''}`, 'ok');
+              toast(`+${points}${streak > 1 ? ` — ${streak} in a row` : ''}`, 'ok');
               ask();
             } else {
               streak = 0;
@@ -116,7 +119,7 @@ function quizDrill(drill, go) {
     if (!quit) confetti(24);
     stage.replaceChildren(
       h('div', { class: 'card celebrate' },
-        h('div', { class: 'big-emoji' }, res.isBest ? '🏆' : '🎮'),
+        h('div', { class: 'big-mark' }, icon(res.isBest ? 'trophy' : 'target', { size: 44 })),
         h('h2', {}, res.isBest ? 'New personal best!' : 'Nice work!'),
         h('p', { class: 'xp-line' }, `${ui('score')}: ${score} · ${ui('best')}: ${res.best}`),
         res.earned.length ? h('div', { class: 'badge-pop' }, ...res.earned.map((b) => h('div', { class: 'badge-chip' }, `${b.emoji} ${b.name}`))) : null,
@@ -145,8 +148,8 @@ function mazeDrill(drill, go) {
   const el = h('div', { class: 'view drill-view' },
     h('h1', { class: 'view-title' }, `${drill.emoji} ${drill.name}`),
     h('div', { class: 'hud' },
-      h('span', { class: 'hud-item' }, '⚡ ', scoreEl),
-      h('button', { class: 'btn btn-ghost', onclick: () => go('#/practice') }, '✕'),
+      h('span', { class: 'hud-item' }, icon('bolt', { size: 17 }), scoreEl),
+      h('button', { class: 'btn btn-ghost', onclick: () => go('#/practice') }, icon('close', { size: 17 })),
     ),
     stage,
   );
@@ -160,12 +163,12 @@ function mazeDrill(drill, go) {
       for (let x = 0; x < spec.w; x++) {
         const key = `${x},${y}`;
         const cell = h('div', { class: 'cell' + (walls.has(key) ? ' cell-wall' : '') });
-        if (spec.goal.x === x && spec.goal.y === y) cell.append(h('span', { class: 'cell-goal' }, '🏠'));
-        if (gems.has(key)) cell.append(h('span', { class: 'cell-gem' }, '🍎'));
+        if (spec.goal.x === x && spec.goal.y === y) cell.append(h('span', { class: 'cell-goal' }, icon('yurt', { size: 20 })));
+        if (gems.has(key)) cell.append(h('span', { class: 'cell-gem' }, icon('apple', { size: 18 })));
         if (frame.x === x && frame.y === y) {
-          const yak = h('span', { class: 'cell-bot' }, '🐃');
-          yak.style.transform = `rotate(${[0, 90, 180, 270][frame.dir]}deg)`;
-          cell.append(yak);
+          const bot = h('span', { class: 'cell-bot' }, rover(26));
+          bot.style.transform = `rotate(${[0, 90, 180, 270][frame.dir]}deg)`;
+          cell.append(bot);
         }
         grid.append(cell);
       }
@@ -177,7 +180,7 @@ function mazeDrill(drill, go) {
     const spec = drill.pool[level];
     const grid = h('div', { class: 'grid' });
     const status = h('div', { class: 'feedback' });
-    const cons = createConsole();
+    const cons = createScreen({ title: 'Kodo world' });
     const editor = createEditor({ value: '', onRun: () => run(), minRows: 7 });
 
     paint(grid, { x: spec.start.x, y: spec.start.y, dir: spec.start.dir ?? 0, gems: (spec.gems || []).map(([x, y]) => `${x},${y}`) }, spec);
@@ -199,7 +202,7 @@ function mazeDrill(drill, go) {
             confetti(16);
             sfx('great', store.get().sound);
             status.className = 'feedback ok';
-            status.textContent = `✅ Solved in ${lines} lines (+${points})`;
+            status.textContent = `Solved in ${lines} lines (+${points})`;
             level += 1;
             setTimeout(playLevel, 1200);
           } else {
@@ -214,12 +217,12 @@ function mazeDrill(drill, go) {
     stage.replaceChildren(
       h('div', { class: 'card' },
         h('h3', {}, `Level ${level + 1} / ${drill.pool.length}`),
-        h('p', { class: 'muted' }, 'Collect every 🍎 and route Kodo to the 🏠. Fewer lines = more points.'),
+        h('p', { class: 'muted' }, 'Collect every apple and park the rover on its base. Fewer lines scores higher.'),
         h('div', { class: 'grid-wrap' }, grid, h('div', { class: 'grid-legend' }, 'forward() · turnLeft() · turnRight() · collect() · canMove()')),
         editor.el,
         h('div', { class: 'row gap tools' },
-          h('button', { class: 'btn btn-run', onclick: run }, '▶ ' + ui('run')),
-          h('button', { class: 'btn btn-ghost', onclick: () => { level += 1; playLevel(); } }, 'Skip ↷'),
+          h('button', { class: 'btn btn-run', onclick: run }, icon('play', { size: 16 }), ui('run')),
+          h('button', { class: 'btn btn-ghost', onclick: () => { level += 1; playLevel(); } }, 'Skip'),
         ),
         cons.el,
         status,
@@ -233,7 +236,7 @@ function mazeDrill(drill, go) {
     confetti(30);
     stage.replaceChildren(
       h('div', { class: 'card celebrate' },
-        h('div', { class: 'big-emoji' }, '🐃'),
+        h('div', { class: 'big-mark' }, rover(46)),
         h('h2', {}, 'All levels cleared!'),
         h('p', { class: 'xp-line' }, `${ui('score')}: ${score} · ${ui('best')}: ${res.best}`),
         h('div', { class: 'row gap' },

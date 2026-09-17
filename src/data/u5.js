@@ -2,13 +2,13 @@ import { all, said, linesAre, uses, avoids, varIs, saidContains } from './checks
 
 export default {
   id: 'u5',
-  emoji: '📦',
+  icon: 'layers',
   title: { en: 'Lists & Things', ky: 'Тизмелер жана нерселер' },
   blurb: 'Handle many values at once — then build your final project.',
   lessons: [
     {
       id: 'u5l1',
-      emoji: '📋',
+      icon: 'list',
       title: { en: 'Lists', ky: 'Тизмелер' },
       minutes: 11,
       xp: 55,
@@ -57,7 +57,7 @@ export default {
     },
     {
       id: 'u5l2',
-      emoji: '🔎',
+      icon: 'eye',
       title: { en: 'Walk the List', ky: 'Тизмени аралоо' },
       minutes: 13,
       xp: 60,
@@ -117,7 +117,7 @@ export default {
     },
     {
       id: 'u5l3',
-      emoji: '🗂️',
+      icon: 'layers',
       title: { en: 'Things With Labels', ky: 'Белгиси бар нерселер' },
       minutes: 12,
       xp: 60,
@@ -175,7 +175,7 @@ export default {
     },
     {
       id: 'u5l4',
-      emoji: '🏆',
+      icon: 'trophy',
       title: { en: 'Final Project: Chaihana', ky: 'Акыркы долбоор: Чайкана' },
       minutes: 18,
       xp: 100,
@@ -203,7 +203,7 @@ export default {
         {
           type: 'code',
           prompt:
-            'Step 2 — a vegetarian friend arrives 🥗. Write a function `vegOnly(list)` that **returns** a new list of only the veg dishes, then print their names.',
+            'Step 2 — a vegetarian friend arrives. Write a function`vegOnly(list)`that **returns** a new list of only the veg dishes, then print their names.',
           starter:
             'let menu = [\n  { name: "samsa", price: 45, veg: false },\n  { name: "lagman", price: 180, veg: false },\n  { name: "salad", price: 90, veg: true },\n  { name: "plov", price: 200, veg: false },\n  { name: "borsok", price: 30, veg: true },\n];\n\nfunction vegOnly(list) {\n  \n}\n\n',
           hint: 'Make an empty result list, loop, and `result.push(dish)` when `dish.veg` is true. Return the result.',
@@ -219,25 +219,25 @@ export default {
         {
           type: 'code',
           prompt:
-            'Step 3 — the bill 🧾. Write `billTotal(order)` that returns the sum of the prices, then print:\n\n`Total: 315 som`\n\nIf the total is **300 or more**, print a second line: `Free chai included ☕`.',
+            'Step 3 — the bill. Write`billTotal(order)`that returns the sum of the prices, then print:\n\n`Total: 315 som`\n\nIf the total is **300 or more**, print a second line:`Free chai included`.',
           starter:
             'let order = [\n  { name: "samsa", price: 45 },\n  { name: "lagman", price: 180 },\n  { name: "salad", price: 90 },\n];\n\nfunction billTotal(list) {\n  \n}\n\n',
           hint: 'Accumulator inside the function; then an if outside it.',
           solution:
-            'let order = [\n  { name: "samsa", price: 45 },\n  { name: "lagman", price: 180 },\n  { name: "salad", price: 90 },\n];\n\nfunction billTotal(list) {\n  let sum = 0;\n  for (let item of list) {\n    sum += item.price;\n  }\n  return sum;\n}\n\nlet total = billTotal(order);\nconsole.log(`Total: ${total} som`);\n\nif (total >= 300) {\n  console.log("Free chai included ☕");\n}',
+            'let order = [\n{ name:"samsa", price: 45 },\n{ name:"lagman", price: 180 },\n{ name:"salad", price: 90 },\n];\n\nfunction billTotal(list) {\nlet sum = 0;\nfor (let item of list) {\nsum += item.price;\n}\nreturn sum;\n}\n\nlet total = billTotal(order);\nconsole.log(`Total: ${total} som`);\n\nif (total >= 300) {\nconsole.log("Free chai included");\n}',
           check: (ctx) =>
             all(
               uses(ctx, /function\s+billTotal/, 'Write a function named `billTotal`.'),
               avoids(ctx, /\b315\b/, 'Let the loop add it up — do not type 315.'),
               said(ctx, 'Total: 315 som'),
               ctx.logs.length === 2 ? true : 'The order costs 315, so the free-chai line should appear too.',
-              /chai/i.test(ctx.logs[1] || '') ? true : 'Second line: `Free chai included ☕`.',
+              /chai/i.test(ctx.logs[1] || '')? true :'Second line:`Free chai included`.',
             ),
         },
         {
           type: 'code',
           prompt:
-            'Step 4 — your own ending 🎨. Free build!\n\nAdd anything you like: a discount function, the cheapest dish, a loyalty counter, a dish your grandmother makes. The only rule: print at least **three** lines and use a function you wrote.',
+            'Step 4 — your own ending. Free build!\n\nAdd anything you like: a discount function, the cheapest dish, a loyalty counter, a dish your grandmother makes. The only rule: print at least **three** lines and use a function you wrote.',
           starter:
             '// Your chaihana, your rules.\n// Ideas: cheapest(), discount(total), or a menu in your own language.\n\nfunction myTool() {\n  return "Kel, chai ich!";\n}\n\nconsole.log(myTool());\n',
           hint: 'There is no wrong answer here — just make it run and print three lines.',
@@ -251,7 +251,7 @@ export default {
         },
         {
           type: 'unplugged',
-          title: 'Final quest: teach someone 👩‍🏫',
+          title: 'Final quest: teach someone',
           text:
             'Show your chaihana program to a friend, a parent or a sibling. Explain what a loop is using your menu as the example.\n\n' +
             'If you can teach it, you own it. Then come back and start a project of your own in the Playground.',

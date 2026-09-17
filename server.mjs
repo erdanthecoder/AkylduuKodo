@@ -33,5 +33,5 @@ createServer(async (req, res) => {
     res.writeHead(404, { 'content-type': 'text/plain' }).end('Not found');
   }
 }).listen(PORT, () => {
-  console.log(`\n  🏔️  AkylduuKodo running at http://localhost:${PORT}\n`);
+  console.log(`\nAkylduuKodo running at http://localhost:${PORT}\n`);
 });

@@ -1,6 +1,7 @@
 // app.js — router, top bar, bottom nav, and the first-run welcome.
 
 import { h, clear, sfx, confetti } from './ui.js';
+import { icon, mascot } from './icons.js';
 import { ui, LANGS } from './i18n.js';
 import * as store from './state.js';
 import { HomeView } from './views/home.js';
@@ -14,11 +15,11 @@ import * as auth from './auth.js';
 import { animateIn, countUp, startBackdrop } from './anim.js';
 
 const NAV = [
-  { hash: '#/home', icon: '🏠', key: 'nav_home' },
-  { hash: '#/journey', icon: '🗺️', key: 'nav_journey' },
-  { hash: '#/practice', icon: '🎯', key: 'nav_practice' },
-  { hash: '#/lab', icon: '🧪', key: 'nav_lab' },
-  { hash: '#/settings', icon: '⚙️', key: 'nav_settings' },
+  { hash: '#/home', icon: 'home', key: 'nav_home' },
+  { hash: '#/journey', icon: 'map', key: 'nav_journey' },
+  { hash: '#/practice', icon: 'target', key: 'nav_practice' },
+  { hash: '#/lab', icon: 'flask', key: 'nav_lab' },
+  { hash: '#/settings', icon: 'settings', key: 'nav_settings' },
 ];
 
 let currentView = null;
@@ -27,7 +28,7 @@ let lastXp = 0;
 function accountButton() {
   const u = auth.user();
   if (!u) {
-    return h('button', { class: 'pill pill-btn pill-signin', onclick: () => go('#/account') }, '👤 Sign in');
+    return h('button', { class: 'pill pill-btn pill-signin', onclick: () => go('#/account') }, icon('user', { size: 15 }), 'Sign in');
   }
   return h('button', { class: 'pill pill-btn pill-user', onclick: () => go('#/account'), title: u.email || u.name },
     u.photo
@@ -60,6 +61,8 @@ function render() {
   void route;
   const path = (location.hash || '#/home').replace('#/', '').split('/');
 
+  document.body.dataset.view = path[0] || 'home';
+
   switch (path[0]) {
     case 'journey':
       mount(JourneyView(go));
@@ -91,17 +94,17 @@ function paintChrome() {
   const lvl = store.level();
   const week = store.weekProgress();
   const bar = document.getElementById('topbar');
-  const xpPill = h('span', { class: 'pill', title: ui('xp') }, '⚡ ', h('b', { class: 'xp-count' }, String(lastXp)));
+  const xpPill = h('span', { class: 'pill', title: ui('xp') }, icon('bolt', { size: 15 }), h('b', { class: 'xp-count' }, String(lastXp)));
   clear(bar).append(
     h('button', { class: 'brand', onclick: () => go('#/home') },
-      h('span', { class: 'brand-mark' }, '🏔️'),
+      h('span', { class: 'brand-mark' }, '\u{1F3D4}\uFE0F'),
       h('span', { class: 'brand-name' }, 'Akyldu', h('em', {}, 'u'), 'Kodo'),
     ),
     h('div', { class: 'top-stats' },
-      h('span', { class: 'pill pill-level', title: ui('level') }, `${lvl.emoji} ${lvl.name}`),
+      h('span', { class: 'pill pill-level', title: ui('level') }, icon(lvl.icon, { size: 15 }), lvl.name),
       xpPill,
-      h('span', { class: 'pill', title: ui('streak') }, h('span', { class: 'flame' }, '🔥'), ` ${store.streak()}`),
-      h('span', { class: 'pill', title: ui('this_week') }, `🎯 ${week.count}/${week.goal}`),
+      h('span', { class: 'pill', title: ui('streak') }, icon('flame', { size: 15, cls: 'flame' }), String(store.streak())),
+      h('span', { class: 'pill', title: ui('this_week') }, icon('target', { size: 15 }), `${week.count}/${week.goal}`),
       accountButton(),
     ),
   );
@@ -119,7 +122,7 @@ function paintChrome() {
           go(item.hash);
         },
       },
-        h('span', { class: 'nav-icon' }, item.icon),
+        h('span', { class: 'nav-icon' }, icon(item.icon, { size: 22 })),
         h('span', { class: 'nav-label' }, ui(item.key)),
       ),
     ),
@@ -135,12 +138,12 @@ function Onboarding() {
 
   const el = h('div', { class: 'view onboard' },
     h('div', { class: 'card hero onboard-hero' },
-      h('div', { class: 'big-emoji' }, '🏔️'),
+      h('div', { class: 'onboard-mascot' }, mascot(140, 'happy')),
       h('h1', {}, 'AkylduuKodo'),
-      h('p', { class: 'muted' }, 'Smart code, one clear step at a time.'),
+      h('p', { class: 'muted' }, 'Learn to write real code, one clear step at a time.'),
     ),
     h('div', { class: 'card' },
-      h('h3', {}, '🌍 ' + ui('lang')),
+      h('h3', {}, ui('lang')),
       h('div', { class: 'chips' },
         ...LANGS.map((l) =>
           h('button', {
@@ -151,16 +154,16 @@ function Onboarding() {
               [...e.target.parentElement.children].forEach((c) => c.classList.remove('chip-on'));
               e.target.classList.add('chip-on');
             },
-          }, `${l.flag} ${l.label}`),
+          }, l.label),
         ),
       ),
     ),
     h('div', { class: 'card' },
-      h('h3', {}, '🙋 ' + ui('name_q')),
+      h('h3', {}, ui('name_q')),
       h('input', { class: 'text-input', placeholder: 'Aisuluu', oninput: (e) => (name = e.target.value) }),
     ),
     h('div', { class: 'card' },
-      h('h3', {}, '🎯 ' + ui('goal_q')),
+      h('h3', {}, ui('goal_q')),
       h('p', { class: 'muted' }, ui('goal_note')),
       h('div', { class: 'chips' },
         ...[3, 5, 7, 10].map((n) =>
@@ -178,11 +181,13 @@ function Onboarding() {
     h('div', { class: 'card start-card' },
       h('h3', {}, 'How it works'),
       h('ul', { class: 'how' },
-        h('li', {}, '📖 Tiny explanations — then you try it immediately'),
-        h('li', {}, '🧩 Start with blocks if you like, switch to typing any time'),
-        h('li', {}, '🐛 Find bugs, 🔮 predict output, 🐃 route a robot yak'),
-        h('li', {}, '🌍 Offline quests away from the screen'),
-        h('li', {}, '🔥 Keep your streak and hit your weekly goal'),
+        ...[
+          ['book', 'Short explanations, then you write code immediately'],
+          ['puzzle', 'Start with blocks if you like, switch to typing any time'],
+          ['bug', 'Hunt bugs, predict output, and program a rover through mazes'],
+          ['globe', 'Offline missions away from the screen'],
+          ['flame', 'Keep your streak and hit your weekly goal'],
+        ].map(([ic, text]) => h('li', {}, icon(ic, { size: 18 }), h('span', {}, text))),
       ),
       h('button', {
         class: 'btn btn-primary btn-big',
@@ -192,7 +197,7 @@ function Onboarding() {
           go('#/home');
           render();
         },
-      }, "Let's code 🚀"),
+      }, "Start learning"),
     ),
   );
   return el;

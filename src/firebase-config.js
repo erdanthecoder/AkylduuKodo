@@ -3,7 +3,7 @@
 // Paste your Firebase web config here to turn on real accounts (Google sign-in,
 // email sign-up) and cloud-saved progress.
 //
-//   1. console.firebase.google.com → your project → ⚙️ Project settings
+// 1. console.firebase.google.com → your project → Project settings
 //   2. "Your apps" → Web app → copy the `firebaseConfig` object
 //   3. Replace `null` below with that object
 //   4. Authentication → Sign-in method → enable **Google** and **Email/Password**
