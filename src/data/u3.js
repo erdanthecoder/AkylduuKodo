@@ -11,13 +11,13 @@ const robotBlocks = [
 
 export default {
   id: 'u3',
-  emoji: '🔁',
+  icon: 'reset',
   title: { en: 'Loops & Patterns', ky: 'Циклдер жана үлгүлөр' },
   blurb: 'Stop repeating yourself. Let the computer do the boring part.',
   lessons: [
     {
       id: 'u3l1',
-      emoji: '♻️',
+      icon: 'reset',
       title: { en: 'Do It Again', ky: 'Дагы бир жолу' },
       minutes: 11,
       xp: 50,
@@ -70,7 +70,7 @@ export default {
         },
         {
           type: 'unplugged',
-          title: 'Offline quest: loop your chores 🧹',
+          title: 'Offline quest: loop your chores',
           text:
             'Find something you repeat at home — watering 6 plants, folding 10 socks, doing 20 jumps.\n\n' +
             'Write it as a loop on paper: `for (let plant = 1; plant <= 6; plant++) { water(plant); }`. Then actually do it and count out loud. Loops feel different once your legs run one.',
@@ -79,7 +79,7 @@ export default {
     },
     {
       id: 'u3l2',
-      emoji: '🧮',
+      icon: 'list',
       title: { en: 'Counting & Collecting', ky: 'Санап, чогултуу' },
       minutes: 12,
       xp: 55,
@@ -110,7 +110,7 @@ export default {
           solution: 'let total = 0;\n\nfor (let i = 1; i <= 100; i++) {\n  total += i;\n}\n\nconsole.log(total);',
           check: (ctx) =>
             all(
-              uses(ctx, /for\s*\(/, 'Use a loop — no typing 5050 😄'),
+              uses(ctx, /for\s*\(/,'Use a loop — no typing 5050'),
               avoids(ctx, /5050/, 'Do not type the answer. Let the loop compute it.'),
               varIs(ctx, 'total', 5050),
               said(ctx, '5050', 'Print the total when the loop is finished.'),
@@ -135,7 +135,7 @@ export default {
         {
           type: 'code',
           prompt:
-            'Star pyramid ⭐ — print 5 lines:\n\n```\n*\n**\n***\n****\n*****\n```\n\nTip: `"*".repeat(3)` gives `"***"`.',
+            'Star pyramid — print 5 lines:\n\n```\n*\n**\n***\n****\n*****\n```\n\nTip:`"*".repeat(3)`gives`"***"`.',
           starter: '',
           hint: 'for (let i = 1; i <= 5; i++) { console.log("*".repeat(i)); }',
           solution: 'for (let i = 1; i <= 5; i++) {\n  console.log("*".repeat(i));\n}',
@@ -145,7 +145,7 @@ export default {
     },
     {
       id: 'u3l3',
-      emoji: '🐃',
+      icon: 'rover',
       title: { en: 'Kodo the Yak', ky: 'Кодо аттуу топоз' },
       minutes: 13,
       xp: 60,
@@ -153,11 +153,11 @@ export default {
       steps: [
         {
           type: 'teach',
-          title: 'Meet Kodo 🐃',
+          title: 'Meet Kodo',
           text:
             'Kodo the yak lives on a grid and understands four commands:\n\n' +
             '`forward()` — one square ahead\n`turnLeft()` / `turnRight()` — spin in place\n`collect()` — pick up the apple under his feet\n\n' +
-            'He also answers a question: `canMove()` is `true` when the square ahead is free.\n\nHis goal is always the yurt 🏠.',
+            'He also answers a question:`canMove()`is`true`when the square ahead is free.\n\nHis goal is always the yurt.',
           code: 'forward();\nforward();\nturnRight();\nforward();\ncollect();',
           tip: 'Bonk into a wall and the run stops. Kodo forgives you — press Run again.',
         },
@@ -172,7 +172,7 @@ export default {
         {
           type: 'robot',
           prompt:
-            'Now with apples 🍎. Collect **both** apples and finish on the yurt. You must `collect()` while standing on an apple.',
+            'Now with apples. Collect **both** apples and finish on the yurt. You must`collect()`while standing on an apple.',
           palette: robotBlocks,
           spec: {
             w: 5,
@@ -188,7 +188,7 @@ export default {
         {
           type: 'robot',
           prompt:
-            'A corner 📐. Walls block the way — go around them. Grab the apple on the route.',
+            'A corner. Walls block the way — go around them. Grab the apple on the route.',
           spec: {
             w: 4,
             h: 4,
@@ -208,12 +208,12 @@ export default {
           text:
             'A `for` loop is for "do this N times". A `while` loop is for "keep going **until** something is true". Kodo does not have to count squares — he can just walk while the way is clear.',
           code: 'while (canMove()) {\n  forward();\n}\n// walks until a wall or the edge stops him',
-          tip: 'Every `while` needs something inside that eventually makes the condition false — otherwise: infinite loop 🌀.',
+          tip: 'Every`while`needs something inside that eventually makes the condition false — otherwise: infinite loop.',
         },
         {
           type: 'robot',
           prompt:
-            'Long hallway 🏃 — you do NOT know how long it is. Use `while (canMove())` to reach the end, then turn and finish at the yurt.',
+            'Long hallway — you do NOT know how long it is. Use`while (canMove())`to reach the end, then turn and finish at the yurt.',
           spec: {
             w: 7,
             h: 2,
@@ -232,7 +232,7 @@ export default {
     },
     {
       id: 'u3l4',
-      emoji: '🌀',
+      icon: 'globe',
       title: { en: 'Project: Spiral Run', ky: 'Долбоор: Спираль' },
       minutes: 14,
       xp: 70,
@@ -255,7 +255,7 @@ export default {
         {
           type: 'code',
           prompt:
-            'FizzBuzz, the famous one 🎤. For numbers 1 to 15 print:\n\n- `Fizz` if divisible by 3\n- `Buzz` if divisible by 5\n- `FizzBuzz` if divisible by both\n- otherwise the number itself',
+            'FizzBuzz, the famous one. For numbers 1 to 15 print:\n\n- `Fizz`if divisible by 3\n- `Buzz`if divisible by 5\n- `FizzBuzz`if divisible by both\n- otherwise the number itself',
           starter: 'for (let i = 1; i <= 15; i++) {\n  \n}',
           hint: 'Check the BOTH case first — otherwise 15 only ever gets to be Fizz.',
           solution:
@@ -268,7 +268,7 @@ export default {
         {
           type: 'robot',
           prompt:
-            'Final maze 🏁. Zig-zag to the yurt and collect all three apples. Loops will save you a lot of typing.',
+            'Final maze. Zig-zag to the yurt and collect all three apples. Loops will save you a lot of typing.',
           spec: {
             w: 5,
             h: 5,

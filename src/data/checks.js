@@ -44,7 +44,7 @@ export function uses(ctx, re, msg) {
 }
 
 export function avoids(ctx, re, msg) {
-  return !re.test(ctx.code) || msg || 'That shortcut is not allowed in this task 😄';
+  return!re.test(ctx.code) || msg || 'That shortcut is not allowed in this task';
 }
 
 /** Runs all checks in order and returns the first failure message, or true. */

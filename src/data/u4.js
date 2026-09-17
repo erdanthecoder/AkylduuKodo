@@ -2,13 +2,13 @@ import { all, said, linesAre, uses, avoids } from './checks.js';
 
 export default {
   id: 'u4',
-  emoji: '⚒️',
+  icon: 'wand',
   title: { en: 'Your Own Commands', ky: 'Өз буйруктарың' },
   blurb: 'Functions: wrap up an idea, give it a name, use it forever.',
   lessons: [
     {
       id: 'u4l1',
-      emoji: '📜',
+      icon: 'book',
       title: { en: 'Name a Recipe', ky: 'Рецептке ат бер' },
       minutes: 11,
       xp: 55,
@@ -53,7 +53,7 @@ export default {
     },
     {
       id: 'u4l2',
-      emoji: '🎁',
+      icon: 'layers',
       title: { en: 'Inputs and Answers', ky: 'Кириш жана жооп' },
       minutes: 13,
       xp: 60,
@@ -125,7 +125,7 @@ export default {
     },
     {
       id: 'u4l3',
-      emoji: '🧰',
+      icon: 'puzzle',
       title: { en: 'Project: Tiny Toolbox', ky: 'Долбоор: Кичине куралдар' },
       minutes: 14,
       xp: 70,
@@ -160,7 +160,7 @@ export default {
         {
           type: 'code',
           prompt:
-            'Final build 🏁 — a **receipt printer** made of two functions.\n\n1. `total(price, count)` returns the price × count\n2. `receipt(item, price, count)` returns a line like `4 x samsa = 180 som` (it must call `total`)\n\nPrint `receipt("samsa", 45, 4)`.',
+            'Final build — a **receipt printer** made of two functions.\n\n1.`total(price, count)`returns the price × count\n2.`receipt(item, price, count)`returns a line like`4 x samsa = 180 som` (it must call`total`)\n\nPrint`receipt("samsa", 45, 4)`.',
           starter: 'function total(price, count) {\n  \n}\n\nfunction receipt(item, price, count) {\n  \n}\n\n',
           hint: 'Inside receipt: return `${count} x ${item} = ${total(price, count)} som`;',
           solution:

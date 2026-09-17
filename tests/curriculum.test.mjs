@@ -125,13 +125,13 @@ MAZES.forEach((m, i) => {
   ok(unreachable.length === 0 || `unreachable: ${unreachable.join(' ')}`, `practice maze ${i + 1} reachable`);
 });
 
-console.log(`\n✅ ${pass} checks passed`);
+console.log(`\n${pass} checks passed`);
 if (warnings.length) {
-  console.log(`\n⚠️  ${warnings.length} warning(s):`);
+  console.log(`\n${warnings.length} warning(s):`);
   warnings.forEach((w) => console.log('   - ' + w));
 }
 if (failures.length) {
-  console.log(`\n❌ ${failures.length} failure(s):`);
+  console.log(`\n${failures.length} failure(s):`);
   failures.forEach((f) => console.log('   - ' + f));
   process.exit(1);
 }

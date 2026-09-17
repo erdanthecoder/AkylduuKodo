@@ -1,6 +1,8 @@
 // ui.js — tiny DOM helpers. No framework, on purpose: everything here is
 // readable by a learner who finishes Unit 5.
 
+import { icon } from './icons.js';
+
 export function h(tag, attrs = {}, ...children) {
   const el = document.createElement(tag);
   for (const [k, v] of Object.entries(attrs || {})) {
@@ -93,14 +95,18 @@ export function toast(message, kind = 'info') {
   toastTimer = setTimeout(() => host.classList.remove('show'), 2800);
 }
 
-const CONFETTI = ['🎉', '⭐', '✨', '🎈', '🏔️', '🍎', '🔥'];
+const CONFETTI_COLORS = ['var(--accent)', 'var(--accent-2)', 'var(--blue)', 'var(--purple)', 'var(--ok)'];
+const CONFETTI_SHAPES = ['sq', 'circ', 'bar'];
+
 export function confetti(count = 28) {
   const layer = h('div', { class: 'confetti-layer' });
   for (let i = 0; i < count; i++) {
-    const piece = h('span', { class: 'confetti' }, CONFETTI[Math.floor(Math.random() * CONFETTI.length)]);
+    const shape = CONFETTI_SHAPES[i % CONFETTI_SHAPES.length];
+    const piece = h('span', { class: `confetti confetti-${shape}` });
     piece.style.left = Math.random() * 100 + '%';
     piece.style.animationDelay = Math.random() * 0.5 + 's';
-    piece.style.fontSize = 14 + Math.random() * 18 + 'px';
+    piece.style.background = CONFETTI_COLORS[Math.floor(Math.random() * CONFETTI_COLORS.length)];
+    piece.style.setProperty('--spin', (Math.random() * 720 - 360) + 'deg');
     layer.append(piece);
   }
   document.body.append(layer);
@@ -145,4 +151,14 @@ export function shuffle(list) {
     [a[i], a[j]] = [a[j], a[i]];
   }
   return a;
+}
+
+/** Filled / empty stars, drawn as icons rather than characters. */
+export function starRow(filled, total = 3, size = 18) {
+  const row = h('span', { class: 'stars' });
+  for (let i = 0; i < total; i++) {
+    const s = icon('star', { size, cls: i < filled ? 'star-on' : 'star-off' });
+    row.append(s);
+  }
+  return row;
 }

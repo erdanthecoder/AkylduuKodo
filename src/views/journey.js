@@ -1,20 +1,21 @@
 // journey.js — the map of units and lessons.
 
-import { h } from '../ui.js';
+import { h, starRow } from '../ui.js';
+import { icon } from '../icons.js';
 import { ui, t } from '../i18n.js';
 import * as store from '../state.js';
 import { UNITS, isUnlocked } from '../data/index.js';
 
 const STEP_ICON = {
-  teach: '📖',
-  quiz: '❓',
-  predict: '🔮',
-  order: '🧵',
-  type: '⌨️',
-  code: '💻',
-  bug: '🐛',
-  robot: '🐃',
-  unplugged: '🌍',
+  teach: 'book',
+  quiz: 'target',
+  predict: 'eye',
+  order: 'list',
+  type: 'keyboard',
+  code: 'code',
+  bug: 'bug',
+  robot: 'rover',
+  unplugged: 'globe',
 };
 
 export function JourneyView(go) {
@@ -23,19 +24,21 @@ export function JourneyView(go) {
   return h(
     'div',
     { class: 'view journey' },
-    h('h1', { class: 'view-title' }, '🗺️ ' + ui('nav_journey')),
+    h('h1', { class: 'view-title' }, ui('nav_journey')),
     ...UNITS.map((unit, ui_i) => {
       const done = unit.lessons.filter((l) => s.done[l.id]).length;
       return h(
         'section',
         { class: `card unit unit-${ui_i + 1}` },
         h('div', { class: 'unit-head' },
-          h('span', { class: 'unit-emoji' }, unit.emoji),
+          h('span', { class: 'unit-mark' }, icon(unit.icon, { size: 24 })),
           h('div', {},
             h('h2', {}, t(unit.title)),
             h('p', { class: 'muted' }, t(unit.blurb)),
           ),
-          h('span', { class: 'unit-count' }, `${done}/${unit.lessons.length}`),
+          h('span', { class: 'unit-progress' },
+            h('span', { class: 'mini-bar' }, h('span', { class: 'mini-bar-fill', style: `width:${Math.round((done / unit.lessons.length) * 100)}%` })),
+          ),
         ),
         h('div', { class: 'lesson-grid' },
           ...unit.lessons.map((lesson) => {
@@ -50,15 +53,17 @@ export function JourneyView(go) {
                 onclick: () => open && go(`#/lesson/${lesson.id}`),
               },
               h('div', { class: 'lesson-card-top' },
-                h('span', { class: 'lesson-card-emoji' }, open ? lesson.emoji : '🔒'),
-                record ? h('span', { class: 'stars small' }, '⭐'.repeat(record.stars)) : null,
+                h('span', { class: 'lesson-card-mark' }, icon(open ? lesson.icon : 'lock', { size: 22 })),
+                record ? starRow(record.stars, 3, 13) : null,
               ),
               h('strong', {}, t(lesson.title)),
               h('small', { class: 'muted' }, t(lesson.blurb)),
               h('div', { class: 'lesson-card-foot' },
-                h('span', { class: 'chip' }, `⏱️ ${lesson.minutes}m`),
-                h('span', { class: 'chip' }, `⚡ ${lesson.xp}`),
-                h('span', { class: 'kinds' }, [...new Set(lesson.steps.map((st) => STEP_ICON[st.type] || '•'))].join('')),
+                h('span', { class: 'chip' }, icon('clock', { size: 12 }), `${lesson.minutes}m`),
+                h('span', { class: 'chip' }, icon('bolt', { size: 12 }), String(lesson.xp)),
+                h('span', { class: 'kinds' },
+                  ...[...new Set(lesson.steps.map((st) => STEP_ICON[st.type] || 'code'))].map((n) => icon(n, { size: 14 })),
+                ),
               ),
               h('span', { class: 'lesson-cta' }, record ? ui('replay') : ui('start')),
             );

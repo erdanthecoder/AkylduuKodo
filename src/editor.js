@@ -141,7 +141,7 @@ export function createScreen({ title = 'What your code shows' } = {}) {
 
   return {
     el,
-    clear(text = 'Press Run ▶ to see what your code does.') {
+    clear(text = 'Press Run to see what your code does.') {
       status.textContent = '';
       status.className = 'screen-status';
       body.replaceChildren(empty(text));

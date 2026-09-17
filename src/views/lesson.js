@@ -1,6 +1,7 @@
 // lesson.js — the lesson player: one step at a time, seven kinds of step.
 
-import { h, md, codeBlock, toast, confetti, sfx, shuffle, clear } from '../ui.js';
+import { h, md, codeBlock, toast, confetti, sfx, shuffle, clear, starRow } from '../ui.js';
+import { icon, rover } from '../icons.js';
 import { createEditor, createScreen } from '../editor.js';
 import { createBlocks } from '../blocks.js';
 import { runCode } from '../runner.js';
@@ -33,7 +34,7 @@ export function LessonView(lessonId, go) {
     h(
       'div',
       { class: 'lesson-head' },
-      h('button', { class: 'btn btn-ghost btn-exit', onclick: () => go('#/journey') }, '✕'),
+      h('button', { class: 'btn btn-ghost btn-exit', onclick: () => go('#/journey'), title: 'Close' }, icon('close', { size: 18 })),
       h(
         'div',
         { class: 'lesson-title' },
@@ -71,9 +72,9 @@ export function LessonView(lessonId, go) {
       h(
         'div',
         { class: 'card celebrate' },
-        h('div', { class: 'big-emoji' }, '🎉'),
+        h('div', { class: 'big-mark' }, icon('trophy', { size: 46 })),
         h('h2', {}, ui('lesson_done')),
-        h('div', { class: 'stars' }, '⭐'.repeat(stars) + '☆'.repeat(3 - stars)),
+        starRow(stars, 3, 30),
         h('p', { class: 'xp-line' }, `+${result.gained} ${ui('xp')}`),
         result.earned.length
           ? h(
@@ -114,7 +115,7 @@ export function LessonView(lessonId, go) {
     nextBtn.disabled = true;
     nextBtn.classList.remove('pulse');
     const step = lesson.steps[index];
-    nextBtn.textContent = index === lesson.steps.length - 1 ? '🏁 Finish' : ui('next') + ' →';
+    nextBtn.textContent = index === lesson.steps.length - 1 ? 'Finish' : ui('next');
 
     dots.replaceChildren(
       ...lesson.steps.map((s, i) =>
@@ -163,7 +164,7 @@ function teachStep(step, api) {
     h('h2', {}, t(step.title)),
     h('div', { class: 'prose', html: md(t(step.text)) }),
     step.code ? exampleWithOutput(t(step.code)) : null,
-    step.tip ? h('div', { class: 'tip', html: '💡 ' + md(t(step.tip)) }) : null,
+    step.tip ? h('div', { class: 'tip' }, icon('bulb', { size: 17 }), h('div', { html: md(t(step.tip)) })) : null,
   );
 }
 
@@ -217,7 +218,7 @@ function quizStep(step, api) {
             btn.classList.add('option-wrong');
             btn.disabled = true;
             sfx('bad', store.get().sound);
-            toast(ui('not_yet') + ' try another one 🤔', 'warn');
+            toast(ui('not_yet') + ' try another one.', 'warn');
           }
         },
       },
@@ -229,7 +230,7 @@ function quizStep(step, api) {
   return h(
     'div',
     { class: 'card' },
-    h('h2', {}, step.type === 'predict' ? '🔮 What does this print?' : t(step.q)),
+    h('h2', {}, step.type === 'predict' ? 'What does this print?' : t(step.q)),
     step.code ? codeBlock(t(step.code)) : null,
     step.type === 'predict' && step.q ? h('p', { class: 'prompt' }, t(step.q)) : null,
     opts,
@@ -289,7 +290,7 @@ function orderStep(step, api) {
   return h(
     'div',
     { class: 'card' },
-    h('h2', {}, '🧵 ' + t(step.prompt || ui('drag_hint'))),
+    h('h2', {}, t(step.prompt || ui('drag_hint'))),
     h('p', { class: 'muted' }, ui('drag_hint')),
     list,
     h(
@@ -299,7 +300,7 @@ function orderStep(step, api) {
         onclick: () => {
           if (current.join('\n') === correct.join('\n')) {
             feedback.className = 'feedback ok';
-            feedback.innerHTML = md('✅ ' + ui('correct') + (step.why ? '\n\n' + t(step.why) : ''));
+            feedback.innerHTML = md(ui('correct') + (step.why ? '\n\n' + t(step.why) : ''));
             api.markSolved();
           } else {
             const firstBad = current.findIndex((l, i) => l !== correct[i]);
@@ -331,7 +332,7 @@ function typeStep(step, api) {
     );
     if (value === target) {
       feedback.className = 'feedback ok';
-      feedback.textContent = '✅ ' + ui('correct');
+      feedback.textContent = ui('correct');
       api.markSolved();
     } else {
       feedback.className = 'feedback';
@@ -345,7 +346,7 @@ function typeStep(step, api) {
   return h(
     'div',
     { class: 'card' },
-    h('h2', {}, '⌨️ ' + t(step.prompt)),
+    h('h2', {}, t(step.prompt)),
     h('p', { class: 'muted' }, ui('typed_it')),
     mirror,
     input,
@@ -364,13 +365,13 @@ function unpluggedStep(step, api) {
       {
         class: 'btn btn-primary',
         onclick: (e) => {
-          e.target.textContent = '✅ Nice one!';
+          e.target.textContent = 'Nice one';
           e.target.disabled = true;
           confetti(12);
           api.markSolved();
         },
       },
-      'I did it ✅',
+      'I did it',
     ),
   );
 }
@@ -388,8 +389,8 @@ function workbench(step, { onRun, extraPanel = null }) {
     ? h(
         'div',
         { class: 'tabs' },
-        h('button', { class: 'tab', dataset: { mode: 'blocks' }, onclick: () => setMode('blocks') }, '🧩 ' + ui('blocks_tab')),
-        h('button', { class: 'tab', dataset: { mode: 'code' }, onclick: () => setMode('code') }, '⌨️ ' + ui('code_tab')),
+        h('button', { class: 'tab', dataset: { mode: 'blocks' }, onclick: () => setMode('blocks') }, icon('puzzle', { size: 15 }), ui('blocks_tab')),
+        h('button', { class: 'tab', dataset: { mode: 'code' }, onclick: () => setMode('code') }, icon('code', { size: 15 }), ui('code_tab')),
       )
     : null;
 
@@ -418,7 +419,7 @@ function workbench(step, { onRun, extraPanel = null }) {
   setMode(mode);
   if (mode !== 'blocks') cons.clear();
 
-  const runBtn = h('button', { class: 'btn btn-run', onclick: () => onRun(editor.value, cons) }, '▶ ' + ui('run'));
+  const runBtn = h('button', { class: 'btn btn-run', onclick: () => onRun(editor.value, cons) }, icon('play', { size: 16 }), ui('run'));
 
   const tools = h(
     'div',
@@ -430,12 +431,12 @@ function workbench(step, { onRun, extraPanel = null }) {
           {
             class: 'btn btn-ghost',
             onclick: (e) => {
-              cons.note('💡 ' + t(step.hint));
+              cons.note('Hint: ' + t(step.hint));
               e.target.disabled = true;
               step.__hinted = true;
             },
           },
-          '💡 ' + ui('hint'),
+          icon('bulb', { size: 16 }), ui('hint'),
         )
       : null,
     step.solution
@@ -444,14 +445,14 @@ function workbench(step, { onRun, extraPanel = null }) {
           {
             class: 'btn btn-ghost',
             onclick: (e) => {
-              if (!confirm('Peek at the solution? You will still get one ⭐ for finishing.')) return;
+              if (!confirm('Show the solution? You will still earn one star for finishing.')) return;
               setMode('code');
               editor.value = step.solution;
               e.target.disabled = true;
               step.__peeked = true;
             },
           },
-          '🔑 ' + ui('solution'),
+          icon('key', { size: 16 }), ui('solution'),
         )
       : null,
     step.solution && step.type !== 'robot'
@@ -462,7 +463,7 @@ function workbench(step, { onRun, extraPanel = null }) {
             const got = runCode(editor.value, { capture: step.capture || [] });
             cons.compare(want.logs, got.logs);
           },
-        }, '⚖️ Compare with what is asked')
+        }, icon('scale', { size: 16 }), 'Compare with the task')
       : null,
     h(
       'button',
@@ -474,7 +475,7 @@ function workbench(step, { onRun, extraPanel = null }) {
           cons.clear();
         },
       },
-      '↺ ' + ui('reset_code'),
+      icon('reset', { size: 16 }), ui('reset_code'),
     ),
   );
 
@@ -484,7 +485,7 @@ function workbench(step, { onRun, extraPanel = null }) {
     tabs,
     extraPanel,
     h('div', { class: 'bench-split' },
-      h('div', { class: 'bench-code' }, h('span', { class: 'bench-label' }, '✍️ Your code'), panes),
+      h('div', { class: 'bench-code' }, h('span', { class: 'bench-label' }, 'Your code'), panes),
       h('div', { class: 'bench-out' }, cons.el),
     ),
     tools,
@@ -513,7 +514,7 @@ function codeStep(step, api) {
       bench.el.querySelector('.btn-compare')?.classList.toggle('hidden', verdict === true);
       if (verdict === true) {
         feedback.className = 'feedback ok';
-        feedback.innerHTML = md('✅ **' + ui('correct') + '** Press Next to keep going.');
+        feedback.innerHTML = md('**' + ui('correct') + '** Press Next to keep going.');
         confetti(14);
         api.markSolved();
       } else {
@@ -527,7 +528,7 @@ function codeStep(step, api) {
   return h(
     'div',
     { class: 'card' },
-    h('h2', {}, (step.type === 'bug' ? '🐛 ' : '💻 ') + (step.type === 'bug' ? 'Fix the bug' : 'Your turn')),
+    h('h2', {}, icon(step.type === 'bug' ? 'bug' : 'code', { size: 22 }), step.type === 'bug' ? 'Fix the bug' : 'Your turn'),
     h('div', { class: 'prose', html: md(t(step.prompt)) }),
     bench.el,
     feedback,
@@ -552,12 +553,12 @@ function robotStep(step, api) {
         const key = `${x},${y}`;
         const isGoal = spec.goal && spec.goal.x === x && spec.goal.y === y;
         const cell = h('div', { class: 'cell' + (walls.has(key) ? ' cell-wall' : '') });
-        if (isGoal) cell.append(h('span', { class: 'cell-goal' }, '🏠'));
-        if (gems.has(key)) cell.append(h('span', { class: 'cell-gem' }, '🍎'));
+        if (isGoal) cell.append(h('span', { class: 'cell-goal' }, icon('yurt', { size: 20 })));
+        if (gems.has(key)) cell.append(h('span', { class: 'cell-gem' }, icon('apple', { size: 18 })));
         if (frame.x === x && frame.y === y) {
-          const yak = h('span', { class: 'cell-bot' }, '🐃');
-          yak.style.transform = `rotate(${[0, 90, 180, 270][frame.dir]}deg)`;
-          cell.append(yak);
+          const bot = h('span', { class: 'cell-bot' }, rover(26));
+          bot.style.transform = `rotate(${[0, 90, 180, 270][frame.dir]}deg)`;
+          cell.append(bot);
         }
         grid.append(cell);
       }
@@ -573,7 +574,7 @@ function robotStep(step, api) {
   paint(startFrame, step.spec);
 
   const bench = workbench(step, {
-    extraPanel: h('div', { class: 'grid-wrap' }, grid, h('div', { class: 'grid-legend' }, '🐃 Kodo · 🍎 apple · 🏠 yurt')),
+    extraPanel: h('div', { class: 'grid-wrap' }, grid, h('div', { class: 'grid-legend' }, 'rover · apple to collect · base to reach')),
     onRun: (code, cons) => {
       clearInterval(timer);
       const res = runRobot(code, step.spec);
@@ -589,7 +590,7 @@ function robotStep(step, api) {
           const extra = step.check ? safeCheck(step, { logs: res.logs, code, vars: {}, value: undefined }) : true;
           if (res.solved && extra === true) {
             status.className = 'feedback ok';
-            status.textContent = `✅ ${ui('correct')} Kodo made it in ${res.moves} moves.`;
+            status.textContent = `${ui('correct')} The rover made it in ${res.moves} moves.`;
             confetti(14);
             api.markSolved();
           } else {
@@ -605,7 +606,7 @@ function robotStep(step, api) {
   return h(
     'div',
     { class: 'card' },
-    h('h2', {}, '🐃 Drive Kodo'),
+    h('h2', {}, icon('rover', { size: 22 }), 'Program the rover'),
     h('div', { class: 'prose', html: md(t(step.prompt)) }),
     bench.el,
     status,

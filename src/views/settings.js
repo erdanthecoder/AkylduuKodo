@@ -1,9 +1,9 @@
 // settings.js — name, weekly goal, language, sound, and the big red button.
 
 import { h, toast } from '../ui.js';
+import { icon } from '../icons.js';
 import { ui, LANGS } from '../i18n.js';
 import * as store from '../state.js';
-import { ALL_LESSONS } from '../data/index.js';
 
 const GOALS = [3, 5, 7, 10];
 
@@ -23,7 +23,7 @@ export function SettingsView(go, rerender) {
         class: `chip chip-btn ${s.goalPerWeek === n ? 'chip-on' : ''}`,
         onclick: () => {
           store.set({ goalPerWeek: n });
-          toast(`Goal set: ${n} lessons per week 🎯`, 'ok');
+          toast(`Goal set: ${n} lessons per week`, 'ok');
           rerender();
         },
       }, `${n} / week`),
@@ -43,28 +43,28 @@ export function SettingsView(go, rerender) {
     },
   });
 
-  const weeksLeft = Math.ceil((ALL_LESSONS.length - Object.keys(s.done).length) / Math.max(1, s.goalPerWeek));
+  const perMonth = s.goalPerWeek * 4;
 
   return h(
     'div',
     { class: 'view' },
-    h('h1', { class: 'view-title' }, '⚙️ ' + ui('nav_settings')),
+    h('h1', { class: 'view-title' }, ui('nav_settings')),
 
     h('section', { class: 'card' },
-      h('h3', {}, '🙋 ' + ui('name_q')),
+      h('h3', {}, ui('name_q')),
       nameInput,
     ),
 
     h('section', { class: 'card' },
-      h('h3', {}, '🎯 ' + ui('goal_q')),
+      h('h3', {}, ui('goal_q')),
       h('p', { class: 'muted' }, ui('goal_note')),
       goalRow,
       h('div', { class: 'row gap center' }, h('span', { class: 'muted' }, 'or your own number:'), custom),
-      h('p', { class: 'muted' }, `At this pace you finish all ${ALL_LESSONS.length} lessons in about ${weeksLeft} week(s).`),
+      h('p', { class: 'muted' }, `That is about ${perMonth} lessons a month.`),
     ),
 
     h('section', { class: 'card' },
-      h('h3', {}, '🌍 ' + ui('lang')),
+      h('h3', {}, ui('lang')),
       h('div', { class: 'chips' },
         ...LANGS.map((l) =>
           h('button', {
@@ -73,14 +73,14 @@ export function SettingsView(go, rerender) {
               store.set({ lang: l.id });
               rerender();
             },
-          }, `${l.flag} ${l.label}`),
+          }, l.label),
         ),
       ),
       h('p', { class: 'muted small' }, 'Lesson text is English for now; the app chrome speaks Kyrgyz too.'),
     ),
 
     h('section', { class: 'card' },
-      h('h3', {}, '🔊 ' + ui('sound')),
+      h('h3', {}, ui('sound')),
       h('label', { class: 'switch-row' },
         h('input', {
           type: 'checkbox',
@@ -92,13 +92,13 @@ export function SettingsView(go, rerender) {
     ),
 
     h('section', { class: 'card danger' },
-      h('h3', {}, '☠️ ' + ui('reset_all')),
+      h('h3', {}, ui('reset_all')),
       h('button', {
         class: 'btn btn-danger',
         onclick: () => {
           if (!confirm(ui('reset_confirm'))) return;
           store.reset();
-          toast('Everything erased. Fresh start! 🌱', 'warn');
+          toast('Everything erased. Fresh start.', 'warn');
           go('#/home');
         },
       }, ui('reset_all')),

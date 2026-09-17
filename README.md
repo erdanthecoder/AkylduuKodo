@@ -1,4 +1,4 @@
-# 🏔️ AkylduuKodo
+# AkylduuKodo
 
 **Learn programming, one clear step at a time.** An interactive, zero-dependency web app
 that teaches real JavaScript through short lessons, guided practice and a weekly study goal.
@@ -87,45 +87,45 @@ value wins.
 
 ## What's inside
 
-**19 lessons across 5 units**, 97 steps — roughly 4 weeks at the default pace of
+A full course across several units — roughly a month at the default pace of
 **5 lessons per week** (changeable to 3, 7, 10 or any number in Settings).
 
 | Unit | What you learn |
 | --- | --- |
-| 🌱 First Words | `console.log`, strings, variables, numbers, template strings |
-| 🔀 Making Choices | booleans, comparisons, `if / else if / else`, `&&` `\|\|` `!` |
-| 🔁 Loops & Patterns | `for`, `while`, accumulators, nested loops, FizzBuzz, robot mazes |
-| ⚒️ Your Own Commands | functions, parameters, `return`, composing small tools |
-| 📦 Lists & Things | arrays, `for...of`, objects, and a final chaihana project |
+| First Words | `console.log`, strings, variables, numbers, template strings |
+| Making Choices | booleans, comparisons,`if / else if / else`,`&&` `\|\|` `!` |
+| Loops & Patterns | `for`,`while`, accumulators, nested loops, FizzBuzz, robot mazes |
+| Your Own Commands | functions, parameters,`return`, composing small tools |
+| Lists & Things | arrays,`for...of`, objects, and a final chaihana project |
 
-### Seven kinds of step — so it never gets boring
+### Eight kinds of step — so it never gets boring
 
-- 📖 **Teach** — a short idea with a worked example, never a wall of text
-- 🔮 **Predict** — what does this code print? (guess before you run)
-- ❓ **Quiz** — concept checks with an explanation of *why*
-- 🧵 **Order** — drag scrambled lines into a working program
-- ⌨️ **Type** — retype a line exactly, character by character, for muscle memory
-- 💻 **Code / 🐛 Bug** — write real code, or hunt a real bug, checked by real tests
-- 🐃 **Robot** — drive Kodo the yak through a maze with `forward()`, `turnLeft()`, `collect()`
-- 🌍 **Unplugged quests** — offline activities away from the screen (the sandwich
+- **Teach** — a short idea with a worked example, and the example's real output beside it
+- **Predict** — what does this code print? (guess before you run)
+- **Quiz** — concept checks with an explanation of *why*
+- **Order** — drag scrambled lines into a working program
+- **Type** — retype a line exactly, character by character, for muscle memory
+- **Code / Bug** — write real code, or hunt a real bug, checked by real tests
+- **Robot** — drive Kodo the yak through a maze with`forward()`,`turnLeft()`,`collect()`
+- **Unplugged quests** — offline activities away from the screen (the sandwich
   algorithm, human booleans, looping your chores, teaching someone else)
 
 ### Blocks *or* typing
 
-Steps that suit it have a **🧩 Blocks** tab: snap blocks together, edit their values, and
-watch the real JavaScript appear live. Switch to **⌨️ Code** at any moment and the generated
+Steps that suit it have a ** Blocks** tab: snap blocks together, edit their values, and
+watch the real JavaScript appear live. Switch to ** Code** at any moment and the generated
 code is already in the editor — the training wheels come off by themselves. Most of the
 course is real typing, by design.
 
 ### Motivation that isn't fake
 
-- ⚡ XP and 8 levels, from *Spark* to *Akyl Master*
-- 🔥 Daily streak + a weekly goal ring (your pace, your choice)
-- ⭐ Stars per lesson — peeking at the solution costs you stars, not progress
-- 🏅 8 badges
-- 🎯 **Practice Drills**: Output Sprint (60s), Bug Hunt (75s), and 5-level Maze Logic where
+- XP and 8 levels, from *Spark* to *Akyl Master*
+- Daily streak + a weekly goal ring (your pace, your choice)
+- Stars per lesson — peeking at the solution costs you stars, not progress
+- 8 badges
+- **Practice Drills**: Output Sprint (60s), Bug Hunt (75s), and 5-level Maze Logic where
   *shorter, smarter code scores higher*
-- 🧪 **Code Lab**: a blank editor with example programs, saved in your browser
+- **Code Lab**: a blank editor with example programs, saved in your browser
 
 ## How it is built
 
@@ -153,12 +153,12 @@ flame, springy buttons and nav, a breathing yak. All of it is switched off in on
 anyone with `prefers-reduced-motion` set.
 
 **Safety rails for learners:** an infinite loop throws a friendly error instead of freezing
-the tab; error messages get a 💡 hint appended; a checker that crashes on odd output says so
+the tab; error messages get a hint appended; a checker that crashes on odd output says so
 politely instead of pretending the program failed.
 
 ## Language
 
-The app chrome speaks **English and Kyrgyz** (🇰🇬 Кыргызча) — switch in Settings. Lesson text
+The app chrome speaks **English and Kyrgyz** ( Кыргызча) — switch in Settings. Lesson text
 is English for now, but every lesson field accepts `{ en: "...", ky: "..." }` and falls back
 to English automatically, so translating is drop-in:
 

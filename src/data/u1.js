@@ -9,13 +9,13 @@ const sayBlocks = [
 
 export default {
   id: 'u1',
-  emoji: '🌱',
+  icon: 'sparkle',
   title: { en: 'First Words', ky: 'Алгачкы сөздөр' },
   blurb: 'Make the computer talk, then teach it to remember things.',
   lessons: [
     {
       id: 'u1l1',
-      emoji: '📣',
+      icon: 'sound',
       title: { en: 'Make It Talk', ky: 'Компьютерди сүйлөт' },
       minutes: 8,
       xp: 40,
@@ -71,7 +71,7 @@ export default {
         },
         {
           type: 'unplugged',
-          title: 'Offline quest: the sandwich algorithm 🥪',
+          title: 'Offline quest: the sandwich algorithm',
           text:
             'Grab a person and a piece of paper. Write the steps for making a sandwich (or a cup of chai) — then have them follow your steps **exactly**, like a computer, without guessing.\n\n' +
             'They will get it hilariously wrong. That is the lesson: computers never guess. Rewrite the steps until it works.',
@@ -80,7 +80,7 @@ export default {
     },
     {
       id: 'u1l2',
-      emoji: '📦',
+      icon: 'layers',
       title: { en: 'Boxes With Names', ky: 'Аты бар кутулар' },
       minutes: 10,
       xp: 45,
@@ -145,7 +145,7 @@ export default {
     },
     {
       id: 'u1l3',
-      emoji: '🔢',
+      icon: 'wand',
       title: { en: 'Number Magic', ky: 'Сан сыйкыры' },
       minutes: 10,
       xp: 45,
@@ -209,7 +209,7 @@ export default {
     },
     {
       id: 'u1l4',
-      emoji: '🎖️',
+      icon: 'medal',
       title: { en: 'Project: Name Badge', ky: 'Долбоор: Аты-жөн белгиси' },
       minutes: 12,
       xp: 60,
@@ -261,7 +261,7 @@ export default {
         {
           type: 'code',
           prompt:
-            'Final challenge 🏁 — a **ticket printer**.\n\nGiven `event`, `seat` and `price`, print one line:\n\n`Kurmanjan Concert — seat 14 — 500 som`\n\n(Use the values already in the variables, and an em dash `—` between the parts.)',
+            'Final challenge — a **ticket printer**.\n\nGiven`event`,`seat`and`price`, print one line:\n\n`Kurmanjan Concert — seat 14 — 500 som`\n\n(Use the values already in the variables, and an em dash`—`between the parts.)',
           starter: 'let event = "Kurmanjan Concert";\nlet seat = 14;\nlet price = 500;\n\n',
           hint: 'One template string: `${event} — seat ${seat} — ${price} som`',
           solution:

@@ -160,14 +160,14 @@ button { font-family: inherit; }
 .hero { display: flex; align-items: center; justify-content: space-between; gap: 16px; flex-wrap: wrap; }
 .hero h1 { font-size: 1.7rem; }
 .hero-level { display: flex; align-items: center; gap: 12px; min-width: 210px; }
-.level-emoji { font-size: 2.2rem; }
+
 .bar { height: 8px; background: var(--bg-2); border-radius: 999px; overflow: hidden; margin: 6px 0 4px; border: 1px solid var(--line); }
 .bar.big { height: 12px; }
 .bar-fill { height: 100%; background: linear-gradient(90deg, var(--accent), var(--accent-2)); transition: width 0.5s ease; }
 
 .stat-row { display: grid; grid-template-columns: repeat(4, 1fr); gap: 10px; }
 .stat { padding: 12px; text-align: center; }
-.stat-emoji { font-size: 1.4rem; }
+
 .stat-value { font-size: 1.3rem; font-weight: 800; }
 .stat-label { font-size: 0.72rem; color: var(--muted); }
 
@@ -182,7 +182,7 @@ button { font-family: inherit; }
 .day-today { outline: 2px solid var(--accent); }
 
 .next-card { display: flex; align-items: center; gap: 16px; flex-wrap: wrap; }
-.next-emoji { font-size: 2.6rem; }
+
 .next-body { flex: 1; min-width: 200px; }
 .chips { display: flex; gap: 6px; flex-wrap: wrap; margin-top: 6px; }
 .chip { font-size: 0.75rem; padding: 3px 9px; border-radius: 999px; background: var(--card-2); border: 1px solid var(--line); color: var(--muted); }
@@ -196,7 +196,7 @@ button { font-family: inherit; }
   background: var(--card-2); border: 1px dashed var(--line); opacity: 0.55;
 }
 .badge-on { opacity: 1; border-style: solid; border-color: var(--accent); }
-.badge-emoji { font-size: 1.6rem; display: block; }
+
 .badge-name { font-size: 0.72rem; color: var(--muted); }
 .unit-mini { display: flex; flex-direction: column; gap: 8px; }
 .unit-pill {
@@ -207,7 +207,7 @@ button { font-family: inherit; }
 
 /* ------------------------------------------------------------- journey */
 .unit-head { display: flex; align-items: center; gap: 12px; margin-bottom: 14px; }
-.unit-emoji { font-size: 2rem; }
+
 .unit-count { margin-left: auto; font-weight: 800; color: var(--muted); }
 .lesson-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(215px, 1fr)); gap: 12px; }
 .lesson-card {
@@ -218,7 +218,7 @@ button { font-family: inherit; }
 }
 .lesson-card:hover:not(:disabled) { transform: translateY(-3px); border-color: var(--accent); }
 .lesson-card-top { display: flex; justify-content: space-between; align-items: center; }
-.lesson-card-emoji { font-size: 1.7rem; }
+
 .lesson-card-foot { display: flex; gap: 6px; align-items: center; margin-top: 4px; flex-wrap: wrap; }
 .kinds { margin-left: auto; font-size: 0.8rem; letter-spacing: 1px; }
 .lesson-cta { font-size: 0.8rem; font-weight: 800; color: var(--accent); }
@@ -392,7 +392,7 @@ button { font-family: inherit; }
 }
 .example-out { position: relative; }
 .example-out::before {
-  content: "▶"; position: absolute; left: -17px; top: 34px; color: var(--accent); font-size: 0.8rem;
+  content:""; position: absolute; left: -17px; top: 34px; color: var(--accent); font-size: 0.8rem;
 }
 
 /* ------------------------------------------------------------- blocks */
@@ -432,7 +432,7 @@ button { font-family: inherit; }
 .drill-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(230px, 1fr)); gap: 12px; }
 .drill-card { text-align: left; cursor: pointer; color: var(--ink); }
 .drill-card:hover { transform: translateY(-3px); border-color: var(--accent); }
-.drill-emoji { font-size: 2.2rem; }
+
 .hud { display: flex; align-items: center; gap: 14px; }
 .hud-item { font-weight: 800; font-size: 1.1rem; }
 .hud-value { font-variant-numeric: tabular-nums; }
@@ -441,7 +441,7 @@ button { font-family: inherit; }
 
 /* ------------------------------------------------------------- misc */
 .celebrate { text-align: center; }
-.big-emoji { font-size: 3.4rem; }
+
 .xp-line { font-size: 1.15rem; font-weight: 800; color: var(--accent); }
 .week-mini { max-width: 320px; margin: 10px auto; }
 .badge-pop { display: flex; gap: 8px; justify-content: center; flex-wrap: wrap; margin: 10px 0; }
@@ -511,3 +511,129 @@ button { font-family: inherit; }
   border-left: 3px solid currentColor;
 }
 .feedback.ok p, .feedback.bad p { margin: 0; }
+
+/* ============================================================ icon system */
+.icon { flex: none; vertical-align: -0.18em; }
+.btn, .chip, .pill, .tab, .hud-item, .lesson-cta { display: inline-flex; align-items: center; gap: 7px; }
+.btn { justify-content: center; }
+h2 .icon, h1 .icon { color: var(--accent); vertical-align: -0.16em; margin-right: 8px; }
+.view-title { display: flex; align-items: center; gap: 10px; }
+.view-title .icon { color: var(--accent); }
+
+.brand-mark { display: inline-flex; color: var(--accent); }
+.big-mark { color: var(--accent); display: flex; justify-content: center; margin-bottom: 6px; }
+.level-mark, .stat-mark, .next-mark, .unit-mark, .drill-mark, .badge-mark, .auth-mark {
+  display: inline-flex; align-items: center; justify-content: center; color: var(--accent);
+}
+.stat-mark { color: var(--muted); }
+.stat:hover .stat-mark { color: var(--accent); }
+.level-mark, .next-mark, .unit-mark, .drill-mark {
+  width: 46px; height: 46px; border-radius: 14px;
+  background: color-mix(in srgb, var(--accent) 14%, transparent);
+  border: 1px solid color-mix(in srgb, var(--accent) 26%, transparent);
+}
+.lesson-card-mark {
+  display: inline-flex; width: 36px; height: 36px; border-radius: 11px; align-items: center; justify-content: center;
+  background: color-mix(in srgb, var(--purple) 20%, transparent); color: var(--purple);
+}
+.lesson-done .lesson-card-mark { background: color-mix(in srgb, var(--ok) 18%, transparent); color: var(--ok); }
+.lesson-locked .lesson-card-mark { background: var(--card); color: var(--muted); }
+.badge-mark { color: var(--muted); }
+.badge-on .badge-mark { color: var(--accent); }
+.kinds { display: inline-flex; gap: 4px; margin-left: auto; color: var(--muted); opacity: 0.75; }
+
+/* stars */
+.stars { display: inline-flex; gap: 3px; align-items: center; }
+.star-on { color: var(--accent); fill: var(--accent); }
+.star-off { color: var(--line); fill: none; }
+
+/* progress bars that replace raw counters */
+.mini-bar {
+  display: block; width: 74px; height: 6px; border-radius: 999px;
+  background: var(--bg-2); border: 1px solid var(--line); overflow: hidden;
+}
+.mini-bar-fill { display: block; height: 100%; background: linear-gradient(90deg, var(--accent), var(--accent-2)); }
+.unit-progress { margin-left: auto; }
+.unit-pill-name { display: inline-flex; align-items: center; gap: 9px; }
+.unit-pill .icon { color: var(--accent); }
+
+/* nav + pills */
+.nav-icon { display: inline-flex; }
+.nav-btn .icon { stroke-width: 1.6; }
+.nav-on .icon { color: var(--accent); }
+.pill .icon { color: var(--muted); }
+.pill-level .icon, .pill-signin .icon { color: inherit; }
+
+/* the rover in the grid */
+.rover { color: var(--accent); display: block; }
+.cell-goal .icon { color: var(--ok); }
+.cell-gem .icon { color: var(--accent-2); fill: color-mix(in srgb, var(--accent-2) 25%, transparent); }
+
+/* tips get the bulb inline */
+.tip { display: flex; gap: 10px; align-items: flex-start; }
+.tip .icon { color: var(--accent); margin-top: 2px; }
+.tip p:first-child { margin-top: 0; }
+
+/* how-it-works list on the welcome screen */
+.how { list-style: none; padding: 0; display: grid; gap: 10px; }
+.how li { display: flex; align-items: flex-start; gap: 10px; line-height: 1.5; }
+.how .icon { color: var(--accent); margin-top: 2px; }
+
+/* confetti is now shapes, not characters */
+.confetti { width: 9px; height: 9px; border-radius: 2px; }
+.confetti-circ { border-radius: 50%; }
+.confetti-bar { width: 5px; height: 14px; border-radius: 2px; }
+@keyframes fall {
+  to { transform: translateY(105vh) rotate(var(--spin, 420deg)); opacity: 0; }
+}
+
+/* ============================================================ desktop rail */
+@media (min-width: 1000px) {
+  body { padding-bottom: 20px; padding-left: 232px; }
+
+  .nav {
+    top: 0; bottom: 0; right: auto; left: 0;
+    width: 212px;
+    flex-direction: column;
+    justify-content: flex-start;
+    gap: 6px;
+    padding: 84px 14px 20px;
+    border-top: 0;
+    border-right: 1px solid var(--line);
+  }
+  .nav-btn {
+    flex: none; max-width: none; width: 100%;
+    flex-direction: row; justify-content: flex-start; gap: 12px;
+    padding: 11px 14px; font-size: 0.92rem; font-weight: 700;
+  }
+  .nav-label { font-size: 0.92rem; }
+  .nav-on { background: color-mix(in srgb, var(--accent) 14%, transparent); color: var(--ink); }
+  .nav-on::before {
+    content: ""; position: absolute; left: 0; width: 3px; height: 22px;
+    border-radius: 0 3px 3px 0; background: var(--accent);
+  }
+  .nav-btn { position: relative; }
+
+  .topbar { padding-left: 24px; }
+  .main { padding-top: 24px; }
+  .lesson-foot { bottom: 20px; }
+  .toast { bottom: 28px; left: calc(50% + 106px); }
+}
+
+/* ============================================================ surfaces v2 */
+.card { padding: 24px; }
+.view { gap: 18px; }
+.hero { padding: 26px; }
+.hero h1 { letter-spacing: -0.03em; }
+.section-head { display: flex; align-items: center; justify-content: space-between; gap: 12px; margin-bottom: 14px; }
+.unit { padding-bottom: 20px; }
+.unit-head h2 { margin-bottom: 2px; }
+.lesson-card { padding: 16px; gap: 7px; border-radius: 16px; }
+.lesson-card strong { font-size: 1rem; letter-spacing: -0.01em; }
+.stat { padding: 16px 12px; }
+.stat-value { font-size: 1.5rem; letter-spacing: -0.02em; margin-top: 4px; }
+.chip { padding: 4px 10px; }
+.btn { border-radius: var(--radius-sm); }
+.day { padding: 10px 2px; border-radius: 14px; }
+.badge { padding: 14px 8px; border-radius: 16px; }
+.screen-body { min-height: 140px; }

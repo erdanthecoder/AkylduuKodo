@@ -4,8 +4,8 @@
 import { get, set } from './state.js';
 
 export const LANGS = [
-  { id: 'en', label: 'English', flag: '🌍' },
-  { id: 'ky', label: 'Кыргызча', flag: '🇰🇬' },
+  { id: 'en', label: 'English', flag: '' },
+  { id: 'ky', label: 'Кыргызча', flag: '' },
 ];
 
 const STRINGS = {
@@ -28,7 +28,7 @@ const STRINGS = {
     replay: 'Replay',
     locked: 'Finish the lesson before to unlock',
     run: 'Run',
-    run_hint: 'Run ▶ (Ctrl+Enter)',
+    run_hint: 'Run (Ctrl+Enter)',
     check: 'Check',
     next: 'Next',
     back: 'Back',
@@ -58,7 +58,7 @@ const STRINGS = {
     time: 'Time',
     begin: 'Start',
     again: 'Try again',
-    goal_reached: 'Weekly goal reached! 🎉',
+    goal_reached: 'Weekly goal reached!',
     keep_going: 'to hit your goal',
     lang: 'Language',
     sound: 'Sound effects',
@@ -85,7 +85,7 @@ const STRINGS = {
     replay: 'Кайра өтүү',
     locked: 'Мурунку сабакты бүтүр',
     run: 'Иштет',
-    run_hint: 'Иштет ▶ (Ctrl+Enter)',
+    run_hint: 'Иштет (Ctrl+Enter)',
     check: 'Текшер',
     next: 'Кийинки',
     back: 'Артка',
@@ -115,7 +115,7 @@ const STRINGS = {
     time: 'Убакыт',
     begin: 'Баштоо',
     again: 'Кайра аракет',
-    goal_reached: 'Жумалык максат аткарылды! 🎉',
+    goal_reached: 'Жумалык максат аткарылды!',
     keep_going: 'максатка калды',
     lang: 'Тил',
     sound: 'Үн эффекттери',

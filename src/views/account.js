@@ -1,6 +1,7 @@
 // account.js — sign in, sign up, or see who is signed in.
 
 import { h, toast, confetti, sfx } from '../ui.js';
+import { icon } from '../icons.js';
 import { ui } from '../i18n.js';
 import * as auth from '../auth.js';
 import * as store from '../state.js';
@@ -92,7 +93,7 @@ function signInCard(go, rerender) {
 
   card.append(
     h('div', { class: 'auth-head' },
-      h('div', { class: 'auth-mark float-y' }, '🏔️'),
+      h('div', { class: 'auth-mark float-y' }, icon('mountain', { size: 42 })),
       h('h1', {}, 'Save your progress'),
       h('p', { class: 'muted' }, 'One account keeps your lessons, streak and XP in sync — school computer, home laptop, phone.'),
     ),
@@ -102,7 +103,7 @@ function signInCard(go, rerender) {
     form,
     auth.MODE === 'device'
       ? h('p', { class: 'muted small auth-note' },
-          '⚠️ This copy is running in device mode: accounts stay in this browser only. Add your Firebase config in ' +
+          'This copy is running in device mode: accounts stay in this browser only. Add your Firebase config in ' +
           'src/firebase-config.js to turn on Google sign-in and cloud sync.')
       : null,
     h('button', { class: 'btn btn-ghost', onclick: () => go('#/home') }, 'Keep going without an account'),
@@ -158,15 +159,15 @@ function profileCard(go, rerender) {
       h('h1', {}, u.name || 'Coder'),
       h('p', { class: 'muted' }, u.email || 'device account'),
       h('div', { class: 'chips center' },
-        h('span', { class: 'chip' }, `${lvl.emoji} ${lvl.name}`),
-        h('span', { class: 'chip' }, `⚡ ${s.xp} XP`),
-        h('span', { class: 'chip' }, `📚 ${done} lessons`),
-        h('span', { class: 'chip' }, `🔥 ${store.streak()} day streak`),
+        h('span', { class: 'chip' }, icon(lvl.icon, { size: 13 }), lvl.name),
+        h('span', { class: 'chip' }, icon('bolt', { size: 13 }), `${s.xp} XP`),
+        h('span', { class: 'chip' }, icon('check', { size: 13 }), `${done} lessons`),
+        h('span', { class: 'chip' }, icon('flame', { size: 13 }), `${store.streak()} day streak`),
       ),
       h('p', { class: 'muted small sync-note' },
         auth.MODE === 'cloud'
-          ? `☁️ Progress syncs to your account (${u.provider === 'google' ? 'Google' : 'email'} sign-in).`
-          : '💾 Saved in this browser. Add the Firebase config to sync across devices.'),
+          ? `Progress syncs to your account (${u.provider === 'google' ? 'Google' : 'email'} sign-in).`
+          : 'Saved in this browser. Add the Firebase config to sync across devices.'),
       h('div', { class: 'row gap center' },
         h('button', { class: 'btn btn-primary', onclick: () => go('#/home') }, 'Back to learning'),
         h('button', {
