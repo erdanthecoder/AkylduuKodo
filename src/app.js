@@ -10,6 +10,8 @@ import { LessonView } from './views/lesson.js';
 import { PracticeView } from './views/practice.js';
 import { LabView } from './views/lab.js';
 import { SettingsView } from './views/settings.js';
+import { BookView } from './views/book.js';
+import { NotesView } from './views/notes.js';
 import { AccountView } from './views/account.js';
 import { WelcomeView } from './views/welcome.js';
 import * as auth from './auth.js';
@@ -21,8 +23,10 @@ import './prefs.js';
 const NAV = [
   { hash: '#/home', icon: 'home', key: 'nav_home' },
   { hash: '#/journey', icon: 'map', key: 'nav_journey' },
+  { hash: '#/book', icon: 'book', key: 'nav_book' },
   { hash: '#/practice', icon: 'target', key: 'nav_practice' },
   { hash: '#/lab', icon: 'flask', key: 'nav_lab' },
+  { hash: '#/notes', icon: 'pencil', key: 'nav_notes' },
   { hash: '#/settings', icon: 'settings', key: 'nav_settings' },
 ];
 
@@ -82,6 +86,12 @@ function render() {
       break;
     case 'lab':
       mount(LabView());
+      break;
+    case 'book':
+      mount(BookView(path[1], go));
+      break;
+    case 'notes':
+      mount(NotesView(go, render));
       break;
     case 'settings':
       mount(SettingsView(go, render));

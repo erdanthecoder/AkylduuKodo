@@ -777,6 +777,10 @@ button, input, textarea { font-family: inherit; font-size: inherit; color: inher
 @media (max-width: 999px) {
   .lesson-head { top: 68px; }
   .bench-out { position: static; }
+  /* seven destinations across a phone: one line each, no wrapping */
+  .nav { gap: 2px; padding-inline: 4px; }
+  .nav-btn { padding: 7px 2px; font-size: 0.62rem; }
+  .nav-label { white-space: nowrap; }
 }
 
 @media (max-width: 860px) {
@@ -821,10 +825,18 @@ h1 > .icon, h2 > .icon { color: var(--accent); flex: none; }
 /* phones: the top bar is one row, always */
 @media (max-width: 620px) {
   .topbar { padding: 10px 14px; flex-wrap: nowrap; gap: 8px; }
-  .top-stats { flex-wrap: nowrap; overflow: hidden; }
+  /* the account button must never be the thing that gets cut off, so the
+     brand gives way first */
+  .top-stats { flex: 0 0 auto; flex-wrap: nowrap; }
+  .brand { min-width: 0; overflow: hidden; }
+  .brand-name { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
   .pill-level, .pill-week { display: none; }
   .brand-name { font-size: 1rem; }
   .pill { padding: 5px 10px; font-size: 0.74rem; }
+}
+
+@media (max-width: 430px) {
+  .top-stats .pill:not(.pill-btn) { display: none; }
 }
 
 /* journey header: the title and its "next up" line are one block */
@@ -833,11 +845,12 @@ h1 > .icon, h2 > .icon { color: var(--accent); flex: none; }
 .journey-head p { margin: 0; font-size: 0.95rem; }
 .band-progress .mini-bar { width: 92px; height: 8px; }
 
-/* The code surfaces stay dark in both themes, so the inline chips inside them
-   cannot follow --ink — it flips with the theme and disappears. */
-.code-sample code, .md-pre code, .screen code, .setting-sample code {
-  background: color-mix(in srgb, var(--violet) 30%, transparent);
-  color: #e9ecff;
+/* The global `code` style is for inline chips in prose. Inside a code block the
+   <code> element wraps the whole sample, so it must stay plain — otherwise the
+   block wears a chip's background, and in daylight its ink turns near-black on
+   a dark panel and vanishes. */
+.code-sample code, .md-pre code, .cpp-code code, .screen code {
+  background: none; color: inherit; padding: 0; border-radius: 0; font-size: inherit;
 }
 
 /* ============================================================== settings */

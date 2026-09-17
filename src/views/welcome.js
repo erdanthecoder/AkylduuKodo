@@ -11,6 +11,7 @@ import { icon, mascot } from '../icons.js';
 import { routeMap, STOPS } from '../map.js';
 import { createGlobe, webglAvailable } from '../globe.js';
 import { calmMotion } from '../prefs.js';
+import { PAGES, CHAPTERS } from '../data/book/index.js';
 import * as store from '../state.js';
 
 const HERO = 'assets/hero.jpg';
@@ -174,6 +175,33 @@ export function WelcomeView(go, rerender) {
     routeFrame,
   );
 
+  // ---------------------------------------------------------- the handbook
+  const bookSection = h('section', { class: 'book-section' },
+    h('div', { class: 'book-plate' },
+      h('div', { class: 'book-plate-text' },
+        h('span', { class: 'eyebrow' }, 'Included from day one'),
+        h('h2', {}, 'A whole C++ handbook, inside the site'),
+        h('p', {},
+          `Beside the lessons there is a complete reference book: ${PAGES.length} pages across ${CHAPTERS.length} chapters, ` +
+          'from your first program to templates, memory and the standard library. One idea to a page, ' +
+          'a real sample on every one, and a pad at the bottom for your own notes.'),
+        h('div', { class: 'book-plate-cta' },
+          h('button', { class: 'btn btn-primary', onclick: () => go('#/book') },
+            'Open the handbook', icon('arrowRight', { size: 17 })),
+        ),
+      ),
+      h('ul', { class: 'book-plate-list' },
+        ...CHAPTERS.slice(0, 8).map((c, i) =>
+          h('li', { style: `--i:${i}` },
+            h('span', { class: 'plate-num' }, String(i + 1).padStart(2, '0')),
+            h('span', {}, c.title),
+          ),
+        ),
+        h('li', { class: 'plate-more' }, `and ${CHAPTERS.length - 8} more chapters`),
+      ),
+    ),
+  );
+
   // ------------------------------------------------------- what you control
   const controls = [
     ['calendar', 'Your pace', 'Three lessons a week, or ten. Change it whenever life changes.'],
@@ -238,7 +266,7 @@ export function WelcomeView(go, rerender) {
     h('p', { class: 'muted small center' }, 'No account needed to start. You can sign in later to keep your progress, and change every setting after that.'),
   );
 
-  const view = h('div', { class: 'view welcome' }, scene, how, routePreview, settingsPreview, startCard);
+  const view = h('div', { class: 'view welcome' }, scene, how, routePreview, bookSection, settingsPreview, startCard);
   view.addEventListener('view-destroy', () => {
     globe?.destroy();
     window.removeEventListener('pointermove', onPointer);

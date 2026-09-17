@@ -4,6 +4,7 @@
 import { h } from './ui.js';
 import { UNITS } from './data/index.js';
 import { createGlobe, webglAvailable } from './globe.js';
+import { landPaths, graticule, greatCircle } from './atlas.js';
 
 const SVG = 'http://www.w3.org/2000/svg';
 
@@ -25,11 +26,17 @@ export const STOPS = UNITS.filter((u) => u.city).map((u, i) => ({
   ...project(u.city.lon, u.city.lat),
 }));
 
-/** A gentle arc between two stops — flight paths bow, they do not run straight. */
-function arc(a, b, lift = 0.22) {
-  const mx = (a.x + b.x) / 2;
-  const my = (a.y + b.y) / 2 - Math.abs(b.x - a.x) * lift - 14;
-  return `M ${a.x} ${a.y} Q ${mx} ${my} ${b.x} ${b.y}`;
+/**
+ * The real flight path between two cities: the great circle, projected. On a
+ * flat map it bows north, which is exactly what an aeroplane does.
+ */
+function arc(a, b) {
+  return greatCircle(a, b, 40)
+    .map((p, i) => {
+      const q = project(p.lon, p.lat);
+      return (i === 0 ? 'M' : 'L') + q.x.toFixed(1) + ' ' + q.y.toFixed(1);
+    })
+    .join(' ');
 }
 
 function el(name, attrs = {}) {
@@ -38,19 +45,51 @@ function el(name, attrs = {}) {
   return node;
 }
 
-/** Soft land shapes: a designed travel map, not a survey. */
-const LAND = [
-  'M -20 150 C 40 118, 96 126, 132 104 C 168 84, 206 96, 232 86 C 258 76, 276 96, 300 92 ' +
-    'C 330 86, 352 60, 392 62 C 440 64, 470 40, 520 44 C 580 48, 640 30, 700 40 ' +
-    'C 780 52, 860 36, 1020 52 L 1020 -40 L -20 -40 Z',
-  'M -20 214 C 60 196, 120 210, 176 198 C 232 186, 266 206, 320 200 C 372 194, 404 214, 452 208 ' +
-    'C 520 200, 566 224, 640 214 C 720 204, 800 226, 1020 210 L 1020 400 L -20 400 Z',
-];
 
-const SEA_ISLES = [
-  'M 300 150 q 26 -10 44 4 q -18 16 -44 -4 Z',
-  'M 470 168 q 30 -12 52 6 q -24 18 -52 -6 Z',
-  'M 640 128 q 34 -10 56 8 q -26 16 -56 -8 Z',
+/**
+ * Paint the real world into a map: graticule first, then every coastline that
+ * reaches this window. The coastlines arrive asynchronously — the map is drawn
+ * and usable before they land, and they fade in underneath the route.
+ */
+function paintGeography(svg, { landFill = 'url(#land)', landStroke = '#4d709f', width = 1, labels = true, opacity = 1 } = {}) {
+  const grat = el('g', { class: 'graticule', opacity: String(0.5 * opacity) });
+  graticule(project, BOX).forEach((line) => {
+    grat.append(el('line', {
+      x1: line.x1.toFixed(1), y1: line.y1.toFixed(1), x2: line.x2.toFixed(1), y2: line.y2.toFixed(1),
+      stroke: '#1b2b4d', 'stroke-width': 0.6 * width,
+    }));
+  });
+  const land = el('g', { class: 'land', opacity: String(opacity) });
+  svg.append(grat, land);
+
+  landPaths(project, BOX).then((paths) => {
+    paths.forEach((d) => {
+      land.append(el('path', { d, fill: landFill, stroke: landStroke, 'stroke-width': 0.9 * width, 'stroke-linejoin': 'round' }));
+    });
+    land.classList.add('is-drawn');
+    if (labels) {
+      const names = el('g', { class: 'geo-labels' });
+      PLACES.forEach((place) => {
+        const p = project(place.lon, place.lat);
+        const text = el('text', { x: p.x.toFixed(1), y: p.y.toFixed(1), class: 'geo-label', 'text-anchor': 'middle' });
+        text.textContent = place.name;
+        names.append(text);
+      });
+      land.after(names);
+    }
+  });
+  return land;
+}
+
+/** Quiet context labels, so the map reads as a place and not a diagram. */
+const PLACES = [
+  { name: 'ATLANTIC', lon: -9.5, lat: 44.5 },
+  { name: 'NORTH SEA', lon: 3.5, lat: 56 },
+  { name: 'MEDITERRANEAN', lon: 17, lat: 35 },
+  { name: 'BLACK SEA', lon: 34.5, lat: 43.4 },
+  { name: 'CASPIAN', lon: 51, lat: 42 },
+  { name: 'ARAL', lon: 60, lat: 45.2 },
+  { name: 'TIAN SHAN', lon: 79, lat: 42.2 },
 ];
 
 /**
@@ -72,10 +111,10 @@ export function routeMap({ doneUnits = new Set(), currentUnitId = null, onPick =
   svg.innerHTML = `
     <defs>
       <linearGradient id="sea" x1="0" y1="0" x2="0" y2="1">
-        <stop offset="0" stop-color="#0b1b3a"/><stop offset="1" stop-color="#07101f"/>
+        <stop offset="0" stop-color="#091834"/><stop offset="1" stop-color="#050d1c"/>
       </linearGradient>
       <linearGradient id="land" x1="0" y1="0" x2="0" y2="1">
-        <stop offset="0" stop-color="#16243f"/><stop offset="1" stop-color="#101a30"/>
+        <stop offset="0" stop-color="#263d63"/><stop offset="1" stop-color="#1b2a48"/>
       </linearGradient>
       <linearGradient id="trail" x1="0" y1="0" x2="1" y2="0">
         <stop offset="0" stop-color="#ffb547"/><stop offset="1" stop-color="#ff6f91"/>
@@ -85,20 +124,15 @@ export function routeMap({ doneUnits = new Set(), currentUnitId = null, onPick =
         <stop offset="1" stop-color="#ffb547" stop-opacity="0"/>
       </radialGradient>
     </defs>
-    <rect x="0" y="0" width="${W}" height="${H}" fill="url(#sea)"/>
-    <g opacity="0.5">
-      ${Array.from({ length: 11 }, (_, i) => `<line x1="0" y1="${i * 36}" x2="${W}" y2="${i * 36}" stroke="#1b2b4d" stroke-width="0.6"/>`).join('')}
-      ${Array.from({ length: 21 }, (_, i) => `<line x1="${i * 50}" y1="0" x2="${i * 50}" y2="${H}" stroke="#1b2b4d" stroke-width="0.6"/>`).join('')}
-    </g>
-    <g class="land">
-      ${LAND.map((d) => `<path d="${d}" fill="url(#land)" stroke="#24375c" stroke-width="1.2"/>`).join('')}
-      ${SEA_ISLES.map((d) => `<path d="${d}" fill="#16243f" stroke="#24375c" stroke-width="0.8"/>`).join('')}
-    </g>`;
+    <rect x="0" y="0" width="${W}" height="${H}" fill="url(#sea)"/>`;
+
+  paintGeography(svg, { labels: !compact });
 
   const routes = el('g', { class: 'routes' });
   const markers = el('g', { class: 'markers' });
   svg.append(routes, markers);
 
+  let lastSide = 1;
   STOPS.forEach((stop, i) => {
     if (i > 0) {
       const prev = STOPS[i - 1];
@@ -129,11 +163,14 @@ export function routeMap({ doneUnits = new Set(), currentUnitId = null, onPick =
       const tick = el('path', { d: 'M -3.4 0 l 2.6 2.7 l 5 -5.6', class: 'stop-tick' });
       g.append(tick);
     }
-    // Cities that sit close together (Almaty and Bishkek) would print their
-    // names on top of each other, so the nearer one hangs its label below.
+    // Cities bunch up at the eastern end, where Samarkand, Almaty and Bishkek
+    // are only a few hundred kilometres apart. When two names would collide the
+    // second one takes the other side of its dot, so they interleave.
     const prevStop = STOPS[i - 1];
-    const crowded = prevStop && Math.hypot(stop.x - prevStop.x, stop.y - prevStop.y) < 60;
-    const label = el('text', { x: 0, y: crowded ? 26 : -18, class: 'stop-label', 'text-anchor': 'middle' });
+    const crowded = prevStop && Math.hypot(stop.x - prevStop.x, stop.y - prevStop.y) < 120;
+    const side = crowded ? -lastSide : -1;
+    lastSide = side;
+    const label = el('text', { x: 0, y: side < 0 ? -18 : 28, class: 'stop-label', 'text-anchor': 'middle' });
     label.textContent = stop.name;
     g.append(label);
     if (onPick) {
@@ -255,16 +292,11 @@ function flatFlight(unitId, onDone) {
         <stop offset="0" stop-color="#ffb547"/><stop offset="1" stop-color="#ff6f91"/>
       </linearGradient>
     </defs>
-    <rect x="${0}" y="${0}" width="${W}" height="${H}" fill="url(#fsea)"/>
-    <g opacity="0.4">
-      ${Array.from({ length: 11 }, (_, i) => `<line x1="0" y1="${i * 36}" x2="${W}" y2="${i * 36}" stroke="#1d2f52" stroke-width="${0.7 * zoom}"/>`).join('')}
-      ${Array.from({ length: 21 }, (_, i) => `<line x1="${i * 50}" y1="0" x2="${i * 50}" y2="${H}" stroke="#1d2f52" stroke-width="${0.7 * zoom}"/>`).join('')}
-    </g>
-    <g opacity="0.55">
-      ${LAND.map((d) => `<path d="${d}" fill="#152441" stroke="#27395e" stroke-width="1.2"/>`).join('')}
-    </g>`;
+    <rect x="${0}" y="${0}" width="${W}" height="${H}" fill="url(#fsea)"/>`;
 
-  const d = arc(from, to, 0.3);
+  paintGeography(svg, { landFill: '#263d63', landStroke: '#4d709f', width: zoom, labels: false, opacity: 0.85 });
+
+  const d = arc(from, to);
   const track = el('path', { d, fill: 'none', stroke: '#2b3d63', 'stroke-width': 1.6 * zoom, 'stroke-dasharray': `${4 * zoom} ${8 * zoom}` });
   const trail = el('path', { d, fill: 'none', stroke: 'url(#ftrail)', 'stroke-width': 3 * zoom, 'stroke-linecap': 'round' });
   const plane = planeNode();
