@@ -6,6 +6,7 @@
 import { h, confetti } from '../ui.js';
 import { icon, mascot } from '../icons.js';
 import { routeMap, STOPS } from '../map.js';
+import { createGlobe, webglAvailable } from '../globe.js';
 import * as store from '../state.js';
 
 const reduced = () => globalThis.matchMedia?.('(prefers-reduced-motion: reduce)').matches ?? false;
@@ -59,6 +60,23 @@ export function WelcomeView(go, rerender) {
     layers.push({ el: layer, depth: ridge.depth });
   });
 
+  // The planet sits behind the ridges: a real sphere, lit by one sun, that you
+  // can grab and spin. If WebGL is missing the drawn sky carries the scene.
+  const globeWrap = h('div', { class: 'scene-globe' });
+  scene.prepend(globeWrap);
+  let globe = null;
+  if (webglAvailable()) {
+    scene.classList.add('has-globe');
+    createGlobe(globeWrap, { stops: STOPS, interactive: true, offsetY: -0.62, distance: 3.5 })
+      .then((g) => {
+        globe = g;
+        // Face the middle of the route, so Europe and Central Asia are what you
+        // see first — the journey, not a random ocean.
+        g.lookAt(40, 44, 2800);
+      })
+      .catch(() => scene.classList.remove('has-globe'));
+  }
+
   const snow = h('canvas', { class: 'scene-snow', 'aria-hidden': 'true' });
   scene.append(snow);
 
@@ -69,7 +87,7 @@ export function WelcomeView(go, rerender) {
       h('span', { class: 'word accent' }, 'u'),
       h('span', { class: 'word' }, 'Kodo'),
     ),
-    h('p', {}, 'Learn to build real things on the web. You write the code, you see it run, and you travel a little further east with every unit you finish.'),
+    h('p', {}, 'Learn to build real things on the web. You write the code, you watch it run, and every unit you finish flies you one city further east. Spin the planet — that is the whole route.'),
     h('div', { class: 'scene-cta' },
       h('button', { class: 'btn btn-primary btn-lift', onclick: () => document.getElementById('start-card')?.scrollIntoView({ behavior: 'smooth', block: 'center' }) },
         'Start the journey', icon('arrowRight', { size: 18 })),
@@ -77,7 +95,7 @@ export function WelcomeView(go, rerender) {
         'How it works'),
     ),
   );
-  scene.append(title, h('div', { class: 'scene-fade' }));
+  scene.append(title, h('div', { class: 'globe-hint' }, 'drag the planet'), h('div', { class: 'scene-fade' }));
   layers.push({ el: title, depth: 0.16 });
 
   // ---------------------------------------------------------------- parallax
@@ -223,6 +241,7 @@ export function WelcomeView(go, rerender) {
 
   const view = h('div', { class: 'view welcome' }, scene, how, routePreview, startCard);
   view.addEventListener('view-destroy', () => {
+    globe?.destroy();
     window.removeEventListener('pointermove', onPointer);
     window.removeEventListener('scroll', onScroll);
     cancelAnimationFrame(snowRaf);

@@ -3,6 +3,7 @@
 
 import { h } from './ui.js';
 import { UNITS } from './data/index.js';
+import { createGlobe, webglAvailable } from './globe.js';
 
 const SVG = 'http://www.w3.org/2000/svg';
 
@@ -162,7 +163,70 @@ function planeNode() {
  * A full-screen flight from one city to the next, played when a unit is
  * finished. Returns a promise that resolves when the plane has landed.
  */
+/**
+ * The arrival: the planet turns to the new city while the plane flies the arc.
+ * Falls back to the flat map when WebGL is unavailable.
+ */
 export function flightTo(unitId, { onDone } = {}) {
+  if (webglAvailable()) return globeFlight(unitId, onDone);
+  return flatFlight(unitId, onDone);
+}
+
+function globeFlight(unitId, onDone) {
+  const index = STOPS.findIndex((s) => s.unit.id === unitId);
+  const from = STOPS[Math.max(0, index - 1)];
+  const to = STOPS[index];
+  if (!to || from === to) {
+    onDone?.();
+    return null;
+  }
+
+  const stage = h('div', { class: 'flight-globe' });
+  const card = h('div', { class: 'flight-card' },
+    h('span', { class: 'flight-kicker' }, 'Unit complete — next stop'),
+    h('h2', {}, to.name),
+    h('p', { class: 'flight-country' }, to.country),
+    h('p', { class: 'flight-line' }, to.line),
+  );
+  const skip = h('button', { class: 'btn btn-primary flight-skip', onclick: () => finish() }, 'Continue');
+  const overlay = h('div', { class: 'flight-overlay flight-overlay-3d' },
+    h('div', { class: 'flight-inner' }, stage, card, skip),
+  );
+  document.body.append(overlay);
+  requestAnimationFrame(() => overlay.classList.add('is-open'));
+
+  let globe = null;
+  let done = false;
+
+  createGlobe(stage, {
+    stops: STOPS,
+    doneUnits: new Set(STOPS.slice(0, index).map((s) => s.unit.id)),
+    interactive: true,
+  }).then(async (g) => {
+    globe = g;
+    g.setSpin(0.0004);
+    await g.lookAt(from.lon, from.lat, 900);
+    g.zoom(2.6, 1200);
+    await g.fly(from, to, 3000);
+    await g.lookAt(to.lon, to.lat, 1100);
+    card.classList.add('is-landed');
+  });
+
+  function finish() {
+    if (done) return;
+    done = true;
+    globe?.destroy();
+    overlay.classList.remove('is-open');
+    setTimeout(() => {
+      overlay.remove();
+      onDone?.();
+    }, 420);
+  }
+
+  return { finish };
+}
+
+function flatFlight(unitId, onDone) {
   const index = STOPS.findIndex((s) => s.unit.id === unitId);
   const from = STOPS[Math.max(0, index - 1)];
   const to = STOPS[index];
