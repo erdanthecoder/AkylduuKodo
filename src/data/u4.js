@@ -3,6 +3,7 @@ import { all, said, linesAre, uses, avoids } from './checks.js';
 export default {
   id: 'u4',
   level: 'intermediate',
+  city: { name: 'Tbilisi', country: 'Georgia', lon: 44.8, lat: 41.72, line: 'Build your own tools' },
   icon: 'wand',
   title: { en: 'Your Own Commands', ky: 'Өз буйруктарың' },
   blurb: 'Functions: wrap up an idea, give it a name, use it forever.',

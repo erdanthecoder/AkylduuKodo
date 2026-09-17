@@ -1,0 +1,226 @@
+/* scene.css — the cinematic entrance, the route map and the flight between
+   cities. Depth here comes from layered planes moving at different speeds. */
+
+/* ============================================================ the entrance */
+.welcome { gap: 0; }
+.scene {
+  position: relative;
+  height: min(88vh, 760px);
+  margin: -26px -18px 0;
+  overflow: hidden;
+  isolation: isolate;
+  display: grid;
+  align-items: center;
+}
+.scene-sky {
+  position: absolute; inset: 0; z-index: -6;
+  background:
+    linear-gradient(180deg, #060a18 0%, #0d1733 38%, #23305c 66%, #6a4a72 84%, #c9744f 100%);
+}
+.scene-sun {
+  position: absolute; left: 50%; top: 56%; z-index: -5;
+  width: 320px; height: 320px; margin: -160px 0 0 -160px; border-radius: 50%;
+  background: radial-gradient(circle, #ffd9a0 0%, #ff9f5a 38%, rgba(255, 140, 80, 0) 70%);
+  filter: blur(2px);
+  animation: sunRise 3.4s cubic-bezier(0.22, 1, 0.36, 1) backwards;
+}
+@keyframes sunRise { from { transform: translateY(90px) scale(0.85); opacity: 0; } to { opacity: 1; } }
+
+.scene-clouds { position: absolute; inset: 0; z-index: -4; pointer-events: none; }
+.cloud {
+  position: absolute; width: 260px; height: 46px; border-radius: 999px;
+  background: radial-gradient(60% 100% at 30% 50%, rgba(255, 255, 255, 0.16), transparent 70%),
+              radial-gradient(50% 100% at 70% 40%, rgba(255, 255, 255, 0.12), transparent 70%);
+  filter: blur(6px);
+  animation: drift linear infinite;
+}
+@keyframes drift { from { margin-left: -40vw; } to { margin-left: 140vw; } }
+
+.ridge { position: absolute; inset: auto 0 -2% 0; z-index: -3; will-change: transform; }
+.ridge:nth-of-type(4) { bottom: -6%; }
+.ridge svg { display: block; width: 104%; height: clamp(220px, 46vh, 420px); margin-left: -2%; }
+.ridge:nth-of-type(5) svg { height: clamp(150px, 30vh, 300px); }
+.ridge:nth-of-type(6) svg { height: clamp(120px, 24vh, 240px); }
+
+.scene-snow { position: absolute; inset: 0; z-index: -2; pointer-events: none; }
+.scene-fade {
+  position: absolute; left: 0; right: 0; bottom: 0; height: 180px; z-index: -1; pointer-events: none;
+  background: linear-gradient(180deg, transparent, var(--bg));
+}
+
+.scene-title {
+  position: relative; z-index: 2;
+  max-width: 660px; margin: 0 auto; padding: 0 20px; text-align: center;
+  will-change: transform;
+}
+.scene-kicker {
+  display: inline-block; margin-bottom: 14px;
+  font-family: var(--mono); font-size: 0.72rem; letter-spacing: 0.16em; text-transform: uppercase;
+  color: #ffd8a8; opacity: 0; animation: riseFade 0.9s 0.25s var(--ease-out) forwards;
+}
+.scene-title h1 {
+  display: block; margin: 0 0 16px;
+  font-size: clamp(2.8rem, 9vw, 5.4rem); font-weight: 800; letter-spacing: -0.045em; line-height: 0.95;
+  color: #fff; text-shadow: 0 10px 40px rgba(0, 0, 0, 0.55);
+}
+.scene-title .word { display: inline-block; opacity: 0; animation: wordUp 1s var(--ease-out) forwards; }
+.scene-title .word:nth-child(1) { animation-delay: 0.35s; }
+.scene-title .word:nth-child(2) { animation-delay: 0.45s; }
+.scene-title .word:nth-child(3) { animation-delay: 0.55s; }
+.scene-title .accent {
+  background: linear-gradient(135deg, #ffd166, #ff7a6b);
+  -webkit-background-clip: text; background-clip: text; color: transparent;
+}
+@keyframes wordUp { from { opacity: 0; transform: translateY(26px) rotate(-2deg); } to { opacity: 1; transform: none; } }
+.scene-title p {
+  margin: 0 auto 26px; max-width: 46ch; color: #dbe4ff; font-size: 1.06rem;
+  opacity: 0; animation: riseFade 1s 0.7s var(--ease-out) forwards;
+}
+@keyframes riseFade { from { opacity: 0; transform: translateY(16px); } to { opacity: 1; transform: none; } }
+.scene-cta {
+  display: flex; gap: 12px; justify-content: center; flex-wrap: wrap;
+  opacity: 0; animation: riseFade 1s 0.9s var(--ease-out) forwards;
+}
+.btn-lift { padding: 14px 26px; font-size: 1.02rem; }
+.btn-clear { color: #e7ecff; border-color: rgba(255, 255, 255, 0.28); background: rgba(255, 255, 255, 0.06); }
+.btn-clear:hover:not(:disabled) { background: rgba(255, 255, 255, 0.12); }
+
+/* ============================================================== explainer */
+.how-section, .route-section { padding: 74px 0 10px; }
+.section-lede { max-width: 56ch; margin-bottom: 26px; }
+.eyebrow {
+  display: block; margin-bottom: 10px;
+  font-family: var(--mono); font-size: 0.7rem; letter-spacing: 0.16em; text-transform: uppercase; color: var(--accent);
+}
+.how-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(230px, 1fr)); gap: 16px; }
+.how-card {
+  padding: 22px; border-radius: var(--r-lg);
+  background: var(--card); border: 1px solid var(--line);
+  opacity: 0; transform: translateY(20px);
+  animation: riseFade 0.7s var(--ease-out) forwards;
+  animation-delay: calc(var(--i) * 110ms + 120ms);
+  transition: transform var(--t-med) var(--ease-out), border-color var(--t-med);
+}
+.how-card:hover { transform: translateY(-4px); border-color: var(--line-strong); }
+.how-mark {
+  display: grid; place-items: center; width: 44px; height: 44px; margin-bottom: 14px;
+  border-radius: var(--r-md); color: var(--accent);
+  background: color-mix(in srgb, var(--accent) 14%, transparent);
+  border: 1px solid color-mix(in srgb, var(--accent) 26%, transparent);
+}
+.how-card h3 { margin-bottom: 6px; }
+.how-card p { margin: 0; color: var(--muted); font-size: 0.94rem; }
+
+.start-card { margin: 56px auto 20px; max-width: 520px; text-align: center; display: grid; gap: 16px; }
+.start-card .field { text-align: left; }
+.start-card .chips { justify-content: center; }
+.start-mascot { display: flex; justify-content: center; }
+
+/* ============================================================== route map */
+.route-frame {
+  border-radius: var(--r-xl); overflow: hidden; border: 1px solid var(--line);
+  background: #091223; box-shadow: var(--sh-3);
+}
+.route-svg { display: block; width: 100%; height: auto; }
+.stop-dot { fill: #3d5183; stroke: #0b1428; stroke-width: 2; transition: fill 0.3s; }
+.stop-done .stop-dot { fill: var(--mint); }
+.stop-now .stop-dot { fill: var(--accent); }
+.stop-tick { stroke: #04281a; stroke-width: 2; fill: none; stroke-linecap: round; stroke-linejoin: round; }
+.stop-label {
+  font-family: var(--display); font-size: 15px; font-weight: 600; fill: #b9c6e8;
+  paint-order: stroke; stroke: #070f1d; stroke-width: 3px; stroke-linejoin: round;
+}
+.stop-done .stop-label { fill: #d8f6e7; }
+.stop-now .stop-label { fill: #ffe0b0; font-size: 17px; }
+.stop-halo { animation: haloPulse 3s ease-in-out infinite; transform-origin: center; }
+@keyframes haloPulse { 0%, 100% { opacity: 0.45; r: 24; } 50% { opacity: 0.85; r: 30; } }
+.stop:focus-visible { outline: none; }
+.stop:focus-visible .stop-dot { stroke: var(--accent); stroke-width: 3; }
+.leg-flown { filter: drop-shadow(0 0 6px rgba(255, 181, 71, 0.35)); }
+
+.route-card { padding: 0; overflow: hidden; }
+.route-head {
+  display: flex; align-items: center; justify-content: space-between; gap: 14px; flex-wrap: wrap;
+  padding: 18px 22px 14px;
+}
+.route-head h3 { margin: 0; }
+.route-now { display: inline-flex; align-items: center; gap: 8px; color: var(--muted); font-size: 0.88rem; }
+.route-now b { color: var(--ink); font-weight: 650; }
+
+/* ================================================================= flight */
+.flight-overlay {
+  position: fixed; inset: 0; z-index: 90;
+  display: grid; place-items: center; padding: 20px;
+  background: rgba(4, 7, 16, 0.86);
+  backdrop-filter: blur(10px); -webkit-backdrop-filter: blur(10px);
+  opacity: 0; transition: opacity 0.4s var(--ease-out);
+}
+.flight-overlay.is-open { opacity: 1; }
+.flight-inner {
+  width: min(960px, 100%); display: grid; gap: 18px; justify-items: center;
+  transform: scale(0.96); transition: transform 0.5s var(--ease-out);
+}
+.flight-overlay.is-open .flight-inner { transform: none; }
+.flight-map {
+  width: 100%; border-radius: var(--r-xl); overflow: hidden;
+  border: 1px solid var(--line-strong); box-shadow: var(--sh-3);
+}
+.plane { filter: drop-shadow(0 3px 8px rgba(0, 0, 0, 0.55)); }
+.flight-card { text-align: center; opacity: 0; transform: translateY(14px); transition: all 0.6s var(--ease-out); }
+.flight-card.is-landed { opacity: 1; transform: none; }
+.flight-kicker {
+  font-family: var(--mono); font-size: 0.7rem; letter-spacing: 0.16em; text-transform: uppercase; color: var(--accent);
+}
+.flight-card h2 { font-size: clamp(2rem, 6vw, 3rem); margin: 6px 0 2px; display: block; }
+.flight-country { color: var(--muted); margin: 0 0 6px; }
+.flight-line { color: var(--ink-2); margin: 0; }
+.flight-skip { opacity: 0; animation: riseFade 0.5s 2.4s var(--ease-out) forwards; }
+
+/* ====================================================== lesson entrance */
+.lesson-enter { animation: lessonIn 0.55s var(--ease-out) backwards; }
+@keyframes lessonIn {
+  from { opacity: 0; transform: translateY(26px) scale(0.97); filter: blur(6px); }
+  to { opacity: 1; transform: none; filter: none; }
+}
+.step-body > * { animation: stepIn 0.42s var(--ease-out) backwards; }
+@keyframes stepIn {
+  from { opacity: 0; transform: translateY(14px); }
+  to { opacity: 1; transform: none; }
+}
+
+/* ============================================================ lesson media */
+.shot { margin: 16px 0; border-radius: var(--r-md); overflow: hidden; border: 1px solid var(--line); background: var(--card-2); }
+.shot img { display: block; width: 100%; height: auto; }
+.shot figcaption { padding: 10px 14px; font-size: 0.85rem; color: var(--muted); border-top: 1px solid var(--line); }
+
+@media (max-width: 860px) {
+  .scene { height: min(80vh, 620px); margin-inline: -14px; }
+  .how-section, .route-section { padding-top: 54px; }
+}
+@media (prefers-reduced-motion: reduce) {
+  .scene-sun, .cloud, .scene-title .word, .scene-kicker, .scene-title p, .scene-cta,
+  .how-card, .flight-skip, .lesson-enter, .step-body > * { animation: none !important; opacity: 1 !important; transform: none !important; }
+}
+
+/* The entrance is a full-bleed film frame: no rail, no top bar, no chrome. */
+body[data-view="welcome"] { padding-left: 0; padding-bottom: 0; }
+body[data-view="welcome"] .topbar,
+body[data-view="welcome"] .nav { display: none; }
+body[data-view="welcome"] .main { max-width: none; padding: 0 0 40px; }
+body[data-view="welcome"] .how-section,
+body[data-view="welcome"] .route-section,
+body[data-view="welcome"] .start-card { max-width: 1060px; margin-inline: auto; padding-inline: 20px; }
+body[data-view="welcome"] .scene { margin: 0; height: min(96vh, 900px); }
+
+/* the sun belongs behind the words, not through them */
+.scene-sun { top: 74%; width: 420px; height: 420px; margin: -210px 0 0 -210px; opacity: 0.85; }
+.scene-title::before {
+  content: ""; position: absolute; inset: -12% -18%; z-index: -1;
+  background: radial-gradient(60% 60% at 50% 45%, rgba(6, 10, 24, 0.72), transparent 72%);
+}
+.scene-title p { text-shadow: 0 2px 14px rgba(4, 8, 20, 0.85); }
+
+/* grander peaks */
+.ridge svg { height: clamp(260px, 54vh, 520px); }
+.ridge:nth-of-type(5) svg { height: clamp(190px, 38vh, 360px); }
+.ridge:nth-of-type(6) svg { height: clamp(150px, 30vh, 290px); }

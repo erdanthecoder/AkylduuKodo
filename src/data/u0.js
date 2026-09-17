@@ -9,6 +9,7 @@ export default {
   id: 'u0',
   icon: 'globe',
   level: 'beginner',
+  city: { name: 'London', country: 'United Kingdom', lon: -0.13, lat: 51.51, line: 'Where the web was invented' },
   title: { en: 'Your First Web Page', ky: 'Биринчи веб барагың' },
   blurb: 'Type a line, watch a real page appear. No experience needed.',
   lessons: [

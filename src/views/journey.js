@@ -7,6 +7,7 @@ import { icon, mascot } from '../icons.js';
 import { ui, t } from '../i18n.js';
 import * as store from '../state.js';
 import { UNITS, ALL_LESSONS, LEVELS, isUnlocked } from '../data/index.js';
+import { routeMap } from '../map.js';
 
 const STEP_ICON = {
   teach: 'book',
@@ -49,13 +50,14 @@ export function JourneyView(go) {
       );
     }
 
-    const band = h('section', { class: `band band-${(unitIndex % 7) + 1}` });
+    const band = h('section', { class: `band band-${(unitIndex % 7) + 1}`, id: 'band-' + unit.id });
 
     band.append(
       h('header', { class: 'band-head' },
         h('span', { class: 'band-mark' }, icon(unit.icon, { size: 22 })),
         h('div', { class: 'band-text' },
-          h('span', { class: 'band-kicker' }, `Part ${unitIndex + 1} · ${unit.level}`),
+          h('span', { class: 'band-kicker' },
+            unit.city ? `${unit.city.name}, ${unit.city.country}` : `Part ${unitIndex + 1}`),
           h('h2', {}, t(unit.title)),
           h('p', {}, t(unit.blurb)),
         ),
@@ -116,6 +118,26 @@ export function JourneyView(go) {
     path.append(band);
   });
 
+  const doneUnits = new Set(UNITS.filter((u) => u.lessons.every((l) => s.done[l.id])).map((u) => u.id));
+  const currentUnit = nextUp ? UNITS.find((u) => u.lessons.some((l) => l.id === nextUp.id)) : null;
+
+  const mapCard = h('section', { class: 'card route-card' },
+    h('div', { class: 'route-head' },
+      h('h3', {}, 'Your route'),
+      h('span', { class: 'route-now' },
+        icon('map', { size: 16 }),
+        currentUnit
+          ? h('span', {}, 'Now in ', h('b', {}, currentUnit.city?.name || ''), ' — ', String(doneUnits.size), ' of ', String(UNITS.length), ' cities visited')
+          : h('span', {}, 'Every city visited'),
+      ),
+    ),
+    routeMap({
+      doneUnits,
+      currentUnitId: currentUnit?.id || null,
+      onPick: (unitId) => document.getElementById('band-' + unitId)?.scrollIntoView({ behavior: 'smooth', block: 'start' }),
+    }),
+  );
+
   return h(
     'div',
     { class: 'view journey' },
@@ -130,6 +152,7 @@ export function JourneyView(go) {
             ui('continue'), icon('arrowRight', { size: 17 }))
         : null,
     ),
+    mapCard,
     path,
   );
 }

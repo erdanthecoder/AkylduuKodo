@@ -12,6 +12,7 @@ const robotBlocks = [
 export default {
   id: 'u3',
   level: 'intermediate',
+  city: { name: 'Istanbul', country: 'Turkiye', lon: 28.98, lat: 41.01, line: 'Where two continents repeat' },
   icon: 'reset',
   title: { en: 'Loops & Patterns', ky: 'Циклдер жана үлгүлөр' },
   blurb: 'Stop repeating yourself. Let the computer do the boring part.',

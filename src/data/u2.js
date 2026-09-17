@@ -10,6 +10,7 @@ const ifBlocks = [
 export default {
   id: 'u2',
   level: 'beginner',
+  city: { name: 'Rome', country: 'Italy', lon: 12.5, lat: 41.9, line: 'Every road forks somewhere' },
   icon: 'scale',
   title: { en: 'Making Choices', ky: 'Чечим кабыл алуу' },
   blurb: 'Teach your program to look at the situation and decide.',

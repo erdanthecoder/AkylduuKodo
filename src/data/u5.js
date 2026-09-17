@@ -3,6 +3,7 @@ import { all, said, linesAre, uses, avoids, varIs, saidContains } from './checks
 export default {
   id: 'u5',
   level: 'intermediate',
+  city: { name: 'Samarkand', country: 'Uzbekistan', lon: 66.97, lat: 39.65, line: 'Caravans, lists and cargo' },
   icon: 'layers',
   title: { en: 'Lists & Things', ky: 'Тизмелер жана нерселер' },
   blurb: 'Handle many values at once — then build your final project.',
