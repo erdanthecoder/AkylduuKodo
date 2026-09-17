@@ -12,7 +12,7 @@
 /* ------------------------------------------------ part bands (backgrounds) */
 .band {
   position: relative;
-  border-radius: 26px;
+  border-radius: var(--r-xl);
   padding: 24px 18px 40px;
   border: 1px solid var(--line);
   overflow: hidden;
@@ -111,10 +111,10 @@
 .node:not(:disabled):hover { transform: translateY(-2px); box-shadow: 0 10px 0 0 var(--node-rim-dark), 0 16px 26px rgba(0,0,0,.45); }
 .node:not(:disabled):active { transform: translateY(6px); box-shadow: 0 2px 0 0 var(--node-rim-dark), 0 6px 12px rgba(0,0,0,.4); }
 
-.node-done { --node-rim: #2f9e63; --node-rim-dark: #1d6b43; }
-.node-done .node-face { --node-face: #48d18a; color: #06301c; }
-.node-open { --node-rim: #4a3f8f; --node-rim-dark: #302963; }
-.node-open .node-face { --node-face: #6f5fd6; }
+.node-done { --node-rim: #27a96f; --node-rim-dark: #16714a; }
+.node-done .node-face { --node-face: #3ddc97; color: #04281a; }
+.node-open { --node-rim: #5b4ab5; --node-rim-dark: #382c78; }
+.node-open .node-face { --node-face: #8b7cf6; }
 .node-locked { --node-rim: #232a4d; --node-rim-dark: #1a2040; cursor: not-allowed; opacity: 0.75; }
 .node-locked .node-face { --node-face: #2c3459; color: var(--muted); }
 
@@ -136,7 +136,7 @@
   background: var(--accent); color: #2c1c04;
   font-weight: 900; font-size: 0.8rem; letter-spacing: 0.1em; text-transform: uppercase;
   padding: 7px 16px; border-radius: 999px;
-  box-shadow: 0 4px 0 0 #a06d10;
+  box-shadow: 0 4px 0 0 #b96f1b;
   animation: calloutPop 2.4s ease-in-out infinite;
 }
 .node-callout::after {
