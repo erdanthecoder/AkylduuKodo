@@ -11,6 +11,7 @@ import { PracticeView } from './views/practice.js';
 import { LabView } from './views/lab.js';
 import { SettingsView } from './views/settings.js';
 import { AccountView } from './views/account.js';
+import { WelcomeView } from './views/welcome.js';
 import * as auth from './auth.js';
 import { animateIn, countUp, startBackdrop } from './anim.js';
 
@@ -55,7 +56,10 @@ function mount(node) {
 
 function render() {
   const s = store.get();
-  if (!s.onboarded) return mount(Onboarding());
+  if (!s.onboarded) {
+    document.body.dataset.view = 'welcome';
+    return mount(WelcomeView(go, render));
+  }
 
   const [, route, arg] = (location.hash || '#/home').split('/');
   void route;

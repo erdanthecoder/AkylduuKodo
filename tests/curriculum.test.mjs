@@ -98,6 +98,11 @@ for (const lesson of ALL_LESSONS) {
     if (step.type === 'type') {
       ok(typeof step.target === 'string' && step.target.length > 5 || 'bad target', `${at} target`);
     }
+    if (step.image) {
+      ok(typeof step.image.src === 'string' && step.image.src.length > 0 || 'image needs a src', `${at} image src`);
+      ok(typeof step.image.alt === 'string' && step.image.alt.length > 0 || 'image needs alt text', `${at} image alt`);
+    }
+
     if (step.type === 'teach') {
       ok(typeof step.text === 'string' && step.text.length > 30 || 'text too short', `${at} text`);
     }

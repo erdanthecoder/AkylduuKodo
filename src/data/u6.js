@@ -3,6 +3,7 @@ import { all, said, linesAre, uses, avoids, varIs, saidContains } from './checks
 export default {
   id: 'u6',
   level: 'expert',
+  city: { name: 'Almaty', country: 'Kazakhstan', lon: 76.89, lat: 43.24, line: 'Words, ciphers and letters' },
   icon: 'wand',
   title: { en: 'Text Workshop', ky: 'Текст устаканасы' },
   blurb: 'Cut, join and rebuild words. This is how chat apps, search boxes and secret codes work.',

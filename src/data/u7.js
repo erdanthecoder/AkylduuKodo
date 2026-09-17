@@ -3,6 +3,7 @@ import { all, said, linesAre, uses, avoids, varIs, saidContains } from './checks
 export default {
   id: 'u7',
   level: 'expert',
+  city: { name: 'Bishkek', country: 'Kyrgyzstan', lon: 74.6, lat: 42.87, line: 'Home. Think like a programmer' },
   icon: 'puzzle',
   title: { en: 'Think Like a Programmer', ky: 'Программист катары ойлон' },
   blurb: 'Search, sort, count and decide — the moves behind every app you use.',

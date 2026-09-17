@@ -7,7 +7,8 @@ import { createBlocks } from '../blocks.js';
 import { runCode } from '../runner.js';
 import { runRobot, DIRS } from '../robot.js';
 import { safeCheck } from '../data/checks.js';
-import { lessonById, nextLesson } from '../data/index.js';
+import { lessonById, nextLesson, UNITS } from '../data/index.js';
+import { flightTo } from '../map.js';
 import { ui, t } from '../i18n.js';
 import * as store from '../state.js';
 
@@ -32,7 +33,7 @@ export function LessonView(lessonId, go) {
 
   const el = h(
     'div',
-    { class: 'lesson' },
+    { class: 'lesson lesson-enter' },
     h(
       'div',
       { class: 'lesson-head' },
@@ -66,6 +67,16 @@ export function LessonView(lessonId, go) {
 
   function finish() {
     const result = store.completeLesson(lesson.id, lesson.xp, stars);
+
+    // Finishing the last lesson of a unit means the next city is reached.
+    const unitIndex = UNITS.findIndex((u) => u.lessons.some((l) => l.id === lesson.id));
+    const unit = UNITS[unitIndex];
+    const unitDone = unit && unit.lessons.every((l) => store.get().done[l.id]);
+    const nextUnit = unitDone ? UNITS[unitIndex + 1] : null;
+    if (nextUnit?.city) {
+      setTimeout(() => flightTo(nextUnit.id), 900);
+    }
+
     confetti(40);
     sfx('great', store.get().sound);
     clear(body);
@@ -168,6 +179,7 @@ function teachStep(step, api) {
     h('div', { class: 'prose', html: md(t(step.text)) }),
     step.code ? exampleWithOutput(t(step.code)) : null,
     step.web ? exampleWithPage(t(step.web)) : null,
+    step.image ? shot(step.image) : null,
     step.tip ? h('div', { class: 'tip' }, icon('bulb', { size: 17 }), h('div', { html: md(t(step.tip)) })) : null,
   );
 }
@@ -199,6 +211,17 @@ function exampleWithOutput(code) {
     pane.classList.add('example-split');
   }
   return pane;
+}
+
+/**
+ * A picture in a lesson: `image: { src, alt, caption }`. Files live in
+ * assets/ next to index.html, so drop a photo in and reference it by name.
+ */
+function shot(image) {
+  return h('figure', { class: 'shot' },
+    h('img', { src: image.src, alt: image.alt || '', loading: 'lazy' }),
+    image.caption ? h('figcaption', {}, image.caption) : null,
+  );
 }
 
 /** A teaching example for HTML: the markup beside the page it produces. */
