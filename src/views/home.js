@@ -5,6 +5,9 @@ import { icon, mascot } from '../icons.js';
 import { ui, t } from '../i18n.js';
 import * as store from '../state.js';
 import { nextUpFor, UNITS, ALL_LESSONS } from '../data/index.js';
+import { PAGES } from '../data/book/index.js';
+import { bookProgress } from './book.js';
+import { noteCount } from '../notes.js';
 import * as auth from '../auth.js';
 
 const DAY_LETTERS = ['M', 'T', 'W', 'T', 'F', 'S', 'S'];
@@ -101,6 +104,32 @@ export function HomeView(go) {
             h('button', { class: 'btn btn-ghost', onclick: () => go('#/practice') }, ui('nav_practice')),
           ),
         ),
+
+    // The handbook sits right under the next lesson: it is the thing to reach
+    // for the moment a lesson raises a question.
+    (() => {
+      const bp = bookProgress();
+      const last = s.book?.last;
+      return h('section', { class: 'card book-promo' },
+        h('div', { class: 'promo-mark' }, icon('book', { size: 28 })),
+        h('div', { class: 'next-body' },
+          h('small', { class: 'muted' }, 'The handbook'),
+          h('h3', {}, 'C++ from the beginning'),
+          h('p', { class: 'muted' },
+            bp.count
+              ? `You have read ${bp.count} of ${bp.total} pages. Pick up where you stopped.`
+              : `Every part of the language, one idea to a page — ${PAGES.length} of them, in order.`),
+          h('div', { class: 'chips' },
+            h('span', { class: 'chip' }, icon('book', { size: 13 }), `${PAGES.length} pages`),
+            h('span', { class: 'chip' }, icon('pencil', { size: 13 }), `${noteCount()} notes`),
+          ),
+        ),
+        h('button', {
+          class: 'btn btn-primary',
+          onclick: () => go(last ? `#/book/${last}` : '#/book'),
+        }, bp.count ? 'Continue reading' : 'Open the book'),
+      );
+    })(),
 
     !auth.user()
       ? h('section', { class: 'card save-prompt' },

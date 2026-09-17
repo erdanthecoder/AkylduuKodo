@@ -16,6 +16,7 @@ const DEFAULT = {
   done: {},              // lessonId -> { at, xp, stars }
   log: [],               // ISO dates of days with at least one finished lesson
   arcade: {},            // gameId -> best score
+  notes: {},             // noteKey -> { text, title, label, href, at }
   badges: [],
   mode: 'code',          // preferred step mode: 'blocks' | 'code'
   sound: true,
@@ -114,11 +115,23 @@ export function mergeRemote(remote) {
     done,
     arcade,
     log: [...new Set([...(state.log || []), ...(remote.log || [])])].sort(),
+    notes: mergeNotes(state.notes, remote.notes),
     badges: [...new Set([...(state.badges || []), ...(remote.badges || [])])],
     onboarded: state.onboarded || remote.onboarded || false,
     created: remote.created || state.created,
   };
   save();
+}
+
+/** Two copies of a note: keep the fuller one rather than lose a paragraph. */
+function mergeNotes(mine = {}, theirs = {}) {
+  const out = { ...mine };
+  for (const [key, note] of Object.entries(theirs || {})) {
+    const have = out[key];
+    if (!have) out[key] = note;
+    else if ((note.text || '').length > (have.text || '').length) out[key] = note;
+  }
+  return out;
 }
 
 export function get() {

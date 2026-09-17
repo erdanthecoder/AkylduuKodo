@@ -1,0 +1,249 @@
+/* book.css — the C++ handbook, the notebook, and the pads that connect them. */
+
+/* ================================================================ the pad */
+.pad {
+  margin: 20px 0 0; border-radius: var(--r-lg);
+  background: var(--card); border: 1px solid var(--line);
+  overflow: hidden;
+}
+.pad-toggle {
+  display: flex; align-items: center; gap: 10px; width: 100%;
+  padding: 14px 16px; background: none; border: 0; cursor: pointer;
+  color: var(--ink); font: inherit; font-weight: 600; text-align: left;
+}
+.pad-toggle:hover { background: var(--card-2); }
+.pad-mark {
+  display: grid; place-items: center; width: 28px; height: 28px; flex: none;
+  border-radius: var(--r-sm); color: var(--violet);
+  background: color-mix(in srgb, var(--violet) 15%, transparent);
+}
+.pad-title { flex: 1; }
+.pad-dot { width: 7px; height: 7px; border-radius: 50%; background: var(--mint); flex: none; }
+.pad-chevron { color: var(--faint); transition: transform var(--t-med) var(--ease-out); }
+.pad.is-open .pad-chevron { transform: rotate(90deg); }
+.pad-body {
+  display: grid; grid-template-rows: 0fr;
+  transition: grid-template-rows var(--t-slow) var(--ease-out);
+}
+.pad.is-open .pad-body { grid-template-rows: 1fr; }
+.pad-body > * { overflow: hidden; }
+.pad-area {
+  width: 100%; padding: 0 16px 10px; border: 0; resize: vertical;
+  background: none; color: var(--ink); font: inherit; line-height: 1.6; outline: none;
+  min-height: 120px;
+}
+.pad-area::placeholder { color: var(--faint); }
+.pad-foot {
+  display: flex; align-items: center; justify-content: space-between; gap: 10px;
+  padding: 10px 16px 14px; border-top: 1px solid var(--line);
+}
+.pad-status { font-family: var(--mono); font-size: 0.72rem; color: var(--faint); transition: color var(--t-med); }
+.pad-status.is-flash { color: var(--mint); }
+
+/* ============================================================ the notebook */
+.note-list { display: grid; gap: 12px; margin-top: 22px; }
+.note-card {
+  padding: 16px 18px; border-radius: var(--r-lg);
+  background: var(--card); border: 1px solid var(--line);
+  transition: border-color var(--t-med);
+}
+.note-card:hover { border-color: var(--line-strong); }
+.note-head { display: flex; align-items: flex-start; justify-content: space-between; gap: 12px; }
+.note-head h3 { margin: 0 0 2px; font-size: 1rem; }
+.note-actions { display: flex; gap: 6px; flex: none; }
+.btn-sm { padding: 6px 10px; font-size: 0.82rem; }
+.btn-quiet { color: var(--faint); }
+.btn-quiet:hover { color: var(--bad); }
+.note-text { margin: 10px 0 0; color: var(--ink-2); white-space: pre-wrap; line-height: 1.65; }
+
+/* ================================================================ the book */
+.book { display: block; }
+.book-reading {
+  display: grid; grid-template-columns: 290px minmax(0, 1fr); gap: 28px; align-items: start;
+}
+
+.book-side {
+  position: sticky; top: 84px; max-height: calc(100vh - 110px);
+  display: flex; flex-direction: column; gap: 12px;
+  padding: 16px; border-radius: var(--r-lg);
+  background: var(--card); border: 1px solid var(--line);
+  overflow: hidden;
+}
+.book-side-head { display: grid; gap: 6px; }
+.book-search { margin: 0; }
+.toc { overflow-y: auto; padding-right: 4px; margin: 0 -4px 0 0; }
+.toc-group + .toc-group { margin-top: 2px; }
+.toc-head {
+  display: flex; align-items: center; gap: 9px; width: 100%;
+  padding: 9px 8px; border: 0; border-radius: var(--r-sm); cursor: pointer;
+  background: none; color: var(--ink-2); font: inherit; font-size: 0.9rem; text-align: left;
+}
+.toc-head:hover { background: var(--card-2); color: var(--ink); }
+.toc-num { font-family: var(--mono); font-size: 0.7rem; color: var(--faint); flex: none; }
+.toc-name { flex: 1; font-weight: 600; }
+.toc-count { font-family: var(--mono); font-size: 0.68rem; color: var(--faint); flex: none; }
+.toc-pages { display: none; list-style: none; margin: 2px 0 8px; padding: 0 0 0 10px; border-left: 1px solid var(--line); }
+.toc-group.is-open .toc-pages { display: block; }
+.toc-link {
+  display: flex; gap: 8px; width: 100%; padding: 6px 8px;
+  border: 0; border-radius: var(--r-sm); cursor: pointer;
+  background: none; color: var(--muted); font: inherit; font-size: 0.85rem; text-align: left;
+}
+.toc-link:hover { background: var(--card-2); color: var(--ink); }
+.toc-link.is-read { color: var(--ink-2); }
+.toc-link.is-current { background: color-mix(in srgb, var(--accent) 16%, transparent); color: var(--ink); font-weight: 600; }
+.toc-page-num { font-family: var(--mono); font-size: 0.7rem; color: var(--faint); flex: none; min-width: 2em; }
+.toc-empty { padding: 10px 8px; }
+
+/* -------------------------------------------------------------- the page */
+.book-page { max-width: 760px; min-width: 0; }
+.book-page-head { margin-bottom: 20px; }
+.book-page-head h1 { margin: 6px 0 10px; font-size: clamp(1.7rem, 4vw, 2.4rem); letter-spacing: -0.02em; }
+.book-lede { margin: 0; color: var(--ink-2); font-size: 1.08rem; }
+.book-body { color: var(--ink-2); line-height: 1.75; }
+.book-body p { margin: 0 0 14px; }
+
+.cpp-sample {
+  max-width: 100%; margin: 20px 0; border-radius: var(--r-lg); overflow: hidden;
+  border: 1px solid var(--line-strong); background: var(--code-bg);
+}
+.cpp-bar {
+  display: flex; align-items: center; justify-content: space-between;
+  padding: 9px 14px; background: rgba(255, 255, 255, 0.04); border-bottom: 1px solid var(--line);
+}
+.cpp-file { font-family: var(--mono); font-size: 0.74rem; color: var(--muted); }
+.code-copy {
+  display: inline-flex; align-items: center; gap: 6px;
+  padding: 4px 10px; border-radius: 999px; cursor: pointer;
+  background: none; border: 1px solid var(--line); color: var(--muted);
+  font: inherit; font-size: 0.74rem;
+  transition: color var(--t-fast), border-color var(--t-fast);
+}
+.code-copy:hover { color: var(--ink); border-color: var(--line-strong); }
+.cpp-code { margin: 0; border: 0; border-radius: 0; background: none; overflow-x: auto; }
+.cpp-out { border-top: 1px solid var(--line); padding: 12px 16px; background: rgba(61, 220, 151, 0.05); }
+.cpp-out-label {
+  display: block; margin-bottom: 6px;
+  font-family: var(--mono); font-size: 0.66rem; letter-spacing: 0.14em;
+  text-transform: uppercase; color: var(--mint);
+}
+.cpp-out pre { margin: 0; font-family: var(--mono); font-size: var(--code-size); color: #cfe9dc; white-space: pre-wrap; }
+.tok-pre { color: #9aa7ff; }
+
+.book-points {
+  margin: 20px 0; padding: 16px 20px; border-radius: var(--r-lg);
+  background: var(--card); border: 1px solid var(--line);
+}
+.book-points h3 {
+  margin: 0 0 8px; font-family: var(--mono); font-size: 0.7rem;
+  letter-spacing: 0.16em; text-transform: uppercase; color: var(--accent);
+}
+.book-points ul { margin: 0; padding-left: 18px; color: var(--ink-2); }
+.book-points li { margin-bottom: 5px; }
+
+.book-tip {
+  display: flex; gap: 12px; margin: 18px 0; padding: 14px 16px;
+  border-radius: var(--r-md); border: 1px solid color-mix(in srgb, var(--sky) 28%, transparent);
+  background: color-mix(in srgb, var(--sky) 9%, transparent);
+}
+.book-tip .tip-mark { color: var(--sky); flex: none; }
+.book-tip p { margin: 0; color: var(--ink-2); }
+
+.book-nav {
+  display: flex; align-items: center; justify-content: space-between; gap: 12px;
+  margin-top: 26px; padding-top: 20px; border-top: 1px solid var(--line);
+}
+.book-prev span, .book-next span {
+  max-width: 24ch; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
+}
+
+/* ------------------------------------------------------------- the cover */
+.cover-plate {
+  position: relative; overflow: hidden;
+  padding: 44px 40px; border-radius: var(--r-xl);
+  border: 1px solid var(--line-strong);
+  background:
+    radial-gradient(90% 120% at 12% 0%, rgba(139, 124, 246, 0.24), transparent 60%),
+    radial-gradient(70% 100% at 100% 100%, rgba(89, 185, 255, 0.18), transparent 60%),
+    var(--card-solid);
+  box-shadow: var(--sh-3);
+}
+.cover-plate::after {
+  content: "C++"; position: absolute; right: -10px; bottom: -46px;
+  font-family: var(--display); font-size: 12rem; font-weight: 800;
+  color: color-mix(in srgb, var(--ink) 6%, transparent); pointer-events: none;
+}
+.cover-plate h1 { margin: 8px 0 14px; font-size: clamp(2rem, 6vw, 3.4rem); letter-spacing: -0.035em; }
+.cover-lede { max-width: 54ch; color: var(--ink-2); font-size: 1.06rem; }
+.cover-stats { display: flex; flex-wrap: wrap; gap: 22px; margin: 22px 0 26px; color: var(--muted); }
+.cover-stats b { color: var(--ink); font-size: 1.3rem; font-family: var(--display); }
+.cover-cta { display: flex; flex-wrap: wrap; gap: 10px; }
+.cover-cta .btn { width: auto; flex: 0 0 auto; }
+
+.cover-grid {
+  display: grid; grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
+  gap: 14px; margin-top: 22px;
+}
+.cover-chapter {
+  position: relative; padding: 20px; text-align: left; cursor: pointer;
+  border-radius: var(--r-lg); background: var(--card); border: 1px solid var(--line);
+  color: var(--ink); font: inherit;
+  opacity: 0; transform: translateY(16px);
+  animation: riseFade 0.5s var(--ease-out) forwards;
+  animation-delay: calc(var(--i) * 45ms + 60ms);
+  transition: transform var(--t-med) var(--ease-out), border-color var(--t-med);
+}
+.cover-chapter:hover { transform: translateY(-4px); border-color: var(--line-strong); }
+.cover-num {
+  display: block; margin-bottom: 8px;
+  font-family: var(--mono); font-size: 0.72rem; letter-spacing: 0.14em; color: var(--accent);
+}
+.cover-chapter h3 { margin: 0 0 6px; font-size: 1.05rem; }
+.cover-chapter p { margin: 0 0 12px; color: var(--muted); font-size: 0.88rem; line-height: 1.55; }
+.cover-pages { font-family: var(--mono); font-size: 0.72rem; color: var(--faint); }
+
+@media (max-width: 1000px) {
+  .book-reading { grid-template-columns: minmax(0, 1fr); }
+  .book-side { position: static; max-height: none; order: 2; }
+  .book-page { order: 1; max-width: none; }
+  .toc { max-height: 420px; }
+  .cover-plate { padding: 30px 22px; }
+  .cover-plate::after { display: none; }
+}
+
+/* the handbook, promoted on the dashboard */
+.book-promo { display: flex; align-items: center; gap: 18px; flex-wrap: wrap; }
+.book-promo .promo-mark {
+  display: grid; place-items: center; width: 56px; height: 56px; flex: none;
+  border-radius: var(--r-md); color: var(--violet);
+  background: color-mix(in srgb, var(--violet) 14%, transparent);
+  border: 1px solid color-mix(in srgb, var(--violet) 26%, transparent);
+}
+.book-promo .next-body { flex: 1; min-width: 220px; }
+.book-promo h3 { margin: 2px 0 6px; }
+
+/* the handbook, on the front page */
+.book-section { padding: 74px 0 10px; }
+.book-plate {
+  display: grid; grid-template-columns: minmax(0, 1.25fr) minmax(0, 0.75fr); gap: 34px;
+  padding: 36px; border-radius: var(--r-xl);
+  border: 1px solid var(--line-strong);
+  background:
+    radial-gradient(80% 120% at 8% 0%, rgba(139, 124, 246, 0.2), transparent 62%),
+    radial-gradient(60% 90% at 100% 100%, rgba(89, 185, 255, 0.14), transparent 60%),
+    var(--card-solid);
+  box-shadow: var(--sh-3);
+}
+.book-plate h2 { margin: 8px 0 12px; font-size: clamp(1.5rem, 3.4vw, 2.2rem); letter-spacing: -0.025em; }
+.book-plate p { margin: 0 0 20px; color: var(--ink-2); max-width: 54ch; line-height: 1.7; }
+.book-plate-list { list-style: none; margin: 0; padding: 0; align-self: center; }
+.book-plate-list li {
+  display: flex; gap: 12px; align-items: baseline;
+  padding: 8px 0; border-bottom: 1px solid var(--line); color: var(--ink-2); font-size: 0.94rem;
+}
+.book-plate-list .plate-num { font-family: var(--mono); font-size: 0.72rem; color: var(--accent); }
+.book-plate-list .plate-more { border-bottom: 0; color: var(--faint); font-size: 0.86rem; }
+@media (max-width: 860px) {
+  .book-plate { grid-template-columns: 1fr; gap: 22px; padding: 24px; }
+  .book-section { padding-top: 54px; }
+}
