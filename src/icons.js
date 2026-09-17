@@ -61,7 +61,7 @@ export function icon(name, { size = 20, cls = '' } = {}) {
   el.setAttribute('height', String(size));
   el.setAttribute('fill', 'none');
   el.setAttribute('stroke', 'currentColor');
-  el.setAttribute('stroke-width', '1.7');
+  el.setAttribute('stroke-width', '1.65');
   el.setAttribute('stroke-linecap', 'round');
   el.setAttribute('stroke-linejoin', 'round');
   el.setAttribute('aria-hidden', 'true');

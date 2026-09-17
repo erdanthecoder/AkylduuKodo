@@ -104,7 +104,7 @@ function paintChrome() {
       h('span', { class: 'pill pill-level', title: ui('level') }, icon(lvl.icon, { size: 15 }), lvl.name),
       xpPill,
       h('span', { class: 'pill', title: ui('streak') }, icon('flame', { size: 15, cls: 'flame' }), String(store.streak())),
-      h('span', { class: 'pill', title: ui('this_week') }, icon('target', { size: 15 }), `${week.count}/${week.goal}`),
+      h('span', { class: 'pill pill-week', title: ui('this_week') }, icon('target', { size: 15 }), `${week.count}/${week.goal}`),
       accountButton(),
     ),
   );

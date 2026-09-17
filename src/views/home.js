@@ -31,6 +31,7 @@ export function HomeView(go) {
         'div',
         { class: `day ${active ? 'day-on' : ''} ${isToday ? 'day-today' : ''}`, title: iso },
         h('span', { class: 'day-letter' }, DAY_LETTERS[i]),
+        h('span', { class: 'day-num' }, String(d.getDate())),
         h('span', { class: 'day-dot' }, active ? icon('flame', { size: 15 }) : ''),
       ),
     );
