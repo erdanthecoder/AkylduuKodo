@@ -276,7 +276,7 @@ export async function createGlobe(container, { stops = [], doneUnits = new Set()
   const routeGroup = new THREE.Group();
   earth.add(routeGroup);
 
-  const cityMat = new THREE.MeshBasicMaterial({ color: 0xffb547 });
+  const cityMat = new THREE.MeshBasicMaterial({ color: 0x10b981 });
   const doneMat = new THREE.MeshBasicMaterial({ color: 0x3ddc97 });
   stops.forEach((stop) => {
     const at = toVec(stop.lon, stop.lat, R * 1.004);
@@ -286,7 +286,7 @@ export async function createGlobe(container, { stops = [], doneUnits = new Set()
 
     const halo = new THREE.Mesh(
       new THREE.RingGeometry(0.022, 0.032, 24),
-      new THREE.MeshBasicMaterial({ color: 0xffb547, transparent: true, opacity: 0.55, side: THREE.DoubleSide }),
+      new THREE.MeshBasicMaterial({ color: 0x10b981, transparent: true, opacity: 0.55, side: THREE.DoubleSide }),
     );
     halo.position.copy(at);
     halo.lookAt(new THREE.Vector3(0, 0, 0));
@@ -299,7 +299,7 @@ export async function createGlobe(container, { stops = [], doneUnits = new Set()
     const curve = arcCurve(prev, stop);
     const tube = new THREE.Mesh(
       new THREE.TubeGeometry(curve, 64, flown ? 0.006 : 0.003, 8, false),
-      new THREE.MeshBasicMaterial({ color: flown ? 0xffb547 : 0x44598c }),
+      new THREE.MeshBasicMaterial({ color: flown ? 0x10b981 : 0x2c3a52 }),
     );
     routeGroup.add(tube);
   });
@@ -408,7 +408,7 @@ export async function createGlobe(container, { stops = [], doneUnits = new Set()
       const curve = arcCurve(from, to, 0.34);
       const trail = new THREE.Mesh(
         new THREE.TubeGeometry(curve, 96, 0.007, 10, false),
-        new THREE.MeshBasicMaterial({ color: 0xffb547, transparent: true, opacity: 0.95 }),
+        new THREE.MeshBasicMaterial({ color: 0x10b981, transparent: true, opacity: 0.95 }),
       );
       trail.geometry.setDrawRange(0, 0);
       routeGroup.add(trail);

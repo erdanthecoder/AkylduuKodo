@@ -3,46 +3,54 @@
    curve comes from this file so the whole app reads as one product. */
 
 /* ============================================================== 1. tokens */
-/* One neutral surface ramp, one accent, and no decoration that is not doing a
-   job. Colour is reserved for meaning: the accent marks what is live or next,
-   green means correct, red means wrong. Everything else is ink on a surface. */
+/* The workspace palette: obsidian surfaces, slate edges, and two colours that
+   each mean one thing.
+     emerald — progress, and anything that came out right
+     indigo  — where you are right now
+   Nothing is tinted for decoration. If it has colour, it is saying something. */
 :root {
-  /* base — a neutral dark, not a coloured one */
-  --bg: #0e1013;
-  --bg-2: #14161a;
-  --bg-3: #191c21;
+  /* obsidian */
+  --bg: #090d16;
+  --bg-2: #0d121d;
+  --bg-3: #141b2a;
 
-  /* surfaces are solid, so text sits on a known colour */
-  --card: #16191d;
-  --card-2: #1c2026;
-  --card-solid: #16191d;
-  --line: rgba(255, 255, 255, 0.085);
-  --line-strong: rgba(255, 255, 255, 0.17);
+  /* surfaces */
+  --card: #0e131f;
+  --card-2: #151c2b;
+  --card-solid: #0e131f;
+  --line: #1e293b;
+  --line-strong: #2c3a52;
 
-  /* ink */
-  --ink: #f1f2f4;
-  --ink-2: #c5c9d0;
-  --muted: #8a9098;
-  --faint: #656b74;
+  /* ink, on the slate ramp */
+  --ink: #e8edf5;
+  --ink-2: #a9b4c6;
+  --muted: #7c8798;
+  --faint: #59647a;
 
-  /* one accent, and the two tints it is allowed to make */
-  --accent: #e0973f;
-  --accent-ink: #1b1205;
-  --accent-soft: rgba(224, 151, 63, 0.12);
-  --accent-line: rgba(224, 151, 63, 0.32);
-  --accent-2: #e0973f;
+  /* emerald: progress, and anything correct */
+  --accent: #10b981;
+  --accent-ink: #052018;
+  --accent-soft: rgba(16, 185, 129, 0.12);
+  --accent-line: rgba(16, 185, 129, 0.34);
+  --accent-2: #10b981;
 
-  /* semantic only — never decorative */
-  --violet: #7f86f2;
-  --purple: #7f86f2;
-  --mint: #4cae82;
-  --ok: #4cae82;
-  --sky: #5c9bd6;
-  --blue: #5c9bd6;
-  --bad: #dd6b6b;
-  --warn: #d9a441;
+  /* indigo: the step you are on */
+  --active: #6366f1;
+  --active-ink: #ffffff;
+  --active-soft: rgba(99, 102, 241, 0.14);
+  --active-line: rgba(99, 102, 241, 0.4);
 
-  --code-bg: #0a0c0f;
+  /* semantic only */
+  --violet: #6366f1;
+  --purple: #6366f1;
+  --mint: #10b981;
+  --ok: #10b981;
+  --sky: #38bdf8;
+  --blue: #38bdf8;
+  --bad: #f43f5e;
+  --warn: #f59e0b;
+
+  --code-bg: #070b12;
 
   /* geometry — smaller radii read as software, large ones read as a toy */
   --r-sm: 6px;
@@ -52,10 +60,10 @@
   --radius: var(--r-lg);
   --radius-sm: var(--r-md);
 
-  /* elevation — depth comes from one soft, neutral shadow, not a glow */
-  --sh-1: 0 1px 2px rgba(0, 0, 0, 0.28);
-  --sh-2: 0 1px 2px rgba(0, 0, 0, 0.24), 0 6px 20px -14px rgba(0, 0, 0, 0.6);
-  --sh-3: 0 1px 3px rgba(0, 0, 0, 0.28), 0 20px 44px -28px rgba(0, 0, 0, 0.72);
+  /* elevation — one soft, neutral shadow, never a glow */
+  --sh-1: 0 1px 2px rgba(0, 0, 0, 0.3);
+  --sh-2: 0 1px 2px rgba(0, 0, 0, 0.26), 0 6px 20px -14px rgba(0, 0, 0, 0.65);
+  --sh-3: 0 1px 3px rgba(0, 0, 0, 0.3), 0 20px 44px -28px rgba(0, 0, 0, 0.78);
   --shadow: var(--sh-2);
 
   /* motion */
@@ -71,67 +79,78 @@
   --mono: "JetBrains Mono", ui-monospace, "SF Mono", Menlo, Consolas, monospace;
 }
 
-/* Daylight. Chosen in Settings, or followed from the device when the learner
-   has not chosen at all. Both routes land on the same tokens. */
+/* Daylight. Same two meanings, darkened enough to hold their own on white. */
 @media (prefers-color-scheme: light) {
   :root:not([data-theme="dark"]) {
-    --bg: #f7f8f9;
-    --bg-2: #f1f2f4;
-    --bg-3: #e9ebee;
+    --bg: #f6f8fb;
+    --bg-2: #eef2f7;
+    --bg-3: #e4eaf2;
     --card: #ffffff;
-    --card-2: #f3f4f6;
+    --card-2: #f1f5f9;
     --card-solid: #ffffff;
-    --line: rgba(17, 19, 24, 0.1);
-    --line-strong: rgba(17, 19, 24, 0.2);
-    --ink: #16181d;
-    --ink-2: #3d424a;
-    --muted: #676d76;
-    --faint: #939aa4;
-    --accent: #a96a12;
+    --line: #e2e8f0;
+    --line-strong: #cbd5e1;
+    --ink: #0f172a;
+    --ink-2: #334155;
+    --muted: #64748b;
+    --faint: #94a3b8;
+    --accent: #047857;
     --accent-ink: #ffffff;
-    --accent-soft: rgba(169, 106, 18, 0.1);
-    --accent-line: rgba(169, 106, 18, 0.28);
-    --accent-2: #a96a12;
-    --mint: #2f8f60;
-    --ok: #2f8f60;
-    --sky: #2f6fae;
-    --blue: #2f6fae;
-    --bad: #c4454b;
-    --warn: #a2761a;
-    --code-bg: #12151a;
-    --sh-1: 0 1px 2px rgba(20, 24, 40, 0.08);
-    --sh-2: 0 1px 2px rgba(20, 24, 40, 0.07), 0 6px 18px -12px rgba(20, 24, 40, 0.25);
-    --sh-3: 0 1px 3px rgba(20, 24, 40, 0.08), 0 18px 40px -26px rgba(20, 24, 40, 0.35);
+    --accent-soft: rgba(4, 120, 87, 0.1);
+    --accent-line: rgba(4, 120, 87, 0.3);
+    --accent-2: #047857;
+    --active: #4f46e5;
+    --active-ink: #ffffff;
+    --active-soft: rgba(79, 70, 229, 0.1);
+    --active-line: rgba(79, 70, 229, 0.32);
+    --violet: #4f46e5;
+    --purple: #4f46e5;
+    --mint: #047857;
+    --ok: #047857;
+    --sky: #0369a1;
+    --blue: #0369a1;
+    --bad: #be123c;
+    --warn: #b45309;
+    --code-bg: #0b1220;
+    --sh-1: 0 1px 2px rgba(15, 23, 42, 0.07);
+    --sh-2: 0 1px 2px rgba(15, 23, 42, 0.06), 0 6px 18px -12px rgba(15, 23, 42, 0.22);
+    --sh-3: 0 1px 3px rgba(15, 23, 42, 0.07), 0 18px 40px -26px rgba(15, 23, 42, 0.3);
   }
 }
 :root[data-theme="light"] {
-  --bg: #f7f8f9;
-  --bg-2: #f1f2f4;
-  --bg-3: #e9ebee;
+  --bg: #f6f8fb;
+  --bg-2: #eef2f7;
+  --bg-3: #e4eaf2;
   --card: #ffffff;
-  --card-2: #f3f4f6;
+  --card-2: #f1f5f9;
   --card-solid: #ffffff;
-  --line: rgba(17, 19, 24, 0.1);
-  --line-strong: rgba(17, 19, 24, 0.2);
-  --ink: #16181d;
-  --ink-2: #3d424a;
-  --muted: #676d76;
-  --faint: #939aa4;
-  --accent: #a96a12;
+  --line: #e2e8f0;
+  --line-strong: #cbd5e1;
+  --ink: #0f172a;
+  --ink-2: #334155;
+  --muted: #64748b;
+  --faint: #94a3b8;
+  --accent: #047857;
   --accent-ink: #ffffff;
-  --accent-soft: rgba(169, 106, 18, 0.1);
-  --accent-line: rgba(169, 106, 18, 0.28);
-  --accent-2: #a96a12;
-  --mint: #2f8f60;
-  --ok: #2f8f60;
-  --sky: #2f6fae;
-  --blue: #2f6fae;
-  --bad: #c4454b;
-  --warn: #a2761a;
-  --code-bg: #12151a;
-  --sh-1: 0 1px 2px rgba(20, 24, 40, 0.08);
-  --sh-2: 0 1px 2px rgba(20, 24, 40, 0.07), 0 6px 18px -12px rgba(20, 24, 40, 0.25);
-  --sh-3: 0 1px 3px rgba(20, 24, 40, 0.08), 0 18px 40px -26px rgba(20, 24, 40, 0.35);
+  --accent-soft: rgba(4, 120, 87, 0.1);
+  --accent-line: rgba(4, 120, 87, 0.3);
+  --accent-2: #047857;
+  --active: #4f46e5;
+  --active-ink: #ffffff;
+  --active-soft: rgba(79, 70, 229, 0.1);
+  --active-line: rgba(79, 70, 229, 0.32);
+  --violet: #4f46e5;
+  --purple: #4f46e5;
+  --mint: #047857;
+  --ok: #047857;
+  --sky: #0369a1;
+  --blue: #0369a1;
+  --bad: #be123c;
+  --warn: #b45309;
+  --code-bg: #0b1220;
+  --sh-1: 0 1px 2px rgba(15, 23, 42, 0.07);
+  --sh-2: 0 1px 2px rgba(15, 23, 42, 0.06), 0 6px 18px -12px rgba(15, 23, 42, 0.22);
+  --sh-3: 0 1px 3px rgba(15, 23, 42, 0.07), 0 18px 40px -26px rgba(15, 23, 42, 0.3);
 }
 
 /* ------------------------------------------------- reading and code size */
@@ -204,7 +223,7 @@ code {
   padding: 1px 5px; border-radius: 5px;
 }
 button, input, textarea { font-family: inherit; font-size: inherit; color: inherit; }
-:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; border-radius: 4px; }
+:focus-visible { outline: 2px solid var(--active); outline-offset: 2px; border-radius: 4px; }
 
 /* ============================================================ 2. app frame */
 .topbar {
@@ -269,8 +288,8 @@ button, input, textarea { font-family: inherit; font-size: inherit; color: inher
 }
 .nav-btn:hover { color: var(--ink-2); }
 .nav-btn:active { transform: scale(0.94); }
-.nav-on { color: var(--ink); background: var(--card-2); }
-.nav-on .icon { color: var(--accent); }
+.nav-on { color: var(--ink); background: var(--active-soft); }
+.nav-on .icon { color: var(--active); }
 .nav-btn { font-weight: 550; }
 .nav-icon { display: inline-flex; }
 
@@ -341,7 +360,7 @@ button, input, textarea { font-family: inherit; font-size: inherit; color: inher
 .chips { display: flex; gap: 8px; flex-wrap: wrap; margin-top: 8px; }
 .chip-btn { cursor: pointer; color: var(--ink-2); font-size: 0.88rem; padding: 9px 16px; transition: all var(--t-med); }
 .chip-btn:hover { border-color: var(--line-strong); color: var(--ink); }
-.chip-on { background: var(--accent); color: var(--accent-ink); border-color: transparent; font-weight: 650; }
+.chip-on { background: var(--active); color: var(--active-ink); border-color: transparent; font-weight: 650; }
 
 /* ============================================================ 5. dashboard */
 .hero {
@@ -400,7 +419,9 @@ button, input, textarea { font-family: inherit; font-size: inherit; color: inher
 .day-letter { display: block; font-size: 0.66rem; color: var(--faint); font-weight: 550; }
 .day-dot { display: flex; justify-content: center; min-height: 16px; color: var(--accent); }
 .day-on { background: var(--accent-soft); border-color: color-mix(in srgb, var(--accent) 30%, transparent); }
-.day-today { border-color: var(--accent); }
+/* today is where you are, so it takes the active colour; the days you worked
+   take the progress colour */
+.day-today { border-color: var(--active); }
 
 .next-card { display: flex; align-items: center; gap: 20px; flex-wrap: wrap; }
 .next-mark, .drill-mark, .band-mark, .auth-mark {
@@ -474,13 +495,14 @@ button, input, textarea { font-family: inherit; font-size: inherit; color: inher
 .code-sample, .md-pre {
   margin: 12px 0; padding: 14px 16px; overflow-x: auto;
   background: var(--code-bg); border: 1px solid var(--line); border-radius: var(--r-md);
-  font-family: var(--mono); font-size: var(--code-size); line-height: 1.6; color: #e6eaff;
+  font-family: var(--mono); font-size: var(--code-size); line-height: 1.6; color: #dbe4f0;
 }
-.tok-kw { color: #ff8fc5; }
-.tok-str { color: #8ef0bd; }
-.tok-num { color: #ffc266; }
-.tok-com { color: #5d6790; font-style: italic; }
-.tok-fn { color: #6fc9ff; }
+/* the editor palette: emerald strings, indigo keywords — the same two meanings */
+.tok-kw { color: #818cf8; }
+.tok-str { color: #34d399; }
+.tok-num { color: #fbbf24; }
+.tok-com { color: #475569; font-style: italic; }
+.tok-fn { color: #38bdf8; }
 
 .options { display: grid; gap: 10px; margin-top: 16px; }
 .option {
@@ -489,7 +511,7 @@ button, input, textarea { font-family: inherit; font-size: inherit; color: inher
   font-family: var(--mono); font-size: 0.9rem;
   transition: border-color var(--t-med), background var(--t-med);
 }
-.option:hover:not(:disabled) { border-color: var(--accent); background: var(--bg-3); }
+.option:hover:not(:disabled) { border-color: var(--active-line); background: var(--bg-3); }
 .option:active:not(:disabled) { transform: translateY(1px); }
 .option-right { background: color-mix(in srgb, var(--mint) 18%, var(--card-2)); border-color: var(--mint); }
 .option-wrong { background: color-mix(in srgb, var(--bad) 15%, var(--card-2)); border-color: var(--bad); }
@@ -536,8 +558,8 @@ button, input, textarea { font-family: inherit; font-size: inherit; color: inher
 }
 .text-input { font-family: var(--sans); }
 .type-input:focus, .text-input:focus {
-  outline: none; border-color: var(--accent);
-  box-shadow: 0 0 0 4px color-mix(in srgb, var(--accent) 18%, transparent);
+  outline: none; border-color: var(--active);
+  box-shadow: 0 0 0 3px var(--active-soft);
 }
 .small-input { width: 110px; margin: 0; }
 .switch-row { display: flex; align-items: center; gap: 11px; cursor: pointer; }
@@ -552,8 +574,8 @@ button, input, textarea { font-family: inherit; font-size: inherit; color: inher
   border-radius: 50%; background: var(--muted);
   transition: transform var(--t-med) var(--ease-spring), background var(--t-med);
 }
-.switch:checked { background: color-mix(in srgb, var(--accent) 34%, transparent); border-color: color-mix(in srgb, var(--accent) 55%, transparent); }
-.switch:checked::after { transform: translateX(19px); background: var(--accent); }
+.switch:checked { background: var(--active-soft); border-color: var(--active-line); }
+.switch:checked::after { transform: translateX(19px); background: var(--active); }
 .btn-inline { justify-self: start; width: auto; }
 .field { display: flex; flex-direction: column; gap: 5px; }
 .field-label { font-size: 0.76rem; font-weight: 700; letter-spacing: 0.06em; text-transform: uppercase; color: var(--muted); }
@@ -574,7 +596,7 @@ button, input, textarea { font-family: inherit; font-size: inherit; color: inher
   font-weight: 650; font-size: 0.85rem; transition: all var(--t-med);
 }
 .tab:hover { color: var(--ink); }
-.tab-on { background: var(--accent); color: var(--accent-ink); border-color: transparent; }
+.tab-on { background: var(--active); color: var(--active-ink); border-color: transparent; }
 
 .bench-split { display: grid; grid-template-columns: 1.1fr 0.9fr; gap: 18px; align-items: start; }
 .bench-label, .example-label {
@@ -588,17 +610,17 @@ button, input, textarea { font-family: inherit; font-size: inherit; color: inher
   background: var(--code-bg); border: 1px solid var(--line);
   transition: border-color var(--t-med), box-shadow var(--t-med);
 }
-.editor:focus-within { border-color: color-mix(in srgb, var(--accent) 55%, var(--line)); box-shadow: 0 0 0 4px color-mix(in srgb, var(--accent) 12%, transparent); }
+.editor:focus-within { border-color: var(--active-line); box-shadow: 0 0 0 3px var(--active-soft); }
 .editor-scroll { position: relative; flex: 1; min-width: 0; }
 .hl-layer, .code-area {
   margin: 0; padding: 14px 16px; border: 0;
   font-family: var(--mono); font-size: var(--code-size); line-height: var(--code-line);
   white-space: pre; tab-size: 2;
 }
-.hl-layer { position: absolute; inset: 0; overflow: hidden; pointer-events: none; color: #e6eaff; }
+.hl-layer { position: absolute; inset: 0; overflow: hidden; pointer-events: none; color: #dbe4f0; }
 .code-area {
   position: relative; display: block; width: 100%; resize: none; outline: none; overflow: auto;
-  background: transparent; color: transparent; caret-color: var(--accent);
+  background: transparent; color: transparent; caret-color: var(--active);
 }
 .code-area::selection { background: color-mix(in srgb, var(--accent) 32%, transparent); }
 .gutter {
@@ -621,15 +643,15 @@ button, input, textarea { font-family: inherit; font-size: inherit; color: inher
 .page-bar { background: var(--card-2); }
 .dots { display: inline-flex; gap: 5px; }
 .dots i { width: 8px; height: 8px; border-radius: 50%; display: block; opacity: 0.55; }
-.dots i:first-child { background: #c9615f; }
-.dots i:nth-child(2) { background: #c2973d; }
-.dots i:last-child { background: #4f9a6d; }
+.dots i:first-child { background: #f43f5e; }
+.dots i:nth-child(2) { background: #f59e0b; }
+.dots i:last-child { background: #10b981; }
 .screen-title { font-size: 0.76rem; font-weight: 650; color: var(--muted); }
 .page-bar span:last-child { font-size: 0.76rem; font-weight: 650; color: var(--muted); }
 .screen-status { margin-left: auto; font-family: var(--mono); font-size: 0.7rem; color: var(--faint); }
 .screen-status.is-ok { color: var(--mint); }
 .screen-status.is-bad { color: var(--bad); }
-.screen-body { flex: 1; padding: 14px 16px; max-height: 340px; min-height: 150px; overflow: auto; font-family: var(--mono); font-size: var(--code-size); color: #dde3ff; }
+.screen-body { flex: 1; padding: 14px 16px; max-height: 340px; min-height: 150px; overflow: auto; font-family: var(--mono); font-size: var(--code-size); color: #cfdae8; }
 .screen-line { display: flex; gap: 12px; padding: 3px 0; white-space: pre-wrap; word-break: break-word; }
 .screen-num { min-width: 1.2em; text-align: right; color: var(--faint); opacity: 0.6; font-size: 0.8em; padding-top: 2px; user-select: none; }
 .screen-text { flex: 1; }
@@ -743,7 +765,7 @@ button, input, textarea { font-family: inherit; font-size: inherit; color: inher
 .celebrate { text-align: center; }
 .celebrate .row { justify-content: center; }
 .stars { display: inline-flex; gap: 4px; align-items: center; justify-content: center; }
-.star-on { color: var(--accent); fill: var(--accent); }
+.star-on { color: var(--warn); fill: var(--warn); }
 .star-off { color: var(--line-strong); fill: none; }
 .xp-line { font-family: var(--display); font-size: 1.25rem; font-weight: 650; color: var(--accent); }
 .week-mini { max-width: 330px; margin: 14px auto; }
@@ -783,8 +805,8 @@ button, input, textarea { font-family: inherit; font-size: inherit; color: inher
   }
   .nav-btn { flex: none; width: 100%; max-width: none; flex-direction: row; justify-content: flex-start; gap: 13px; padding: 12px 15px; font-size: 0.93rem; }
   .nav-label { font-size: 0.93rem; }
-  .nav-on { background: color-mix(in srgb, var(--accent) 12%, transparent); }
-  .nav-on::before { content: ""; position: absolute; left: -16px; width: 3px; height: 24px; border-radius: 0 3px 3px 0; background: var(--accent); }
+  .nav-on { background: var(--active-soft); }
+  .nav-on::before { content: ""; position: absolute; left: -16px; width: 3px; height: 24px; border-radius: 0 3px 3px 0; background: var(--active); }
   .topbar { padding-left: 26px; }
   .lesson-foot { bottom: 24px; }
   .toast { left: calc(50% + 112px); bottom: 32px; }
@@ -862,8 +884,11 @@ h1 > .icon, h2 > .icon { color: var(--accent); flex: none; }
    <code> element wraps the whole sample, so it must stay plain — otherwise the
    block wears a chip's background, and in daylight its ink turns near-black on
    a dark panel and vanishes. */
-.code-sample code, .md-pre code, .cpp-code code, .screen code {
-  background: none; color: inherit; padding: 0; border-radius: 0; font-size: inherit;
+/* An inline element with a border breaks across every line it wraps onto, so a
+   block of code wore a box around each of its lines. Nothing about the chip
+   survives inside a code block. */
+.code-sample code, .md-pre code, .cpp-code code, .screen code, .type-target code {
+  background: none; border: 0; color: inherit; padding: 0; border-radius: 0; font-size: inherit;
 }
 
 /* ============================================================== settings */
@@ -891,8 +916,8 @@ h1 > .icon, h2 > .icon { color: var(--accent); flex: none; }
 /* ------------------------------------------------- top-bar icon buttons */
 .pill-icon { padding: 6px 9px; }
 .pill-icon .icon { display: block; }
-.pill-on { color: var(--ink); border-color: color-mix(in srgb, var(--accent) 45%, transparent); }
-.pill-on .icon { color: var(--accent); }
+.pill-on { color: var(--ink); border-color: var(--active-line); }
+.pill-on .icon { color: var(--active); }
 
 /* the Lab, promoted at the top of Practice */
 .lab-promo { display: flex; align-items: center; gap: 18px; flex-wrap: wrap; cursor: pointer; }

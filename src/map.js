@@ -51,12 +51,12 @@ function el(name, attrs = {}) {
  * reaches this window. The coastlines arrive asynchronously — the map is drawn
  * and usable before they land, and they fade in underneath the route.
  */
-function paintGeography(svg, { landFill = 'url(#land)', landStroke = '#39414d', width = 1, labels = true, opacity = 1 } = {}) {
+function paintGeography(svg, { landFill = 'url(#land)', landStroke = '#2c3a52', width = 1, labels = true, opacity = 1 } = {}) {
   const grat = el('g', { class: 'graticule', opacity: String(0.5 * opacity) });
   graticule(project, BOX).forEach((line) => {
     grat.append(el('line', {
       x1: line.x1.toFixed(1), y1: line.y1.toFixed(1), x2: line.x2.toFixed(1), y2: line.y2.toFixed(1),
-      stroke: '#232932', 'stroke-width': 0.6 * width,
+      stroke: '#1e293b', 'stroke-width': 0.6 * width,
     }));
   });
   const land = el('g', { class: 'land', opacity: String(opacity) });
@@ -111,17 +111,17 @@ export function routeMap({ doneUnits = new Set(), currentUnitId = null, onPick =
   svg.innerHTML = `
     <defs>
       <linearGradient id="sea" x1="0" y1="0" x2="0" y2="1">
-        <stop offset="0" stop-color="#0c0f14"/><stop offset="1" stop-color="#090b0f"/>
+        <stop offset="0" stop-color="#0b111c"/><stop offset="1" stop-color="#080c14"/>
       </linearGradient>
       <linearGradient id="land" x1="0" y1="0" x2="0" y2="1">
-        <stop offset="0" stop-color="#1e232b"/><stop offset="1" stop-color="#171b21"/>
+        <stop offset="0" stop-color="#182131"/><stop offset="1" stop-color="#121926"/>
       </linearGradient>
       <linearGradient id="trail" x1="0" y1="0" x2="1" y2="0">
-        <stop offset="0" stop-color="#e0973f"/><stop offset="1" stop-color="#e0973f"/>
+        <stop offset="0" stop-color="#10b981"/><stop offset="1" stop-color="#10b981"/>
       </linearGradient>
       <radialGradient id="glow" cx="50%" cy="50%" r="50%">
-        <stop offset="0" stop-color="#e0973f" stop-opacity="0.32"/>
-        <stop offset="1" stop-color="#e0973f" stop-opacity="0"/>
+        <stop offset="0" stop-color="#6366f1" stop-opacity="0.34"/>
+        <stop offset="1" stop-color="#6366f1" stop-opacity="0"/>
       </radialGradient>
     </defs>
     <rect x="0" y="0" width="${W}" height="${H}" fill="url(#sea)"/>`;
@@ -141,7 +141,7 @@ export function routeMap({ doneUnits = new Set(), currentUnitId = null, onPick =
         d: arc(prev, stop),
         class: 'leg' + (flown ? ' leg-flown' : ''),
         fill: 'none',
-        stroke: flown ? 'url(#trail)' : '#333b46',
+        stroke: flown ? 'url(#trail)' : '#2c3a52',
         'stroke-width': flown ? 2.4 : 1.6,
         'stroke-dasharray': flown ? 'none' : '5 7',
         'stroke-linecap': 'round',
@@ -289,12 +289,12 @@ function flatFlight(unitId, onDone) {
         <stop offset="0" stop-color="#0c0f14"/><stop offset="1" stop-color="#090b0f"/>
       </linearGradient>
       <linearGradient id="ftrail" x1="0" y1="0" x2="1" y2="0">
-        <stop offset="0" stop-color="#e0973f"/><stop offset="1" stop-color="#e0973f"/>
+        <stop offset="0" stop-color="#10b981"/><stop offset="1" stop-color="#10b981"/>
       </linearGradient>
     </defs>
     <rect x="${0}" y="${0}" width="${W}" height="${H}" fill="url(#fsea)"/>`;
 
-  paintGeography(svg, { landFill: '#1e232b', landStroke: '#39414d', width: zoom, labels: false, opacity: 0.85 });
+  paintGeography(svg, { landFill: '#182131', landStroke: '#2c3a52', width: zoom, labels: false, opacity: 0.85 });
 
   const d = arc(from, to);
   const track = el('path', { d, fill: 'none', stroke: '#2b3d63', 'stroke-width': 1.6 * zoom, 'stroke-dasharray': `${4 * zoom} ${8 * zoom}` });
