@@ -43,7 +43,7 @@
   display: grid; gap: 6px; justify-items: end;
 }
 .band-count { font-size: 0.78rem; color: var(--muted); white-space: nowrap; }
-.band-done { display: inline-flex; align-items: center; gap: 5px; color: var(--mint); }
+.band-done { display: inline-flex; align-items: center; gap: 5px; color: var(--accent); }
 
 /* --------------------------------------------------------------- the trail */
 .trail {
@@ -63,7 +63,7 @@
   transform: translateX(-50%);
 }
 .trail-item:first-child::before { display: none; }
-.trail-done::before, .trail-next::before { background: var(--mint); opacity: 0.4; }
+.trail-done::before, .trail-next::before { background: var(--accent); opacity: 0.45; }
 
 /* A node is a circle with a number in it. Its state is the only thing that
    changes: the border, the fill and the ink. */
@@ -80,27 +80,27 @@
   color: var(--ink-2); font-weight: 600;
 }
 .node-num { font-size: 1.15rem; letter-spacing: -0.02em; font-variant-numeric: tabular-nums; }
-.node:not(:disabled):hover { border-color: var(--accent); background: var(--bg-3); }
+.node:not(:disabled):hover { border-color: var(--active-line); background: var(--bg-3); }
 .node:not(:disabled):active { transform: translateY(1px); }
 
-.node-done { background: color-mix(in srgb, var(--mint) 12%, var(--card-2)); border-color: color-mix(in srgb, var(--mint) 45%, transparent); }
-.node-done .node-face { color: var(--mint); }
+.node-done { background: var(--accent-soft); border-color: var(--accent-line); }
+.node-done .node-face { color: var(--accent); }
 .node-open .node-face { color: var(--ink); }
 .node-locked { cursor: not-allowed; opacity: 0.55; }
 .node-locked .node-face { color: var(--faint); }
 
 .node-next {
   width: 76px; height: 76px;
-  background: var(--accent); border-color: transparent;
+  background: var(--active); border-color: transparent;
 }
-.node-next .node-face { color: var(--accent-ink); font-weight: 650; }
+.node-next .node-face { color: var(--active-ink); font-weight: 650; }
 .node-next .node-num { font-size: 1.5rem; }
 
 /* the label above the current node */
 .node-callout {
   position: relative;
-  background: var(--accent-soft); color: var(--accent);
-  border: 1px solid var(--accent-line);
+  background: var(--active-soft); color: var(--active);
+  border: 1px solid var(--active-line);
   font-weight: 650; font-size: 0.68rem; letter-spacing: 0.14em; text-transform: uppercase;
   padding: 5px 13px; border-radius: 999px;
 }
@@ -148,8 +148,8 @@
   padding: 5px 12px; border-radius: 999px;
   color: var(--muted); background: var(--card-2); border: 1px solid var(--line);
 }
-.level-beginner .level-chip { color: var(--mint); border-color: color-mix(in srgb, var(--mint) 35%, transparent); }
-.level-intermediate .level-chip { color: var(--accent); border-color: var(--accent-line); }
-.level-expert .level-chip { color: var(--sky); border-color: color-mix(in srgb, var(--sky) 35%, transparent); }
+.level-beginner .level-chip { color: var(--accent); border-color: var(--accent-line); }
+.level-intermediate .level-chip { color: var(--active); border-color: var(--active-line); }
+.level-expert .level-chip { color: var(--sky); border-color: color-mix(in srgb, var(--sky) 40%, transparent); }
 .level-blurb { color: var(--muted); font-size: 0.86rem; }
 .level-divider::after { content: ""; flex: 1; height: 1px; background: var(--line); min-width: 20px; }
