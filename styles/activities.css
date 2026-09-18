@@ -1,0 +1,311 @@
+/* activities.css — the four activities.
+   Everything here is either the hub that lists them or the stage one of them
+   runs on. Colour still means what it means everywhere else: emerald for a
+   right answer, indigo for where you are now, rose only for a mistake. */
+
+/* ================================================================= the hub */
+
+/* Four of them, so two across reads as a set rather than a row with a gap. */
+.act-grid { display: grid; grid-template-columns: 1fr; gap: 16px; margin-top: 18px; }
+@media (min-width: 720px) { .act-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
+.act-card {
+  text-align: left; cursor: pointer; color: var(--ink);
+  display: flex; flex-direction: column; gap: 14px; padding: 20px;
+  position: relative; overflow: hidden;
+  transition: border-color var(--t-med), box-shadow var(--t-med), transform var(--t-fast);
+}
+.act-card::after {
+  content: ''; position: absolute; inset: 0 0 auto; height: 2px;
+  background: var(--accent); opacity: 0; transition: opacity var(--t-med);
+}
+.act-card:hover { border-color: var(--line-strong); box-shadow: var(--sh-2); }
+.act-card:hover::after { opacity: 1; }
+.act-card:active { transform: translateY(1px); }
+.act-body { flex: 1; display: flex; flex-direction: column; gap: 6px; }
+.act-body h3 { margin: 0; font-size: 1.22rem; }
+.act-body p { margin: 0; }
+.act-teaches {
+  display: inline-flex; align-items: center; gap: 7px;
+  font-size: 0.82rem; color: var(--ink-2); margin-top: 2px !important;
+}
+.act-teaches .icon { color: var(--active); flex: none; }
+.act-chips { margin-top: auto; }
+.chip.is-best { border-color: var(--accent-line); color: var(--accent); }
+
+/* ============================================================== the frame */
+
+.act-head {
+  display: flex; align-items: center; justify-content: space-between; gap: 18px;
+  flex-wrap: wrap; margin-bottom: 4px;
+}
+.act-head .view-title { margin: 0; }
+.hud-item.is-hot .icon { color: var(--warn); }
+.hud-item.hot .hud-value { color: var(--bad); }
+
+/* the briefing, shown once before the clock starts */
+.act-brief { text-align: center; display: grid; justify-items: center; gap: 10px; padding: 34px 24px; }
+.act-brief-mark {
+  width: 62px; height: 62px; border-radius: var(--r-lg); display: grid; place-items: center;
+  color: var(--accent); background: var(--accent-soft); border: 1px solid var(--accent-line);
+}
+.act-brief h2 { margin: 6px 0 0; }
+.act-brief > p { margin: 0; max-width: 46ch; }
+.act-rules {
+  list-style: none; padding: 0; margin: 8px 0 10px; display: grid; gap: 9px;
+  text-align: left; max-width: 46ch;
+}
+.act-rules li {
+  position: relative; padding-left: 22px; color: var(--ink-2); font-size: 0.93rem; line-height: 1.5;
+}
+.act-rules li::before {
+  content: ''; position: absolute; left: 4px; top: 0.62em;
+  width: 6px; height: 6px; border-radius: 50%; background: var(--accent);
+}
+.btn-lg { padding: 12px 28px; font-size: 1.02rem; }
+
+/* the ending */
+.act-stats {
+  display: flex; gap: 26px; justify-content: center; flex-wrap: wrap;
+  margin: 6px 0 4px;
+}
+.act-stat { display: grid; justify-items: center; gap: 2px; }
+.act-stat strong { font-family: var(--display); font-size: 1.5rem; font-variant-numeric: tabular-nums; }
+
+/* =============================================================== Laser Tag */
+
+.laser-card { padding: 0; overflow: hidden; }
+.laser-field {
+  position: relative; height: 340px;
+  background:
+    radial-gradient(120% 90% at 50% 120%, rgba(99, 102, 241, 0.16), transparent 60%),
+    var(--code-bg);
+  border-bottom: 1px solid var(--line);
+  overflow: hidden;
+}
+.laser-arena { position: absolute; inset: 0 0 100px; }
+.laser-target {
+  position: absolute; left: 0; display: inline-flex; align-items: center; gap: 8px;
+  padding: 8px 12px; border-radius: var(--r-md); cursor: pointer;
+  background: var(--card-2); border: 1px solid var(--line-strong); color: var(--ink);
+  font: inherit; white-space: nowrap; will-change: transform;
+  transition: border-color var(--t-fast), background var(--t-fast), opacity 0.2s, scale 0.2s;
+}
+.laser-target code { font-family: var(--mono); font-size: 0.95rem; }
+.laser-target .laser-key {
+  display: grid; place-items: center; width: 18px; height: 18px; flex: none;
+  border-radius: 4px; background: var(--bg-3); color: var(--faint);
+  font-size: 0.68rem; font-weight: 700;
+}
+.laser-target.is-match { border-color: var(--active); background: var(--active-soft); }
+.laser-target.is-match .laser-key { background: var(--active); color: var(--active-ink); }
+.laser-target.is-hit {
+  border-color: var(--accent); background: var(--accent-soft);
+  opacity: 0; scale: 1.25;
+}
+.laser-target.is-miss { border-color: var(--bad); background: color-mix(in srgb, var(--bad) 16%, transparent); }
+
+.laser-cannon {
+  position: absolute; left: 50%; bottom: 10px; translate: -50% 0;
+  display: grid; justify-items: center;
+}
+.laser-barrel {
+  width: 10px; height: 20px; border-radius: 3px 3px 0 0;
+  background: var(--accent); transition: height var(--t-fast);
+}
+.laser-cannon.is-firing .laser-barrel { height: 27px; }
+.laser-charge {
+  display: grid; justify-items: center; padding: 6px 20px 8px; border-radius: var(--r-md);
+  background: var(--card-2); border: 1px solid var(--accent-line); min-width: 104px;
+}
+.laser-charge small { color: var(--muted); font-size: 0.68rem; letter-spacing: 0.08em; text-transform: uppercase; }
+.laser-charge-value {
+  font-family: var(--display); font-size: 1.9rem; line-height: 1.1; color: var(--accent);
+  font-variant-numeric: tabular-nums;
+}
+.laser-charge-value.is-new { animation: laser-charge 0.4s var(--ease-out); }
+@keyframes laser-charge { from { scale: 1.35; opacity: 0.4; } to { scale: 1; opacity: 1; } }
+
+.laser-beam {
+  position: absolute; height: 2px; transform-origin: 0 50%; pointer-events: none;
+  background: linear-gradient(90deg, var(--accent), transparent);
+  animation: laser-fade 0.26s var(--ease-out) forwards;
+}
+.laser-beam.is-bad { background: linear-gradient(90deg, var(--bad), transparent); }
+@keyframes laser-fade { from { opacity: 1; } to { opacity: 0; } }
+.laser-hint { padding: 12px 18px; margin: 0; }
+
+/* ============================================================ Boss Battle */
+
+.boss-card { display: grid; gap: 0; padding: 0; overflow: hidden; }
+.boss-panel {
+  position: relative; display: flex; gap: 18px; align-items: center;
+  padding: 20px; background: var(--bg-2); border-bottom: 1px solid var(--line);
+}
+.boss-panel.is-striking { animation: boss-strike 0.4s var(--ease-out); }
+@keyframes boss-strike {
+  0%, 100% { translate: 0 0; }
+  25% { translate: -5px 0; }
+  60% { translate: 4px 0; }
+}
+.boss-face {
+  width: 74px; height: 74px; flex: none; display: grid; place-items: center;
+  border-radius: var(--r-lg); background: var(--bg-3); border: 1px solid var(--line-strong);
+  color: var(--bad);
+}
+.boss-face.is-hurt { animation: boss-hurt 0.3s var(--ease-out); }
+@keyframes boss-hurt {
+  0% { scale: 1; filter: none; }
+  40% { scale: 0.93; filter: brightness(1.6); }
+  100% { scale: 1; filter: none; }
+}
+.boss-meta { flex: 1; min-width: 0; display: grid; gap: 6px; }
+.boss-name { font-family: var(--display); font-weight: 700; font-size: 1.15rem; display: flex; gap: 10px; flex-wrap: wrap; align-items: baseline; }
+.boss-phase { font-size: 0.82rem; font-weight: 600; color: var(--active); }
+.boss-hp {
+  position: relative; height: 16px; border-radius: 999px; overflow: hidden;
+  background: var(--bg-3); border: 1px solid var(--line);
+}
+.boss-hp-fill {
+  height: 100%; width: 100%; background: var(--bad);
+  transition: width 0.45s var(--ease-out), background var(--t-med);
+}
+.boss-hp-fill.is-low { background: var(--warn); }
+.boss-hp-label {
+  position: absolute; inset: 0; display: grid; place-items: center;
+  font-size: 0.7rem; font-weight: 700; color: var(--ink); font-variant-numeric: tabular-nums;
+  text-shadow: 0 1px 2px var(--bg);
+}
+.boss-pips { display: flex; gap: 6px; }
+.boss-pip { width: 28px; height: 4px; border-radius: 999px; background: var(--line-strong); }
+.boss-pip.is-now { background: var(--active); }
+.boss-pip.is-done { background: var(--accent); }
+.boss-shields { gap: 5px; }
+.boss-shield .icon { color: var(--active); }
+.boss-shield.is-gone .icon { color: var(--line-strong); }
+.boss-float {
+  position: absolute; right: 22px; top: 18px; font-family: var(--display); font-weight: 800;
+  font-size: 1.3rem; pointer-events: none; animation: boss-float 0.9s var(--ease-out) forwards;
+}
+.boss-float.is-ok { color: var(--accent); }
+.boss-float.is-bad { color: var(--bad); font-size: 1rem; }
+@keyframes boss-float {
+  from { opacity: 1; translate: 0 0; }
+  to { opacity: 0; translate: 0 -26px; }
+}
+.boss-timer { height: 3px; background: var(--bg-3); }
+.boss-timer-fill { height: 100%; width: 100%; background: var(--active); transition: width 0.1s linear; }
+.boss-timer-fill.is-low { background: var(--bad); }
+.boss-question { padding: 22px; }
+.boss-prompt { margin: 0 0 12px; }
+.boss-why { margin-top: 12px; }
+.boss-banner { display: grid; justify-items: center; gap: 4px; padding: 44px 10px; text-align: center; }
+.boss-banner h3 { margin: 0; font-size: 1.5rem; }
+
+/* ============================================================= Tug of War */
+
+.tug-card { display: grid; gap: 18px; }
+.tug-rig { display: flex; align-items: center; gap: 14px; }
+.tug-side { display: grid; justify-items: center; gap: 4px; flex: none; width: 76px; }
+.tug-side small { color: var(--muted); font-size: 0.7rem; text-align: center; }
+.tug-side.is-them .icon { color: var(--bad); }
+.tug-side.is-you .icon { color: var(--accent); }
+.tug-rope {
+  position: relative; flex: 1; height: 40px; border-radius: var(--r-md);
+  background: var(--bg-3); border: 1px solid var(--line); overflow: hidden;
+}
+.tug-zone { position: absolute; top: 0; bottom: 0; width: 50%; opacity: 0.16; }
+.tug-zone.is-them { left: 0; background: linear-gradient(90deg, var(--bad), transparent); }
+.tug-zone.is-you { right: 0; background: linear-gradient(270deg, var(--accent), transparent); }
+.tug-centre { position: absolute; left: 50%; top: 0; bottom: 0; width: 1px; background: var(--line-strong); }
+.tug-knot {
+  position: absolute; top: 50%; translate: -50% -50%;
+  width: 30px; height: 30px; border-radius: 50%; display: grid; place-items: center;
+  background: var(--card-2); border: 2px solid var(--active); color: var(--active);
+  transition: left 0.25s linear, border-color var(--t-med), color var(--t-med);
+}
+.tug-rope.is-winning .tug-knot { border-color: var(--accent); color: var(--accent); }
+.tug-rope.is-losing .tug-knot { border-color: var(--bad); color: var(--bad); }
+.tug-claim { display: grid; gap: 10px; }
+.tug-line { margin: 0; font-size: 1.1rem; }
+.tug-line strong { color: var(--active); }
+.tug-answers { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-top: 14px; }
+.tug-answer {
+  justify-content: center; gap: 9px; padding: 16px; font-size: 1.05rem; font-weight: 700;
+  border: 1px solid var(--line-strong); background: var(--card-2); color: var(--ink);
+}
+.tug-answer.is-true:hover { border-color: var(--accent); color: var(--accent); background: var(--accent-soft); }
+.tug-answer.is-false:hover { border-color: var(--bad); color: var(--bad); }
+.tug-verdict { min-height: 22px; font-size: 0.92rem; }
+.tug-verdict.is-ok { color: var(--accent); }
+.tug-verdict.is-bad { color: var(--bad); }
+
+/* ============================================================ Kart Battle */
+
+.kart-card { display: grid; gap: 0; padding: 0; overflow: hidden; }
+.kart-flag {
+  display: flex; align-items: center; justify-content: flex-end; gap: 7px;
+  padding: 10px 18px 0; color: var(--muted); font-size: 0.72rem;
+  letter-spacing: 0.1em; text-transform: uppercase;
+}
+.kart-flag .icon { color: var(--accent); }
+.kart-track { display: grid; gap: 8px; padding: 10px 18px 18px; }
+.kart-lane { display: flex; align-items: center; gap: 12px; }
+.kart-name { flex: none; width: 74px; font-size: 0.74rem; color: var(--muted); }
+.kart-lane.is-you .kart-name { color: var(--accent); font-weight: 700; }
+.kart-strip {
+  position: relative; flex: 1; height: 34px; border-radius: var(--r-sm);
+  background: var(--bg-3); border: 1px solid var(--line);
+  background-image: repeating-linear-gradient(90deg, transparent 0 28px, var(--line) 28px 29px);
+}
+/* the flag: a chequered band down the right-hand edge of every lane */
+.kart-strip::after {
+  content: ''; position: absolute; right: 0; top: 0; bottom: 0; width: 10px;
+  border-radius: 0 3px 3px 0; opacity: 0.7;
+  background:
+    repeating-conic-gradient(var(--ink) 0 25%, transparent 0 50%) 0 0 / 5px 5px;
+}
+.kart-lane.is-you .kart-strip { border-color: var(--accent-line); background-color: var(--accent-soft); }
+.kart-mark {
+  position: absolute; top: 50%; translate: 0 -50%; left: 0;
+  display: grid; place-items: center; color: var(--muted);
+  transition: left 0.12s linear;
+}
+.kart-lane.is-you .kart-mark { color: var(--accent); }
+.kart-mark.is-boost { animation: kart-boost 0.3s var(--ease-out); }
+@keyframes kart-boost {
+  0% { scale: 1; }
+  45% { scale: 1.2; }
+  100% { scale: 1; }
+}
+.kart-cockpit { padding: 16px 18px 20px; border-top: 1px solid var(--line); background: var(--bg-2); display: grid; gap: 10px; }
+.kart-line { margin: 0; }
+.kart-line.is-stalled { border-color: var(--bad); }
+.kart-next { margin: 0; font-family: var(--mono); font-size: 0.74rem; }
+
+/* ================================================================= mobile */
+
+@media (max-width: 620px) {
+  .act-grid { grid-template-columns: 1fr; }
+  .act-head { gap: 10px; }
+  .hud { gap: 12px; font-size: 0.95rem; }
+  .laser-field { height: 330px; }
+  .laser-arena { inset: 0 0 88px; }
+  .laser-target { padding: 7px 10px; }
+  .laser-target code { font-size: 0.85rem; }
+  .laser-charge { padding: 5px 16px 7px; min-width: 92px; }
+  .laser-charge-value { font-size: 1.6rem; }
+  .boss-panel { gap: 14px; padding: 16px; }
+  .boss-face { width: 56px; height: 56px; }
+  .boss-question { padding: 16px; }
+  .tug-side { width: 54px; }
+  .tug-answers { grid-template-columns: 1fr; }
+  .kart-name { width: 52px; font-size: 0.66rem; }
+  .act-stats { gap: 18px; }
+}
+
+/* Calm motion: the arena still moves, because the activity is the movement —
+   but nothing flashes, scales or shakes. */
+:root[data-motion="calm"] .boss-panel.is-striking,
+:root[data-motion="calm"] .boss-face.is-hurt,
+:root[data-motion="calm"] .kart-mark.is-boost,
+:root[data-motion="calm"] .laser-charge-value.is-new { animation: none; }
