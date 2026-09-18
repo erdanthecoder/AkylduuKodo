@@ -34,6 +34,7 @@ const NAV = [
 const NAV_PARENT = {
   lesson: '#/journey',
   lab: '#/practice',
+  activities: '#/practice',
   progress: '#/home',
 };
 
@@ -98,6 +99,7 @@ function render() {
     case 'lesson':
       mount(LessonView(path[1], go));
       break;
+    case 'activities':
     case 'practice':
       mount(PracticeView(go, path[1]));
       break;

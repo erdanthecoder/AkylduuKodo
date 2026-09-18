@@ -93,6 +93,81 @@ export const MAZES = [
   { w: 6, h: 4, start: { x: 0, y: 0, dir: 1 }, walls: [[1, 1], [2, 1], [3, 1], [4, 1], [1, 3], [2, 3], [3, 3]], gems: [[0, 3], [5, 3], [5, 0]], goal: { x: 4, y: 3 } },
 ];
 
+
+/* --------------------------------------------------- typing for accuracy */
+/* Short, real lines. Typing them is how the punctuation stops being scary. */
+export const SYNTAX_LINES = [
+  'let score = 0;',
+  'const name = "Aisuluu";',
+  'console.log("Salam!");',
+  'if (age >= 13) { console.log("ok"); }',
+  'for (let i = 0; i < 5; i++) {',
+  'const cities = ["Osh", "Bishkek"];',
+  'function double(n) { return n * 2; }',
+  'const square = (n) => n * n;',
+  'cities.push("Naryn");',
+  'console.log(`${name} is here`);',
+  'let total = 0;',
+  'total += price * 2;',
+  'while (left > 0) { left--; }',
+  'const learner = { name: "Bek", streak: 5 };',
+  'return items.filter((n) => n > 10);',
+  'console.log(list.length);',
+  'document.title = "AkylduuKodo";',
+  'if (x !== y) { swap(x, y); }',
+];
+
+/* ------------------------------------------------------------ pair up */
+/* Six snippets and the six things they print. Turn two over and see. */
+export const PAIRS = [
+  { code: 'console.log(2 + 3);', out: '5' },
+  { code: 'console.log("2" + 3);', out: '"23"' },
+  { code: 'console.log(7 % 3);', out: '1' },
+  { code: 'console.log("yak".length);', out: '3' },
+  { code: 'console.log([1,2,3][0]);', out: '1' },
+  { code: 'console.log(10 > 3);', out: 'true' },
+  { code: 'console.log(9 / 2);', out: '4.5' },
+  { code: 'console.log("ab".toUpperCase());', out: '"AB"' },
+  { code: 'console.log(Boolean(0));', out: 'false' },
+  { code: 'console.log([1,2].concat([3]).length);', out: '3' },
+];
+
+/* ---------------------------------------------------------- tight code */
+/* Hit the target output in as few characters as you can. `par` is a length a
+   careful solution reaches; beating it is where the points are. */
+export const TIGHT_CODE = [
+  {
+    goal: 'Print the numbers 1 to 5, one per line.',
+    expect: ['1', '2', '3', '4', '5'],
+    par: 46,
+    example: 'for (let i = 1; i <= 5; i++) console.log(i);',
+  },
+  {
+    goal: 'Print "ok" three times.',
+    expect: ['ok', 'ok', 'ok'],
+    par: 44,
+    example: 'for (let i = 0; i < 3; i++) console.log("ok");',
+  },
+  {
+    goal: 'Print the total of 1 to 100.',
+    expect: ['5050'],
+    par: 58,
+    example: 'let t = 0; for (let i = 1; i <= 100; i++) t += i; console.log(t);',
+  },
+  {
+    goal: 'Print every even number from 2 to 10.',
+    expect: ['2', '4', '6', '8', '10'],
+    par: 50,
+    example: 'for (let i = 2; i <= 10; i += 2) console.log(i);',
+  },
+  {
+    goal: 'Print the word "yak" with each letter on its own line.',
+    expect: ['y', 'a', 'k'],
+    par: 40,
+    example: 'for (const c of "yak") console.log(c);',
+  },
+];
+
 export const DRILLS = [
   {
     id: 'sprint',
@@ -119,5 +194,30 @@ export const DRILLS = [
     desc: 'Five routing problems. Shorter, smarter code scores higher.',
     kind: 'maze',
     pool: MAZES,
+  },
+  {
+    id: 'syntax',
+    icon: 'keyboard',
+    name: 'Syntax Sprint',
+    desc: 'Type real lines of code exactly, against the clock. Punctuation counts.',
+    kind: 'type',
+    pool: SYNTAX_LINES,
+    seconds: 60,
+  },
+  {
+    id: 'pairup',
+    icon: 'layers',
+    name: 'Pair Up',
+    desc: 'Turn over two cards: match each snippet to what it prints.',
+    kind: 'match',
+    pool: PAIRS,
+  },
+  {
+    id: 'tight',
+    icon: 'scale',
+    name: 'Tight Code',
+    desc: 'Hit the target output in as few characters as you can.',
+    kind: 'golf',
+    pool: TIGHT_CODE,
   },
 ];

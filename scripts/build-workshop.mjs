@@ -1,9 +1,9 @@
-// build-playground.mjs — bundles the React lesson component into static files
-// the site can serve, so the preview needs no build step at deploy time.
+// build-workshop.mjs — bundles the React lesson component into static files the
+// site can serve, so the preview needs no build step at deploy time.
 //
-//   node scripts/build-playground.mjs
+//   node scripts/build-workshop.mjs
 //
-// Output: playground/app.js, playground/app.css, playground/index.html
+// Output: workshop/app.js, workshop/app.css, workshop/index.html
 
 import { build } from 'esbuild';
 import { execFileSync } from 'node:child_process';
@@ -12,7 +12,7 @@ import { fileURLToPath } from 'node:url';
 import { dirname, join } from 'node:path';
 
 const root = join(dirname(fileURLToPath(import.meta.url)), '..');
-const out = join(root, 'playground');
+const out = join(root, 'workshop');
 mkdirSync(out, { recursive: true });
 
 await build({
@@ -57,4 +57,4 @@ writeFileSync(
 `,
 );
 
-console.log('playground built');
+console.log('workshop built');
