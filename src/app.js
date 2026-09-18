@@ -15,7 +15,7 @@ import { NotesView } from './views/notes.js';
 import { AccountView } from './views/account.js';
 import { WelcomeView } from './views/welcome.js';
 import * as auth from './auth.js';
-import { animateIn, countUp, startBackdrop } from './anim.js';
+import { animateIn, countUp } from './anim.js';
 // Preferences write themselves onto <html> as soon as this module loads, so the
 // first paint is already the right theme and the right text size.
 import './prefs.js';
@@ -244,19 +244,6 @@ store.subscribe(() => {
 });
 auth.onChange(() => {
   if (store.get().onboarded) paintChrome();
-});
-
-// Restore a session (cloud or device) before the first paint, so a signed-in
-// learner never sees a flash of the signed-out dashboard.
-startBackdrop();
-
-// Ripples follow the pointer: the button reads where it was pressed.
-document.addEventListener('pointerdown', (e) => {
-  const btn = e.target.closest?.('.btn');
-  if (!btn) return;
-  const r = btn.getBoundingClientRect();
-  btn.style.setProperty('--rx', `${((e.clientX - r.left) / r.width) * 100}%`);
-  btn.style.setProperty('--ry', `${((e.clientY - r.top) / r.height) * 100}%`);
 });
 
 render();

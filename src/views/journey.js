@@ -108,7 +108,7 @@ export function JourneyView(go) {
                 ),
               ),
         ),
-        isNext ? h('span', { class: 'trail-mascot' }, mascot(92, 'happy')) : null,
+        isNext ? h('span', { class: 'trail-mascot' }, mascot(76, 'happy')) : null,
       );
       item.style.setProperty('--shift', OFFSETS[(number - 1) % OFFSETS.length] + 'px');
       trail.append(item);
