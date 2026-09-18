@@ -21,6 +21,20 @@ export function PracticeView(go, drillId) {
     { class: 'view' },
     h('h1', { class: 'view-title' }, ui('practice_title')),
     h('p', { class: 'muted' }, ui('practice_sub')),
+
+    // The Lab lives here rather than in the nav: it is the same idea as a
+    // drill, only with nothing to guess and no clock.
+    h('section', { class: 'card lab-promo', onclick: () => go('#/lab') },
+      h('div', { class: 'promo-mark' }, icon('flask', { size: 28 })),
+      h('div', { class: 'next-body' },
+        h('small', { class: 'muted' }, ui('nav_lab')),
+        h('h3', {}, 'A blank page and a Run button'),
+        h('p', { class: 'muted' }, 'No question, no timer. Write whatever you like and watch it run — your work is kept between visits.'),
+      ),
+      h('span', { class: 'btn btn-ghost' }, 'Open the Lab', icon('arrowRight', { size: 15 })),
+    ),
+
+    h('h2', { class: 'section-title' }, 'Drills'),
     h('div', { class: 'drill-grid' },
       ...DRILLS.map((g) =>
         h('button', { class: 'card drill-card', onclick: () => go(`#/practice/${g.id}`) },
