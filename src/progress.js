@@ -8,7 +8,7 @@
 
 import * as store from './state.js';
 import { UNITS, ALL_LESSONS, LEVELS } from './data/index.js';
-import { DRILLS } from './data/drills.js';
+import { ACTIVITIES } from './data/activities.js';
 import { CHAPTERS, PAGES } from './data/book/index.js';
 
 const DAY = 86400000;
@@ -177,7 +177,7 @@ export function bookSummary() {
 
 export function drillSummary() {
   const bests = store.get().bests || {};
-  return DRILLS.map((drill) => ({
+  return ACTIVITIES.map((drill) => ({
     id: drill.id,
     name: drill.name,
     icon: drill.icon,

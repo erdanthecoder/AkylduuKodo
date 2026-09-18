@@ -2,7 +2,7 @@
 // If a lesson is impossible (or accidentally trivial), this fails loudly.
 
 import { UNITS, ALL_LESSONS } from '../src/data/index.js';
-import { DRILLS, MAZES } from '../src/data/drills.js';
+import { ACTIVITIES, TARGETS, BOSS, TUG, KART_LINES } from '../src/data/activities.js';
 import { runCode } from '../src/runner.js';
 import { runRobot } from '../src/robot.js';
 import { safeCheck } from '../src/data/checks.js';
@@ -115,34 +115,57 @@ for (const lesson of ALL_LESSONS) {
   });
 }
 
-// Practice-drill sanity
-for (const game of DRILLS) {
-  ok(game.pool.length >= 5 || 'pool too small', `drill ${game.id} pool`);
-  if (game.kind === 'quiz') {
-    game.pool.forEach((q, i) => {
-      ok(q.answer >= 0 && q.answer < q.options.length || 'answer out of range', `drill ${game.id} q${i + 1}`);
-    });
+// Activities: four of them, each with an engine kind and something to say.
+const KINDS = ['laser', 'boss', 'tug', 'kart'];
+ok(ACTIVITIES.length === 4 || `${ACTIVITIES.length} activities`, 'four activities');
+ACTIVITIES.forEach((a) => {
+  ok(KINDS.includes(a.kind) || `unknown kind ${a.kind}`, `activity ${a.id} kind`);
+  ok(a.name && a.desc.length > 20 || 'thin copy', `activity ${a.id} copy`);
+  ok(Boolean(a.teaches) || 'says nothing about what it teaches', `activity ${a.id} teaches`);
+});
+
+// Laser Tag: every expression must actually equal the value it claims, and no
+// value may be unique — the arena needs at least two ways to reach each charge.
+const byValue = new Map();
+TARGETS.forEach((t, i) => {
+  let got;
+  try {
+    got = Function(`"use strict"; return (${t.expr});`)();
+  } catch {
+    got = NaN;
   }
-}
-// Every practice maze must be solvable by *some* route: check reachability by BFS.
-MAZES.forEach((m, i) => {
-  const blocked = new Set((m.walls || []).map(([x, y]) => `${x},${y}`));
-  const seen = new Set([`${m.start.x},${m.start.y}`]);
-  const queue = [[m.start.x, m.start.y]];
-  while (queue.length) {
-    const [x, y] = queue.shift();
-    for (const [dx, dy] of [[1, 0], [-1, 0], [0, 1], [0, -1]]) {
-      const nx = x + dx;
-      const ny = y + dy;
-      const key = `${nx},${ny}`;
-      if (nx < 0 || ny < 0 || nx >= m.w || ny >= m.h || blocked.has(key) || seen.has(key)) continue;
-      seen.add(key);
-      queue.push([nx, ny]);
-    }
-  }
-  const targets = [...(m.gems || []).map(([x, y]) => `${x},${y}`), `${m.goal.x},${m.goal.y}`];
-  const unreachable = targets.filter((t) => !seen.has(t));
-  ok(unreachable.length === 0 || `unreachable: ${unreachable.join(' ')}`, `practice maze ${i + 1} reachable`);
+  ok(got === t.value || `${t.expr} is ${got}, not ${t.value}`, `target ${i + 1} value`);
+  byValue.set(t.value, (byValue.get(t.value) || 0) + 1);
+});
+[...byValue.entries()].forEach(([value, count]) => {
+  ok(count >= 2 || `only one target makes ${value}`, `laser value ${value}`);
+});
+
+// Boss Battle: three phases, real health, answers in range and a reason given.
+ok(BOSS.phases.length === 3 || 'boss needs three phases', 'boss phases');
+BOSS.phases.forEach((phase) => {
+  ok(phase.hp >= 100 || 'phase too short', `boss ${phase.name} hp`);
+  ok(phase.questions.length >= 6 || 'too few questions', `boss ${phase.name} pool`);
+  phase.questions.forEach((q, i) => {
+    ok(q.answer >= 0 && q.answer < q.options.length || 'answer out of range', `boss ${phase.name} q${i + 1}`);
+    ok(new Set(q.options).size === q.options.length || 'duplicate options', `boss ${phase.name} q${i + 1} options`);
+    ok(Boolean(q.why) || 'no explanation', `boss ${phase.name} q${i + 1} why`);
+  });
+});
+
+// Tug of War: an even split, or the rope favours guessing one way.
+const trues = TUG.filter((t) => t.answer === true).length;
+ok(trues * 2 === TUG.length || `${trues} true of ${TUG.length}`, 'tug is an even split');
+TUG.forEach((t, i) => {
+  ok(Boolean(t.code && t.claim) || 'incomplete claim', `tug ${i + 1} shape`);
+  if (t.answer === false) ok(Boolean(t.why) || 'false claim with no reason', `tug ${i + 1} why`);
+});
+
+// Kart Battle: enough lines for a race, all typable in one burst.
+ok(KART_LINES.length >= 10 || 'not enough lines', 'kart pool');
+KART_LINES.forEach((line, i) => {
+  ok(line.length <= 34 || `${line.length} characters is a mouthful`, `kart line ${i + 1} length`);
+  ok(line.trim() === line || 'stray whitespace', `kart line ${i + 1} trim`);
 });
 
 console.log(`\n${pass} checks passed`);
