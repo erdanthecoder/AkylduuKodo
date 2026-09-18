@@ -38,7 +38,12 @@
 .band-text { flex: 1; min-width: 0; }
 .band-text h2 { margin: 0 0 4px; }
 .band-text p { color: var(--muted); margin: 0; font-size: 0.9rem; }
-.band-progress { margin-left: auto; padding-top: 6px; flex: none; }
+.band-progress {
+  margin-left: auto; padding-top: 4px; flex: none;
+  display: grid; gap: 6px; justify-items: end;
+}
+.band-count { font-size: 0.78rem; color: var(--muted); white-space: nowrap; }
+.band-done { display: inline-flex; align-items: center; gap: 5px; color: var(--mint); }
 
 /* --------------------------------------------------------------- the trail */
 .trail {
@@ -48,16 +53,17 @@
 .trail-item {
   position: relative;
   display: flex; flex-direction: column; align-items: center; gap: 10px;
-  transform: translateX(var(--shift, 0));
 }
 
-/* the line between one lesson and the next */
+/* One continuous line runs down the whole unit, so the lessons read as a path
+   rather than a pile. It stops at the node, which is what breaks it into steps. */
 .trail-item::before {
-  content: ""; position: absolute; top: -30px; left: 50%; width: 2px; height: 30px;
-  background: var(--line-strong); opacity: 0.5;
+  content: ""; position: absolute; top: -26px; left: 50%; width: 2px; height: 26px;
+  background: var(--line-strong); opacity: 0.45;
   transform: translateX(-50%);
 }
 .trail-item:first-child::before { display: none; }
+.trail-done::before, .trail-next::before { background: var(--mint); opacity: 0.4; }
 
 /* A node is a circle with a number in it. Its state is the only thing that
    changes: the border, the fill and the ink. */
@@ -118,8 +124,7 @@
 
 @media (max-width: 720px) {
   .band-head { flex-wrap: wrap; }
-  .band-progress { margin-left: 54px; padding-top: 0; }
-  .trail-item { transform: translateX(calc(var(--shift, 0) * 0.35)); }
+  .band-progress { margin-left: 54px; padding-top: 0; justify-items: start; }
   .trail-mascot { display: none; }
   .node { width: 54px; height: 54px; }
   .node-next { width: 66px; height: 66px; }

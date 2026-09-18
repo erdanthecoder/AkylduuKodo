@@ -4,10 +4,11 @@ import { h } from '../ui.js';
 import { icon, mascot } from '../icons.js';
 import { ui, t } from '../i18n.js';
 import * as store from '../state.js';
-import { nextUpFor, UNITS, ALL_LESSONS } from '../data/index.js';
+import { nextUpFor, ALL_LESSONS } from '../data/index.js';
 import { PAGES } from '../data/book/index.js';
 import { bookProgress } from './book.js';
 import { noteCount } from '../notes.js';
+import { courseSummary, byLevel, habitSummary, readableMinutes } from '../progress.js';
 import * as auth from '../auth.js';
 
 const DAY_LETTERS = ['M', 'T', 'W', 'T', 'F', 'S', 'S'];
@@ -64,20 +65,24 @@ export function HomeView(go) {
     h(
       'section',
       { class: 'stat-row' },
-      statCard('calendar', `${week.count}/${week.goal}`, ui('this_week'), week.pct),
-      statCard('flame', String(streak), ui('streak')),
-      statCard('bolt', String(s.xp), ui('xp')),
-      statCard('check', String(doneCount), ui('lessons_done')),
+      statCard('calendar', `${week.count}/${week.goal}`, ui('this_week'), week.pct, () => go('#/progress')),
+      statCard('flame', String(streak), ui('streak'), undefined, () => go('#/progress')),
+      statCard('bolt', String(s.xp), ui('xp'), undefined, () => go('#/progress')),
+      statCard('check', String(doneCount), ui('lessons_done'), undefined, () => go('#/progress')),
     ),
 
     h('section', { class: 'card' },
       h('h3', {}, ui('this_week')),
       weekDays,
       h('div', { class: 'bar big' }, h('div', { class: 'bar-fill', style: `width:${week.pct}%` })),
-      h('p', { class: 'muted' },
-        week.count >= week.goal
-          ? ui('goal_reached')
-          : `${week.goal - week.count} ${ui('keep_going')} — ${ui('goal_note')}`),
+      h('div', { class: 'row gap week-foot' },
+        h('p', { class: 'muted' },
+          week.count >= week.goal
+            ? ui('goal_reached')
+            : `${week.goal - week.count} ${ui('keep_going')} — ${ui('goal_note')}`),
+        h('button', { class: 'btn btn-ghost btn-sm', onclick: () => go('#/progress') },
+          'Full progress', icon('arrowRight', { size: 14 })),
+      ),
     ),
 
     next
@@ -142,37 +147,35 @@ export function HomeView(go) {
         )
       : null,
 
-    h('section', { class: 'card' },
-      h('h3', {}, ui('badges')),
-      h('div', { class: 'badge-grid' },
-        ...store.BADGES.map((b) => {
-          const got = s.badges.includes(b.id);
-          return h('div', { class: `badge ${got ? 'badge-on' : ''}`, title: b.desc },
-            h('span', { class: 'badge-mark' }, icon(got ? b.icon : 'lock', { size: 22 })),
-            h('span', { class: 'badge-name' }, b.name),
-          );
-        }),
-      ),
-    ),
-
-    h('section', { class: 'card' },
-      h('h3', {}, 'The road ahead'),
-      h('div', { class: 'unit-mini' },
-        ...UNITS.map((u) => {
-          const total = u.lessons.length;
-          const done = u.lessons.filter((l) => s.done[l.id]).length;
-          return h('button', { class: 'unit-pill', onclick: () => go('#/journey') },
-            h('span', { class: 'unit-pill-name' }, icon(u.icon, { size: 17 }), t(u.title)),
-            h('span', { class: 'mini-bar' }, h('span', { class: 'mini-bar-fill', style: `width:${Math.round((done / total) * 100)}%` })),
-          );
-        }),
-      ),
-    ),
+    (() => {
+      const course = courseSummary();
+      const habit = habitSummary();
+      return h('section', { class: 'card course-summary' },
+        h('div', { class: 'card-head' },
+          h('h3', {}, 'Where you are'),
+          h('button', { class: 'btn btn-ghost btn-sm', onclick: () => go('#/progress') },
+            'See everything', icon('arrowRight', { size: 14 })),
+        ),
+        h('p', { class: 'muted small course-summary-line' },
+          `${course.done} of ${course.total} lessons · ${course.pct}% of the course · `
+          + `${readableMinutes(course.minutes)} spent · longest run ${habit.longest} day${habit.longest === 1 ? '' : 's'}`),
+        h('div', { class: 'tier-lines' },
+          ...byLevel().map((level) =>
+            h('div', { class: 'tier-line' },
+              h('span', { class: 'tier-line-name' }, level.label),
+              h('span', { class: 'bar bar-thin' },
+                h('span', { class: 'bar-fill', style: `width:${level.pct}%` })),
+              h('span', { class: 'tier-line-count' }, `${level.done}/${level.total}`),
+            ),
+          ),
+        ),
+      );
+    })(),
   );
 }
 
-function statCard(name, value, label, pct) {
-  return h('div', { class: 'card stat' },
+function statCard(name, value, label, pct, go) {
+  return h(go ? 'button' : 'div', { class: 'card stat' + (go ? ' stat-link' : ''), onclick: go || null },
     h('div', { class: 'stat-mark' }, icon(name, { size: 20 })),
     h('div', { class: 'stat-value' }, value),
     h('div', { class: 'stat-label' }, label),

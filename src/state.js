@@ -255,6 +255,18 @@ export const BADGES = [
   { id: 'level-4', icon: 'eye', name: 'Bug Hunter', desc: 'Reach the Bug Hunter level.', test: (s) => level(s.xp).index >= 3 },
 ];
 
+/**
+ * Award anything that has quietly become true. Badges are normally checked when
+ * a lesson or drill ends, but a condition can start holding for another reason
+ * — a streak reaching three overnight, say — so any screen that shows them
+ * calls this first.
+ */
+export function refreshBadges() {
+  const earned = checkBadges();
+  if (earned.length) save();
+  return earned;
+}
+
 function checkBadges() {
   const earned = [];
   for (const b of BADGES) {
