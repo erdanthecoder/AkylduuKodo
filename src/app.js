@@ -12,6 +12,7 @@ import { LabView } from './views/lab.js';
 import { SettingsView } from './views/settings.js';
 import { BookView } from './views/book.js';
 import { NotesView } from './views/notes.js';
+import { ProgressView } from './views/progress.js';
 import { AccountView } from './views/account.js';
 import { WelcomeView } from './views/welcome.js';
 import * as auth from './auth.js';
@@ -33,6 +34,7 @@ const NAV = [
 const NAV_PARENT = {
   lesson: '#/journey',
   lab: '#/practice',
+  progress: '#/home',
 };
 
 let currentView = null;
@@ -107,6 +109,9 @@ function render() {
       break;
     case 'notes':
       mount(NotesView(go, render));
+      break;
+    case 'progress':
+      mount(ProgressView(go));
       break;
     case 'settings':
       mount(SettingsView(go, render));

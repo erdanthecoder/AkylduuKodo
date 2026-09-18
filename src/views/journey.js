@@ -22,9 +22,6 @@ const STEP_ICON = {
   web: 'globe',
 };
 
-/** Nodes swing left and right down the page, like a mountain trail. */
-const OFFSETS = [0, 62, 88, 62, 0, -62, -88, -62];
-
 export function JourneyView(go) {
   const s = store.get();
   const nextUp = ALL_LESSONS.find((l) => !s.done[l.id]);
@@ -62,6 +59,10 @@ export function JourneyView(go) {
           h('p', {}, t(unit.blurb)),
         ),
         h('span', { class: 'band-progress' },
+          h('span', { class: 'band-count' },
+            done === unit.lessons.length
+              ? h('span', { class: 'band-done' }, icon('check', { size: 13 }), 'Unit complete')
+              : `${done} of ${unit.lessons.length} lessons`),
           h('span', { class: 'mini-bar' },
             h('span', { class: 'mini-bar-fill', style: `width:${Math.round((done / unit.lessons.length) * 100)}%` })),
         ),
@@ -110,7 +111,6 @@ export function JourneyView(go) {
         ),
         isNext ? h('span', { class: 'trail-mascot' }, mascot(76, 'happy')) : null,
       );
-      item.style.setProperty('--shift', OFFSETS[(number - 1) % OFFSETS.length] + 'px');
       trail.append(item);
     });
 
