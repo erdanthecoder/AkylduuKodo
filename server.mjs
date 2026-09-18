@@ -15,13 +15,20 @@ const TYPES = {
   '.svg': 'image/svg+xml',
   '.png': 'image/png',
   '.ico': 'image/x-icon',
+  '.jpg': 'image/jpeg',
+  '.jpeg': 'image/jpeg',
+  '.webp': 'image/webp',
+  '.woff2': 'font/woff2',
+  '.map': 'application/json; charset=utf-8',
 };
 
 createServer(async (req, res) => {
   try {
     const url = new URL(req.url, 'http://localhost');
     const rel = normalize(decodeURIComponent(url.pathname)).replace(/^(\.\.[/\\])+/, '');
-    const path = join(ROOT, rel === '/' ? 'index.html' : rel);
+    // A path with no file extension is a directory, and a directory means its
+    // index.html — the same rule Firebase Hosting applies in production.
+    const path = join(ROOT, rel === '/' || !extname(rel) ? join(rel, 'index.html') : rel);
     if (!path.startsWith(ROOT)) {
       res.writeHead(403).end('Forbidden');
       return;
