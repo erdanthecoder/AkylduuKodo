@@ -7,7 +7,7 @@
     "start": "node server.mjs",
     "dev": "node server.mjs",
     "test": "node tests/curriculum.test.mjs && node react/course.test.mjs",
-    "build:playground": "node scripts/build-playground.mjs"
+    "build:workshop": "node scripts/build-workshop.mjs"
   },
   "license": "MIT",
   "private": true,

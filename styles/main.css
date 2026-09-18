@@ -930,3 +930,59 @@ h1 > .icon, h2 > .icon { color: var(--accent); flex: none; }
 .lab-promo .next-body { flex: 1; min-width: 220px; }
 .lab-promo h3 { margin: 2px 0 6px; }
 .section-title { margin: 6px 0 -6px; font-size: 1.15rem; }
+
+/* ============================================================ activities */
+/* Pair Up: two faces to a card, one turn between them. */
+.match-grid {
+  display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 9px; margin-top: 16px;
+  max-width: 720px;
+}
+.match-card {
+  position: relative; aspect-ratio: 5 / 4; min-height: 78px; padding: 8px; cursor: pointer;
+  border-radius: var(--r-md); border: 1px solid var(--line); background: var(--card-2);
+  color: var(--ink); font: inherit;
+  transition: border-color var(--t-med), background var(--t-med), transform var(--t-fast);
+}
+.match-card:hover:not(.is-done) { border-color: var(--active-line); }
+.match-card:active:not(.is-done) { transform: translateY(1px); }
+.match-back {
+  position: absolute; inset: 0; display: grid; place-items: center;
+  color: var(--faint); transition: opacity var(--t-med);
+}
+.match-face {
+  position: absolute; inset: 0; display: grid; place-items: center; padding: 10px;
+  font-family: var(--mono); font-size: 0.74rem; line-height: 1.45; text-align: center;
+  color: var(--ink-2); opacity: 0; transition: opacity var(--t-med);
+  overflow: hidden; word-break: break-word;
+}
+.match-out .match-face { color: var(--accent); font-size: 0.95rem; font-weight: 600; }
+.match-card.is-open .match-back, .match-card.is-done .match-back { opacity: 0; }
+.match-card.is-open .match-face, .match-card.is-done .match-face { opacity: 1; }
+.match-card.is-open { border-color: var(--active); background: var(--active-soft); }
+.match-card.is-done {
+  border-color: var(--accent-line); background: var(--accent-soft);
+  cursor: default; opacity: 0.85;
+}
+
+/* Syntax Sprint: the line you are copying, character by character. */
+.ch { color: var(--faint); }
+.ch.ok { color: var(--accent); }
+.ch.bad { color: var(--bad); background: color-mix(in srgb, var(--bad) 22%, transparent); }
+.ch-cursor { box-shadow: inset 2px 0 0 var(--active); }
+
+/* Tight Code: the character count is the score, so it is never far away. */
+.golf-head { justify-content: space-between; align-items: baseline; }
+.golf-head h3 { margin: 0; }
+.golf-count {
+  font-family: var(--mono); font-size: 0.78rem; color: var(--muted);
+  font-variant-numeric: tabular-nums;
+}
+.golf-count.is-under { color: var(--accent); }
+.golf-goal { font-size: 1.02rem; color: var(--ink); margin: 10px 0 2px; }
+.hud-quit { margin-left: auto; }
+
+@media (max-width: 620px) {
+  .match-grid { grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 8px; }
+  .match-card { min-height: 80px; }
+  .match-face { font-size: 0.66rem; }
+}

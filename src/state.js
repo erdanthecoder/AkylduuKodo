@@ -15,7 +15,7 @@ const DEFAULT = {
   xp: 0,
   done: {},              // lessonId -> { at, xp, stars }
   log: [],               // ISO dates of days with at least one finished lesson
-  arcade: {},            // gameId -> best score
+  bests: {},             // activityId -> best score
   notes: {},             // noteKey -> { text, title, label, href, at }
   badges: [],
   mode: 'code',          // preferred step mode: 'blocks' | 'code'
@@ -32,11 +32,28 @@ const DEFAULT = {
 let state = load();
 const listeners = new Set();
 
+// If this save was written under the old key, rewrite it once so the next read
+// is already in the current shape.
+try {
+  const raw = globalThis.localStorage?.getItem(KEY);
+  if (raw && raw.includes('"arcade"')) {
+    globalThis.localStorage.setItem(KEY, JSON.stringify(state));
+  }
+} catch {
+  /* private mode — nothing to normalise */
+}
+
 function load(key = KEY) {
   try {
     const raw = globalThis.localStorage?.getItem(key);
     if (!raw) return { ...DEFAULT, created: today() };
-    return { ...DEFAULT, ...JSON.parse(raw) };
+    const saved = JSON.parse(raw);
+    // `arcade` was the old name for this. Carry it over so nobody loses a score.
+    if (saved.arcade && !saved.bests) {
+      saved.bests = saved.arcade;
+      delete saved.arcade;
+    }
+    return { ...DEFAULT, ...saved };
   } catch {
     return { ...DEFAULT, created: today() };
   }
@@ -76,7 +93,7 @@ export function setProfile(uid, patch = {}) {
     state.xp = Math.max(guest.xp || 0, state.xp || 0);
     state.log = [...new Set([...(guest.log || []), ...(state.log || [])])].sort();
     state.badges = [...new Set([...(guest.badges || []), ...(state.badges || [])])];
-    state.arcade = { ...guest.arcade, ...state.arcade };
+    state.bests = { ...guest.bests, ...state.bests };
     delete state.claimedBy;
     try {
       globalThis.localStorage?.setItem(BASE_KEY, JSON.stringify({ ...guest, claimedBy: uid }));
@@ -103,9 +120,9 @@ export function mergeRemote(remote) {
       ? rec
       : { ...mine, xp: Math.max(mine.xp || 0, rec.xp || 0), stars: Math.max(mine.stars || 0, rec.stars || 0) };
   }
-  const arcade = { ...state.arcade };
-  for (const [id, score] of Object.entries(remote.arcade || {})) {
-    arcade[id] = Math.max(arcade[id] || 0, score || 0);
+  const bests = { ...state.bests };
+  for (const [id, score] of Object.entries(remote.bests || remote.arcade || {})) {
+    bests[id] = Math.max(bests[id] || 0, score || 0);
   }
   state = {
     ...state,
@@ -113,7 +130,7 @@ export function mergeRemote(remote) {
     goalPerWeek: state.goalPerWeek || remote.goalPerWeek || 5,
     xp: Math.max(state.xp || 0, remote.xp || 0),
     done,
-    arcade,
+    bests,
     log: [...new Set([...(state.log || []), ...(remote.log || [])])].sort(),
     notes: mergeNotes(state.notes, remote.notes),
     badges: [...new Set([...(state.badges || []), ...(remote.badges || [])])],
@@ -185,16 +202,16 @@ export function completeLesson(lessonId, xp, stars = 3) {
   return { gained, first, earned };
 }
 
-export function recordArcade(gameId, score) {
-  const best = state.arcade[gameId] || 0;
+export function recordBest(activityId, score) {
+  const best = state.bests[activityId] || 0;
   const isBest = score > best;
-  if (isBest) state.arcade[gameId] = score;
+  if (isBest) state.bests[activityId] = score;
   state.xp += Math.round(score / 2);
   const d = today();
   if (!state.log.includes(d)) state.log.push(d);
   const earned = checkBadges();
   save();
-  return { isBest, best: state.arcade[gameId] || 0, earned };
+  return { isBest, best: state.bests[activityId] || 0, earned };
 }
 
 /** Lessons finished since Monday. */
@@ -250,8 +267,8 @@ export const BADGES = [
   { id: 'streak-3', icon: 'flame', name: 'Three in a Row', desc: 'Code three days in a row.', test: () => streak() >= 3 },
   { id: 'streak-7', icon: 'flame', name: 'Week on Fire', desc: 'Code seven days in a row.', test: () => streak() >= 7 },
   { id: 'ten-lessons', icon: 'medal', name: 'Double Digits', desc: 'Finish 10 lessons.', test: (s) => Object.keys(s.done).length >= 10 },
-  { id: 'arcade', icon: 'target', name: 'Drill Starter', desc: 'Finish any practice drill.', test: (s) => Object.keys(s.arcade).length >= 1 },
-  { id: 'maze', icon: 'rover', name: 'Yak Whisperer', desc: 'Score 300+ in Maze Logic.', test: (s) => (s.arcade['maze'] || 0) >= 300 },
+  { id: 'activity-1', icon: 'target', name: 'First Activity', desc: 'Finish any activity.', test: (s) => Object.keys(s.bests).length >= 1 },
+  { id: 'maze', icon: 'rover', name: 'Yak Whisperer', desc: 'Score 300+ in Maze Logic.', test: (s) => (s.bests['maze'] || 0) >= 300 },
   { id: 'level-4', icon: 'eye', name: 'Bug Hunter', desc: 'Reach the Bug Hunter level.', test: (s) => level(s.xp).index >= 3 },
 ];
 
@@ -267,10 +284,17 @@ export function refreshBadges() {
   return earned;
 }
 
+/** Badge ids that were renamed; an old save still counts as earned. */
+const BADGE_ALIASES = { 'activity-1': 'arcade' };
+
+function hasBadge(state, id) {
+  return state.badges.includes(id) || state.badges.includes(BADGE_ALIASES[id]);
+}
+
 function checkBadges() {
   const earned = [];
   for (const b of BADGES) {
-    if (state.badges.includes(b.id)) continue;
+    if (hasBadge(state, b.id)) continue;
     let ok = false;
     try {
       ok = b.test(state);

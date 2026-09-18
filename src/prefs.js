@@ -58,7 +58,7 @@ export function exportProgress() {
     exported: new Date().toISOString(),
     progress: {
       name: s.name, xp: s.xp, done: s.done, log: s.log,
-      badges: s.badges, arcade: s.arcade, goalPerWeek: s.goalPerWeek, created: s.created,
+      badges: s.badges, bests: s.bests, goalPerWeek: s.goalPerWeek, created: s.created,
     },
   };
   const blob = new Blob([JSON.stringify(payload, null, 2)], { type: 'application/json' });

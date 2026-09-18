@@ -176,13 +176,13 @@ export function bookSummary() {
 /* ------------------------------------------------------------ practice */
 
 export function drillSummary() {
-  const arcade = store.get().arcade || {};
+  const bests = store.get().bests || {};
   return DRILLS.map((drill) => ({
     id: drill.id,
     name: drill.name,
     icon: drill.icon,
-    best: arcade[drill.id] || 0,
-    played: Boolean(arcade[drill.id]),
+    best: bests[drill.id] || 0,
+    played: Boolean(bests[drill.id]),
   }));
 }
 
@@ -192,7 +192,7 @@ export function badgeSummary() {
   const s = store.get();
   return store.BADGES.map((badge) => ({
     ...badge,
-    earned: (s.badges || []).includes(badge.id),
+    earned: (s.badges || []).includes(badge.id) || (badge.id === 'activity-1' && (s.badges || []).includes('arcade')),
   }));
 }
 
