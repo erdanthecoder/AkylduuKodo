@@ -20,18 +20,33 @@ import { animateIn, countUp, startBackdrop } from './anim.js';
 // first paint is already the right theme and the right text size.
 import './prefs.js';
 
+// Four places to go, and no more. Everything else is reached from the page it
+// belongs to: the Lab from Practice, the Notebook and Settings from the top bar.
 const NAV = [
   { hash: '#/home', icon: 'home', key: 'nav_home' },
   { hash: '#/journey', icon: 'map', key: 'nav_journey' },
   { hash: '#/book', icon: 'book', key: 'nav_book' },
   { hash: '#/practice', icon: 'target', key: 'nav_practice' },
-  { hash: '#/lab', icon: 'flask', key: 'nav_lab' },
-  { hash: '#/notes', icon: 'pencil', key: 'nav_notes' },
-  { hash: '#/settings', icon: 'settings', key: 'nav_settings' },
 ];
+
+/** Which nav item a route belongs under, when it is not a nav route itself. */
+const NAV_PARENT = {
+  lesson: '#/journey',
+  lab: '#/practice',
+};
 
 let currentView = null;
 let lastXp = 0;
+
+/** A small round button for the top bar: icon only, with a tooltip. */
+function topIcon(name, label, hash) {
+  return h('button', {
+    class: 'pill pill-btn pill-icon' + (location.hash.startsWith(hash) ? ' pill-on' : ''),
+    title: label,
+    'aria-label': label,
+    onclick: () => go(hash),
+  }, icon(name, { size: 16 }));
+}
 
 function accountButton() {
   const u = auth.user();
@@ -122,6 +137,8 @@ function paintChrome() {
       xpPill,
       h('span', { class: 'pill', title: ui('streak') }, icon('flame', { size: 15, cls: 'flame' }), String(store.streak())),
       h('span', { class: 'pill pill-week', title: ui('this_week') }, icon('target', { size: 15 }), `${week.count}/${week.goal}`),
+      topIcon('pencil', ui('nav_notes'), '#/notes'),
+      topIcon('settings', ui('nav_settings'), '#/settings'),
       accountButton(),
     ),
   );
@@ -129,7 +146,8 @@ function paintChrome() {
   lastXp = s.xp;
 
   const nav = document.getElementById('nav');
-  const active = (location.hash || '#/home').split('/').slice(0, 2).join('/');
+  const route = (location.hash || '#/home').replace('#/', '').split('/')[0];
+  const active = NAV_PARENT[route] || `#/${route || 'home'}`;
   clear(nav).append(
     ...NAV.map((item) =>
       h('button', {

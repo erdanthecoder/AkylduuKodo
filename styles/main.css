@@ -683,6 +683,9 @@ button, input, textarea { font-family: inherit; font-size: inherit; color: inher
 /* ============================================================ 8. practice */
 .drill-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(240px, 1fr)); gap: 14px; }
 .drill-card { text-align: left; cursor: pointer; color: var(--ink); display: flex; flex-direction: column; gap: 10px; }
+/* the cards sit in a row, so their calls to action line up along the bottom */
+.drill-card p { flex: 1; margin: 0; }
+.drill-card .chips { margin-top: auto; }
 .drill-card:hover { border-color: var(--line-strong); transform: translateY(-4px); box-shadow: var(--sh-3); }
 .hud { display: flex; align-items: center; gap: 16px; }
 .hud-item { display: inline-flex; align-items: center; gap: 8px; font-family: var(--display); font-weight: 700; font-size: 1.15rem; }
@@ -777,9 +780,6 @@ button, input, textarea { font-family: inherit; font-size: inherit; color: inher
 @media (max-width: 999px) {
   .lesson-head { top: 68px; }
   .bench-out { position: static; }
-  /* seven destinations across a phone: one line each, no wrapping */
-  .nav { gap: 2px; padding-inline: 4px; }
-  .nav-btn { padding: 7px 2px; font-size: 0.62rem; }
   .nav-label { white-space: nowrap; }
 }
 
@@ -874,3 +874,22 @@ h1 > .icon, h2 > .icon { color: var(--accent); flex: none; }
 .setting-sample { margin: 2px 0 0; }
 .wrap { flex-wrap: wrap; }
 .hidden-file { display: none; }
+
+/* ------------------------------------------------- top-bar icon buttons */
+.pill-icon { padding: 6px 9px; }
+.pill-icon .icon { display: block; }
+.pill-on { color: var(--ink); border-color: color-mix(in srgb, var(--accent) 45%, transparent); }
+.pill-on .icon { color: var(--accent); }
+
+/* the Lab, promoted at the top of Practice */
+.lab-promo { display: flex; align-items: center; gap: 18px; flex-wrap: wrap; cursor: pointer; }
+.lab-promo:hover { border-color: var(--line-strong); }
+.lab-promo .promo-mark {
+  display: grid; place-items: center; width: 56px; height: 56px; flex: none;
+  border-radius: var(--r-md); color: var(--mint);
+  background: color-mix(in srgb, var(--mint) 13%, transparent);
+  border: 1px solid color-mix(in srgb, var(--mint) 26%, transparent);
+}
+.lab-promo .next-body { flex: 1; min-width: 220px; }
+.lab-promo h3 { margin: 2px 0 6px; }
+.section-title { margin: 6px 0 -6px; font-size: 1.15rem; }
