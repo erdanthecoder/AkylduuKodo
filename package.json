@@ -1,13 +1,23 @@
 {
   "name": "akylduukodo",
   "version": "1.0.0",
-  "description": "AkylduuKodo — an interactive course for learning to code: lessons, guided practice and a weekly study goal.",
+  "description": "AkylduuKodo \u2014 an interactive course for learning to code: lessons, guided practice and a weekly study goal.",
   "type": "module",
   "scripts": {
     "start": "node server.mjs",
     "dev": "node server.mjs",
-    "test": "node tests/curriculum.test.mjs"
+    "test": "node tests/curriculum.test.mjs && node react/course.test.mjs",
+    "build:playground": "node scripts/build-playground.mjs"
   },
   "license": "MIT",
-  "private": true
+  "private": true,
+  "devDependencies": {
+    "@tailwindcss/cli": "^4.3.3",
+    "esbuild": "^0.28.2",
+    "framer-motion": "^13.4.0",
+    "lucide-react": "^1.47.0",
+    "react": "^19.3.0",
+    "react-dom": "^19.3.0",
+    "tailwindcss": "^4.3.3"
+  }
 }
