@@ -231,12 +231,12 @@ export async function createGlobe(container, { stops = [], doneUnits = new Set()
   // atmosphere: a back-facing shell whose edge lights up — the blue halo
   // the halo travels with the planet
   const atmosphere = new THREE.Mesh(
-    new THREE.SphereGeometry(R * 1.13, 96, 64),
+    new THREE.SphereGeometry(R * 1.09, 96, 64),
     new THREE.ShaderMaterial({
       transparent: true,
       side: THREE.BackSide,
       blending: THREE.AdditiveBlending,
-      uniforms: { uColor: { value: new THREE.Color(0x6ab6ff) } },
+      uniforms: { uColor: { value: new THREE.Color(0x4a7fae) } },
       vertexShader: `
         varying vec3 vNormal;
         void main() {
@@ -247,7 +247,7 @@ export async function createGlobe(container, { stops = [], doneUnits = new Set()
         uniform vec3 uColor;
         varying vec3 vNormal;
         void main() {
-          float rim = pow(0.72 - dot(vNormal, vec3(0.0, 0.0, 1.0)), 2.4);
+          float rim = pow(0.66 - dot(vNormal, vec3(0.0, 0.0, 1.0)), 3.2);
           gl_FragColor = vec4(uColor, 1.0) * rim;
         }`,
     }),
@@ -259,7 +259,7 @@ export async function createGlobe(container, { stops = [], doneUnits = new Set()
   const sun = new THREE.DirectionalLight(0xfff2e0, 2.1);
   sun.position.set(-1.6, 0.7, 2.4);
   scene.add(sun);
-  scene.add(new THREE.AmbientLight(0x3a5a8c, 0.55));
+  scene.add(new THREE.AmbientLight(0x3d4653, 0.5));
 
   // --- stars ------------------------------------------------------------
   const starGeo = new THREE.BufferGeometry();
@@ -270,7 +270,7 @@ export async function createGlobe(container, { stops = [], doneUnits = new Set()
     pos.set([v.x, v.y, v.z], i * 3);
   }
   starGeo.setAttribute('position', new THREE.BufferAttribute(pos, 3));
-  scene.add(new THREE.Points(starGeo, new THREE.PointsMaterial({ color: 0xdbe6ff, size: 0.09, sizeAttenuation: true, transparent: true, opacity: 0.85 })));
+  scene.add(new THREE.Points(starGeo, new THREE.PointsMaterial({ color: 0xdbe6ff, size: 0.07, sizeAttenuation: true, transparent: true, opacity: 0.6 })));
 
   // --- the route --------------------------------------------------------
   const routeGroup = new THREE.Group();

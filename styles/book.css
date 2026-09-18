@@ -14,8 +14,8 @@
 .pad-toggle:hover { background: var(--card-2); }
 .pad-mark {
   display: grid; place-items: center; width: 28px; height: 28px; flex: none;
-  border-radius: var(--r-sm); color: var(--violet);
-  background: color-mix(in srgb, var(--violet) 15%, transparent);
+  border-radius: var(--r-sm); color: var(--ink-2);
+  background: var(--card-2); border: 1px solid var(--line);
 }
 .pad-title { flex: 1; }
 .pad-dot { width: 7px; height: 7px; border-radius: 50%; background: var(--mint); flex: none; }
@@ -160,23 +160,20 @@
 /* ------------------------------------------------------------- the cover */
 .cover-plate {
   position: relative; overflow: hidden;
-  padding: 44px 40px; border-radius: var(--r-xl);
-  border: 1px solid var(--line-strong);
-  background:
-    radial-gradient(90% 120% at 12% 0%, rgba(139, 124, 246, 0.24), transparent 60%),
-    radial-gradient(70% 100% at 100% 100%, rgba(89, 185, 255, 0.18), transparent 60%),
-    var(--card-solid);
-  box-shadow: var(--sh-3);
+  padding: 40px; border-radius: var(--r-lg);
+  border: 1px solid var(--line);
+  background: var(--card);
+  box-shadow: var(--sh-1);
 }
 .cover-plate::after {
   content: "C++"; position: absolute; right: -10px; bottom: -46px;
-  font-family: var(--display); font-size: 12rem; font-weight: 800;
-  color: color-mix(in srgb, var(--ink) 6%, transparent); pointer-events: none;
+  font-family: var(--display); font-size: 9rem; font-weight: 700; letter-spacing: -0.05em;
+  color: color-mix(in srgb, var(--ink) 3.5%, transparent); pointer-events: none;
 }
-.cover-plate h1 { margin: 8px 0 14px; font-size: clamp(2rem, 6vw, 3.4rem); letter-spacing: -0.035em; }
+.cover-plate h1 { margin: 8px 0 14px; font-size: clamp(1.8rem, 4.4vw, 2.7rem); letter-spacing: -0.035em; }
 .cover-lede { max-width: 54ch; color: var(--ink-2); font-size: 1.06rem; }
 .cover-stats { display: flex; flex-wrap: wrap; gap: 22px; margin: 22px 0 26px; color: var(--muted); }
-.cover-stats b { color: var(--ink); font-size: 1.3rem; font-family: var(--display); }
+.cover-stats b { color: var(--ink); font-size: 1.2rem; font-family: var(--display); font-variant-numeric: tabular-nums; }
 .cover-cta { display: flex; flex-wrap: wrap; gap: 10px; }
 .cover-cta .btn { width: auto; flex: 0 0 auto; }
 
@@ -193,7 +190,7 @@
   animation-delay: calc(var(--i) * 45ms + 60ms);
   transition: transform var(--t-med) var(--ease-out), border-color var(--t-med);
 }
-.cover-chapter:hover { transform: translateY(-4px); border-color: var(--line-strong); }
+.cover-chapter:hover { border-color: var(--line-strong); box-shadow: var(--sh-2); }
 .cover-num {
   display: block; margin-bottom: 8px;
   font-family: var(--mono); font-size: 0.72rem; letter-spacing: 0.14em; color: var(--accent);
@@ -215,9 +212,9 @@
 .book-promo { display: flex; align-items: center; gap: 18px; flex-wrap: wrap; }
 .book-promo .promo-mark {
   display: grid; place-items: center; width: 56px; height: 56px; flex: none;
-  border-radius: var(--r-md); color: var(--violet);
-  background: color-mix(in srgb, var(--violet) 14%, transparent);
-  border: 1px solid color-mix(in srgb, var(--violet) 26%, transparent);
+  border-radius: var(--r-md); color: var(--ink-2);
+  background: var(--card-2);
+  border: 1px solid var(--line);
 }
 .book-promo .next-body { flex: 1; min-width: 220px; }
 .book-promo h3 { margin: 2px 0 6px; }
@@ -226,15 +223,12 @@
 .book-section { padding: 74px 0 10px; }
 .book-plate {
   display: grid; grid-template-columns: minmax(0, 1.25fr) minmax(0, 0.75fr); gap: 34px;
-  padding: 36px; border-radius: var(--r-xl);
-  border: 1px solid var(--line-strong);
-  background:
-    radial-gradient(80% 120% at 8% 0%, rgba(139, 124, 246, 0.2), transparent 62%),
-    radial-gradient(60% 90% at 100% 100%, rgba(89, 185, 255, 0.14), transparent 60%),
-    var(--card-solid);
-  box-shadow: var(--sh-3);
+  padding: 34px; border-radius: var(--r-lg);
+  border: 1px solid var(--line);
+  background: var(--card);
+  box-shadow: var(--sh-1);
 }
-.book-plate h2 { margin: 8px 0 12px; font-size: clamp(1.5rem, 3.4vw, 2.2rem); letter-spacing: -0.025em; }
+.book-plate h2 { margin: 8px 0 12px; font-size: clamp(1.4rem, 2.8vw, 1.9rem); letter-spacing: -0.025em; }
 .book-plate p { margin: 0 0 20px; color: var(--ink-2); max-width: 54ch; line-height: 1.7; }
 .book-plate-list { list-style: none; margin: 0; padding: 0; align-self: center; }
 .book-plate-list li {

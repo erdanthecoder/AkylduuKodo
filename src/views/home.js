@@ -46,7 +46,7 @@ export function HomeView(go) {
     h(
       'section',
       { class: 'card hero' },
-      h('div', { class: 'hero-mascot' }, mascot(110, 'happy')),
+      h('div', { class: 'hero-mascot' }, mascot(64, 'happy')),
       h('div', { class: 'hero-text' },
         h('h1', {}, s.name ? `${ui('welcome')}, ${s.name}!` : ui('welcome_new')),
         h('p', { class: 'muted' }, ui('tagline')),

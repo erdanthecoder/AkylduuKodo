@@ -75,23 +75,3 @@ export function pop(el) {
   void el.offsetWidth;
   el.classList.add('pop-now');
 }
-
-/** Floating shapes behind the app — pure decoration, never interactive. */
-export function startBackdrop() {
-  if (reduced() || document.querySelector('.backdrop')) return;
-  const layer = document.createElement('div');
-  layer.className = 'backdrop';
-  layer.setAttribute('aria-hidden', 'true');
-  const marks = ['{ }', '< >', '( )', ';', '=>', '[ ]', '//', '0 1'];
-  for (let i = 0; i < 12; i++) {
-    const s = document.createElement('span');
-    s.className = 'float-mark';
-    s.textContent = marks[i % marks.length];
-    s.style.left = Math.random() * 100 + '%';
-    s.style.animationDuration = 18 + Math.random() * 22 + 's';
-    s.style.animationDelay = -Math.random() * 30 + 's';
-    s.style.fontSize = 12 + Math.random() * 26 + 'px';
-    layer.append(s);
-  }
-  document.body.prepend(layer);
-}
