@@ -268,7 +268,7 @@ export const BADGES = [
   { id: 'streak-7', icon: 'flame', name: 'Week on Fire', desc: 'Code seven days in a row.', test: () => streak() >= 7 },
   { id: 'ten-lessons', icon: 'medal', name: 'Double Digits', desc: 'Finish 10 lessons.', test: (s) => Object.keys(s.done).length >= 10 },
   { id: 'activity-1', icon: 'target', name: 'First Activity', desc: 'Finish any activity.', test: (s) => Object.keys(s.bests).length >= 1 },
-  { id: 'boss', icon: 'flame', name: 'Error Slayer', desc: 'Score 600+ in Boss Battle.', test: (s) => (s.bests['boss'] || 0) >= 600 },
+  { id: 'maze', icon: 'rover', name: 'Yak Whisperer', desc: 'Score 300+ in Maze Logic.', test: (s) => (s.bests['maze'] || 0) >= 300 },
   { id: 'level-4', icon: 'eye', name: 'Bug Hunter', desc: 'Reach the Bug Hunter level.', test: (s) => level(s.xp).index >= 3 },
 ];
 
