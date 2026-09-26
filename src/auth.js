@@ -149,8 +149,31 @@ function takeOneInFourSession() {
     return null;
   }
 }
+// Read it the moment this module loads, before the app's router rewrites the
+// address to #/home: otherwise the hand-off is gone by the time init() runs.
+const hadOneInFourReply = /(?:^#|&)oit=/.test(location.hash);
+const pendingOneInFour = takeOneInFourSession();
+
+// Single sign-on. The first time AkylduuKodo opens in a tab, it asks OneInFour
+// who is signed in there: a quick redirect to oneinfour.web.app that comes
+// straight back with the session (#oit=…) or with #oit=none. So the learner
+// arrives signed in as their one account, whatever they opened first.
+const ONEINFOUR_HUB = 'https://oneinfour.web.app/';
+export function signInWithOneInFour({ silent = false } = {}) {
+  const back = location.href;
+  location[silent ? 'replace' : 'assign'](`${ONEINFOUR_HUB}?return=${encodeURIComponent(back)}${silent ? '&silent=1' : ''}`);
+}
+if (MODE === 'cloud' && location.hostname === 'akylduukodo.web.app' && !hadOneInFourReply && navigator.onLine !== false) {
+  try {
+    if (!sessionStorage.getItem('akylduukodo.oit.checked')) {
+      sessionStorage.setItem('akylduukodo.oit.checked', '1');
+      signInWithOneInFour({ silent: true });
+    }
+  } catch { /* storage blocked: skip the check rather than loop */ }
+}
+
 async function signInFromOneInFour(auth, a) {
-  const session = takeOneInFourSession();
+  const session = pendingOneInFour;
   if (!session) return;
   try {
     const res = await fetch(ONEINFOUR_TOKEN_URL, {
