@@ -163,7 +163,7 @@ export function signInWithOneInFour({ silent = false } = {}) {
   const back = location.href;
   location[silent ? 'replace' : 'assign'](`${ONEINFOUR_HUB}?return=${encodeURIComponent(back)}${silent ? '&silent=1' : ''}`);
 }
-if (MODE === 'cloud' && location.hostname === 'akylduukodo.web.app' && !hadOneInFourReply && navigator.onLine !== false) {
+if (MODE === 'cloud' && /^(compactcoding|akylduukodo)\.web\.app$/.test(location.hostname) && !hadOneInFourReply && navigator.onLine !== false) {
   try {
     if (!sessionStorage.getItem('akylduukodo.oit.checked')) {
       sessionStorage.setItem('akylduukodo.oit.checked', '1');

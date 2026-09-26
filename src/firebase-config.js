@@ -7,7 +7,7 @@
 //   2. "Your apps" → Web app → copy the `firebaseConfig` object
 //   3. Replace `null` below with that object
 //   4. Authentication → Sign-in method → enable **Google** and **Email/Password**
-//   5. Authentication → Settings → Authorized domains → add `akylduukodo.web.app`
+//   5. Authentication → Settings → Authorized domains → add `compactcoding.web.app` (the deploy workflow does this itself)
 //   6. Firestore Database → Create database (production mode) and use the rules
 //      in README ("Cloud save") so each learner can only read/write their own row
 //

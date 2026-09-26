@@ -1,12 +1,5 @@
 {
   "projects": {
     "default": "akylduukodo"
-  },
-  "targets": {
-    "akylduukodo": {
-      "hosting": {
-        "akylduukodo": ["akylduukodo"]
-      }
-    }
   }
 }

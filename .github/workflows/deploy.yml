@@ -23,13 +23,26 @@ jobs:
       - run: npm test
 
   deploy:
-    name: Publish to akylduukodo.web.app
+    name: Publish to compactcoding.web.app
     needs: test          # a broken lesson never reaches the live site
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
-      - uses: FirebaseExtended/action-hosting-deploy@v0
+      - uses: actions/setup-node@v4
         with:
-          firebaseServiceAccount: ${{ secrets.FIREBASE_SERVICE_ACCOUNT_AKYLDUUKODO }}
-          channelId: live
-          projectId: akylduukodo
+          node-version: '20'
+      # compactcoding.web.app serves the app; akylduukodo.web.app (the old address)
+      # forwards there. The new site is created the first time this runs.
+      - name: Create compactcoding.web.app (once) and publish both sites
+        env:
+          KEY: ${{ secrets.FIREBASE_SERVICE_ACCOUNT_AKYLDUUKODO }}
+        run: |
+          printf '%s' "$KEY" > "$RUNNER_TEMP/sa.json"
+          export GOOGLE_APPLICATION_CREDENTIALS="$RUNNER_TEMP/sa.json"
+          npm i -g firebase-tools@14 >/dev/null
+          firebase hosting:sites:get compactcoding --project akylduukodo >/dev/null 2>&1 \
+            || firebase hosting:sites:create compactcoding --project akylduukodo --non-interactive
+          npm i --no-save google-auth-library@9 >/dev/null
+          node scripts/auth-domains.mjs akylduukodo
+          firebase deploy --only hosting --project akylduukodo --non-interactive
+          rm -f "$RUNNER_TEMP/sa.json"
