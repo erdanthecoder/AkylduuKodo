@@ -131,12 +131,48 @@ function randomId() {
   return crypto.randomUUID ? crypto.randomUUID() : String(Date.now() + Math.random());
 }
 
+// OneInFour (oneinfour.web.app) — one account for LearnKyrgyz, Quoldek, Kadam and AkylduuKodo.
+// Opening AkylduuKodo from OneInFour adds #oit=… to the address: the OneInFour session, which is
+// never sent to AkylduuKodo's servers. It is removed from the address bar at once, exchanged with
+// OneInFour for a one-time sign-in token here, and forgotten. People who made their OneInFour
+// account with Google get the AkylduuKodo account with the same Google email.
+const ONEINFOUR_TOKEN_URL = 'https://lzamxwqxnzcrazyuipjx.supabase.co/functions/v1/oit-firebase-token';
+function takeOneInFourSession() {
+  const match = location.hash.match(/(?:^#|&)oit=([A-Za-z0-9_-]+)/);
+  if (!match) return null;
+  const rest = location.hash.slice(1).split('&').filter((p) => !p.startsWith('oit=')).join('&');
+  history.replaceState(null, '', location.pathname + location.search + (rest ? `#${rest}` : ''));
+  try {
+    const raw = atob(match[1].replace(/-/g, '+').replace(/_/g, '/'));
+    return JSON.parse(decodeURIComponent(escape(raw))).at || null;
+  } catch {
+    return null;
+  }
+}
+async function signInFromOneInFour(auth, a) {
+  const session = takeOneInFourSession();
+  if (!session) return;
+  try {
+    const res = await fetch(ONEINFOUR_TOKEN_URL, {
+      method: 'POST',
+      headers: { Authorization: `Bearer ${session}`, 'Content-Type': 'application/json' },
+      body: JSON.stringify({ project: 'akylduukodo' }),
+    });
+    const body = await res.json().catch(() => ({}));
+    if (!body.token) throw new Error(body.error || `HTTP ${res.status}`);
+    await a.signInWithCustomToken(auth, body.token);
+  } catch (err) {
+    console.warn('OneInFour sign-in did not complete:', err.message);
+  }
+}
+
 // ------------------------------------------------------------------- API
 
 export async function init() {
   if (MODE === 'cloud') {
     try {
       const { auth, a } = await firebase();
+      await signInFromOneInFour(auth, a);
       await new Promise((resolve) => {
         a.onAuthStateChanged(auth, async (u) => {
           if (u) await adopt(cloudProfile(u), cloudStore(u.uid));
