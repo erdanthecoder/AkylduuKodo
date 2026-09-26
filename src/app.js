@@ -51,6 +51,13 @@ function topIcon(name, label, hash) {
   }, icon(name, { size: 16 }));
 }
 
+// The4Workspace: the one-account hub for LearnKyrgyz, Quoldek, Kadam and AkylduuKodo.
+function workspaceButton() {
+  return h('a', { class: 'pill pill-btn pill-workspace', href: 'https://the4workspace.web.app/', title: 'The4Workspace: all four apps, one account' },
+    h('img', { src: 'assets/the4workspace.svg', alt: '', width: 18, height: 18 }),
+    h('span', { class: 'pill-workspace-name' }, 'The4Workspace'));
+}
+
 function accountButton() {
   const u = auth.user();
   if (!u) {
@@ -146,6 +153,7 @@ function paintChrome() {
       h('span', { class: 'pill pill-week', title: ui('this_week') }, icon('target', { size: 15 }), `${week.count}/${week.goal}`),
       topIcon('pencil', ui('nav_notes'), '#/notes'),
       topIcon('settings', ui('nav_settings'), '#/settings'),
+      workspaceButton(),
       accountButton(),
     ),
   );

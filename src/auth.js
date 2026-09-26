@@ -158,7 +158,7 @@ const pendingOneInFour = takeOneInFourSession();
 // who is signed in there: a quick redirect to oneinfour.web.app that comes
 // straight back with the session (#oit=…) or with #oit=none. So the learner
 // arrives signed in as their one account, whatever they opened first.
-const ONEINFOUR_HUB = 'https://oneinfour.web.app/';
+const ONEINFOUR_HUB = 'https://the4workspace.web.app/';
 export function signInWithOneInFour({ silent = false } = {}) {
   const back = location.href;
   location[silent ? 'replace' : 'assign'](`${ONEINFOUR_HUB}?return=${encodeURIComponent(back)}${silent ? '&silent=1' : ''}`);

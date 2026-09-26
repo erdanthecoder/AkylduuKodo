@@ -73,7 +73,7 @@ function signInCard(go, rerender) {
       class: 'g-mark',
       html: '<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2.6" aria-hidden="true"><circle cx="8" cy="8" r="5"/><circle cx="16" cy="8" r="5"/><circle cx="8" cy="16" r="5"/><circle cx="16" cy="16" r="5"/></svg>',
     }),
-    h('span', {}, 'Continue with OneInFour'),
+    h('span', {}, 'Continue with The4Workspace'),
   ) : null;
 
   function draw() {

@@ -988,3 +988,9 @@ h1 > .icon, h2 > .icon { color: var(--accent); flex: none; }
   .match-card { min-height: 80px; }
   .match-face { font-size: 0.66rem; }
 }
+
+/* The4Workspace: back to the one-account hub */
+.pill-workspace { text-decoration: none; }
+.pill-workspace img { border-radius: 5px; display: block; transition: transform 0.4s cubic-bezier(0.2, 1.4, 0.3, 1); }
+.pill-workspace:hover img { transform: rotate(-10deg) scale(1.1); }
+@media (max-width: 560px) { .pill-workspace-name { display: none; } }
