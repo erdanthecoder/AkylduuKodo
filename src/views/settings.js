@@ -179,6 +179,6 @@ export function SettingsView(go, rerender) {
       }, ui('reset_all')),
     ),
 
-    h('p', { class: 'muted small center' }, 'AkylduuKodo · made for curious people'),
+    h('p', { class: 'muted small center' }, 'CompactCoding · made for curious people'),
   );
 }

@@ -1,6 +1,6 @@
 {
-  "name": "AkylduuKodo — learn programming step by step",
-  "short_name": "AkylduuKodo",
+  "name": "CompactCoding — learn programming step by step",
+  "short_name": "CompactCoding",
   "description": "An interactive JavaScript course with guided practice and a weekly study goal.",
   "start_url": "./",
   "scope": "./",

@@ -51,7 +51,7 @@ function topIcon(name, label, hash) {
   }, icon(name, { size: 16 }));
 }
 
-// The4Workspace: the one-account hub for LearnKyrgyz, Quoldek, Kadam and AkylduuKodo.
+// The4Workspace: the one-account hub for LearnKyrgyz, Quoldek, Kadam and CompactCoding.
 function workspaceButton() {
   return h('a', { class: 'pill pill-btn pill-workspace', href: 'https://the4workspace.web.app/', title: 'The4Workspace: all four apps, one account' },
     h('img', { src: 'assets/the4workspace.svg', alt: '', width: 18, height: 18 }),
@@ -144,7 +144,7 @@ function paintChrome() {
   clear(bar).append(
     h('button', { class: 'brand', onclick: () => go('#/home') },
       h('span', { class: 'brand-mark' }, '\u{1F3D4}\uFE0F'),
-      h('span', { class: 'brand-name' }, 'Akyldu', h('em', {}, 'u'), 'Kodo'),
+      h('span', { class: 'brand-name' }, 'Compact', h('em', {}, 'Coding')),
     ),
     h('div', { class: 'top-stats' },
       h('span', { class: 'pill pill-level', title: ui('level') }, icon(lvl.icon, { size: 15 }), lvl.name),
@@ -189,7 +189,7 @@ function Onboarding() {
   const el = h('div', { class: 'view onboard' },
     h('div', { class: 'card hero onboard-hero' },
       h('div', { class: 'onboard-mascot' }, mascot(140, 'happy')),
-      h('h1', {}, 'AkylduuKodo'),
+      h('h1', {}, 'CompactCoding'),
       h('p', { class: 'muted' }, 'Learn to write real code, one clear step at a time.'),
     ),
     h('div', { class: 'card' },
