@@ -8,7 +8,10 @@ import { int, pick, shuffle, words, distractors } from '../kit.js';
 
 export const countSteps = (r, level) => {
   const step = pick(r, level === 1 ? [4, 8] : level === 2 ? [4, 8, 50] : [4, 8, 50, 100]);
-  const start = step * int(r, 1, level === 1 ? 6 : 9);
+  // five numbers of the sequence must all fit under 1000, which is as far as
+  // Year 3 counts — so the biggest step gets the shortest run-up
+  const most = Math.min(level === 1 ? 6 : 9, Math.floor(1000 / step) - 4);
+  const start = step * int(r, 1, Math.max(1, most));
   const run = [start, start + step, start + step * 2, start + step * 3];
   const answer = start + step * 4;
   return {
@@ -51,12 +54,14 @@ export const partition = (r, level) => {
   const n = h * 100 + t * 10 + o;
   const which = pick(r, ['hundreds', 'tens', 'ones']);
   const value = which === 'hundreds' ? h : which === 'tens' ? t : o;
+  // "1 tens" reads wrong to a child who is being taught to say it properly
+  const say = (count, many) => `${count} ${count === 1 ? many.replace(/s$/, '') : many}`;
   return {
     kind: 'number',
     prompt: `How many ${which} are in ${n}?`,
     answer: String(value),
     hint: 'Look at the place each digit sits in.',
-    why: `${n} is ${h} hundreds, ${t} tens and ${o} ones. So there are ${value} ${which}.`,
+    why: `${n} is ${say(h, 'hundreds')}, ${say(t, 'tens')} and ${say(o, 'ones')}. So there ${value === 1 ? 'is' : 'are'} ${say(value, which)}.`,
   };
 };
 

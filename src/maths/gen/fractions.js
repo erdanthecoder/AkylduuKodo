@@ -58,12 +58,24 @@ export const equivalent = (r, level) => {
   const base = pick(r, level === 1 ? [[1, 2], [1, 4]] : [[1, 2], [1, 3], [1, 4], [2, 3], [3, 4], [1, 5]]);
   const times = int(r, 2, level === 1 ? 2 : 4);
   const [t, b] = base;
-  const right = frac(t * times, b * times);
-  const wrongs = shuffle(r, [
-    frac(t * times + 1, b * times),
-    frac(t * times, b * times + 1),
-    frac(t + times, b + times),
-  ]).filter((x) => x !== right).slice(0, 3);
+  const rt = t * times;
+  const rb = b * times;
+  const right = frac(rt, rb);
+  // a wrong choice must be genuinely wrong — not the same fraction written
+  // another way — and the three of them must differ from each other
+  const candidates = [
+    [rt + 1, rb], [rt, rb + 1], [t + times, b + times], [rt, rb - 1],
+    [rt - 1, rb], [t * (times + 1), rb], [rt, b * (times + 1)],
+  ];
+  const wrongs = [];
+  for (const [ct, cb] of shuffle(r, candidates)) {
+    if (wrongs.length >= 3) break;
+    if (ct < 1 || cb < 2 || ct >= cb) continue;
+    if (ct * rb === rt * cb) continue;              // equivalent, so not wrong
+    const text = frac(ct, cb);
+    if (text === right || wrongs.includes(text)) continue;
+    wrongs.push(text);
+  }
   return {
     kind: 'choice',
     prompt: `Which fraction is the same as ${frac(t, b)}?`,

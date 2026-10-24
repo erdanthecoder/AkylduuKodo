@@ -6,7 +6,10 @@ import { int, pick, shuffle, NAMES, THINGS, plural, distractors } from '../kit.j
 function columnPair(r, level, sub) {
   for (let tries = 0; tries < 60; tries++) {
     const a = int(r, level === 1 ? 110 : 120, 989);
-    const b = int(r, level === 1 ? 11 : 110, sub ? a - 10 : 999 - a);
+    const low = level === 1 ? 11 : 110;
+    const high = sub ? a - 10 : 999 - a;
+    if (high < low) continue;          // no room left under 1000; pick another a
+    const b = int(r, low, high);
     if (b < 10) continue;
     const carries = sub
       ? (a % 10) < (b % 10) || Math.floor(a / 10) % 10 < Math.floor(b / 10) % 10
@@ -19,8 +22,9 @@ function columnPair(r, level, sub) {
 }
 
 export const addMental = (r, level) => {
-  const n = int(r, 120, 880);
+  // the step is chosen first, so there is always room to land under 1000
   const step = level === 1 ? int(r, 2, 9) : pick(r, [int(r, 2, 9), int(r, 1, 8) * 10, int(r, 1, 8) * 100]);
+  const n = int(r, 110, 999 - step);
   const answer = n + step;
   const place = step >= 100 ? 'hundreds' : step >= 10 ? 'tens' : 'ones';
   return {
@@ -33,8 +37,8 @@ export const addMental = (r, level) => {
 };
 
 export const subMental = (r, level) => {
-  const answer = int(r, 110, 880);
   const step = level === 1 ? int(r, 2, 9) : pick(r, [int(r, 2, 9), int(r, 1, 8) * 10, int(r, 1, 8) * 100]);
+  const answer = int(r, 101, 999 - step);
   const n = answer + step;
   const place = step >= 100 ? 'hundreds' : step >= 10 ? 'tens' : 'ones';
   return {
@@ -71,8 +75,8 @@ export const subColumn = (r, level) => {
 };
 
 export const missingNumber = (r, level) => {
-  const a = int(r, level === 1 ? 20 : 120, 800);
   const b = int(r, 10, level === 1 ? 50 : 180);
+  const a = int(r, level === 1 ? 20 : 120, 999 - b);
   if (r() < 0.5) {
     return {
       kind: 'number',
@@ -111,8 +115,12 @@ export const addProblem = (r, level) => {
   const who = pick(r, NAMES);
   const thing = pick(r, THINGS);
   const a = int(r, level === 1 ? 12 : 120, level === 1 ? 60 : 540);
-  const b = int(r, level === 1 ? 8 : 110, level === 1 ? 40 : 330);
   const give = r() < 0.5;
+  // you cannot give away more than you have, and a negative answer is not a
+  // Year 3 idea at all
+  const b = give
+    ? int(r, level === 1 ? 3 : 20, a - 1)
+    : int(r, level === 1 ? 8 : 110, level === 1 ? 40 : 330);
   return {
     kind: 'number',
     // no pronouns: the names are a mix, and a wrong one is a distraction

@@ -38,6 +38,7 @@ export const UNITS = [
       { id: 'sub-column', name: 'Taking away in columns', says: 'Take away a big number, one column at a time.', levels: 3 },
       { id: 'missing-number', name: 'The missing number', says: 'Find the number that is hiding.', levels: 3 },
       { id: 'estimate', name: 'Good guesses', says: 'Guess the answer before you work it out.', levels: 2 },
+      { id: 'add-problem', name: 'Story problems', says: 'Work out the sum hiding in a story.', levels: 3 },
     ],
   },
   {
@@ -52,6 +53,7 @@ export const UNITS = [
       { id: 'table-mixed', name: 'All your tables', says: 'Mix up everything you know.', levels: 3 },
       { id: 'divide', name: 'Sharing out', says: 'Divide by 3, 4 and 8.', levels: 3 },
       { id: 'multiply-2digit', name: 'Bigger multiplying', says: 'Multiply a two-digit number.', levels: 3 },
+      { id: 'times-problem', name: 'Sharing stories', says: 'Multiply and divide inside a story.', levels: 3 },
     ],
   },
   {
@@ -144,8 +146,8 @@ export function unit(id) {
  */
 export const TEACHING_ORDER = [
   'count-steps', 'read-write', 'partition', 'compare', 'order', 'more-less',
-  'add-mental', 'sub-mental', 'add-column', 'sub-column', 'missing-number', 'estimate',
-  'table-3', 'table-4', 'table-8', 'divide', 'table-mixed', 'multiply-2digit',
+  'add-mental', 'sub-mental', 'add-column', 'sub-column', 'missing-number', 'estimate', 'add-problem',
+  'table-3', 'table-4', 'table-8', 'divide', 'table-mixed', 'multiply-2digit', 'times-problem',
   'name-fraction', 'tenths', 'fraction-of', 'equivalent', 'compare-fractions', 'add-fractions',
   'length', 'mass-capacity', 'perimeter',
   'money-total', 'money-change',
