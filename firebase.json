@@ -14,16 +14,6 @@
       "docs/**"
     ],
     "cleanUrls": true,
-    "rewrites": [
-      {
-        "source": "/forteachersonly/**",
-        "destination": "/forteachersonly/index.html"
-      },
-      {
-        "source": "**",
-        "destination": "/index.html"
-      }
-    ],
     "headers": [
       {
         "source": "**/*.@(js|css|svg|webmanifest)",
@@ -43,9 +33,12 @@
           }
         ]
       }
+    ],
+    "rewrites": [
+      {
+        "source": "**",
+        "destination": "/index.html"
+      }
     ]
-  },
-  "firestore": {
-    "rules": "firestore.rules"
   }
 }

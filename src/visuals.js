@@ -264,7 +264,25 @@ function columns({ a, b, op }) {
   );
 }
 
-const DRAW = { bar, rect, clock, coins, bars, picto, lines, array, numberline, columns };
+/** One number in its places, with what each digit is actually worth under it.
+    This is the whole idea of place value in one picture: the 3 in 365 is not
+    three, it is three hundred. */
+function places({ n }) {
+  const digits = String(n).padStart(3, '0').split('').map(Number);
+  const names = ['H', 'T', 'O'];
+  const worth = [digits[0] * 100, digits[1] * 10, digits[2]];
+  return h('div', { class: 'vis vis-places' },
+    ...digits.map((d, i) =>
+      h('div', { class: 'place' + (digits[i] === 0 ? ' is-zero' : '') },
+        h('span', { class: 'place-name' }, names[i]),
+        h('span', { class: 'place-digit' }, String(d)),
+        h('span', { class: 'place-worth' }, String(worth[i])),
+      ),
+    ),
+  );
+}
+
+const DRAW = { bar, rect, clock, coins, bars, picto, lines, array, numberline, columns, places };
 
 export function visual(spec) {
   if (!spec || !DRAW[spec.type]) return null;

@@ -57,12 +57,40 @@ export const partition = (r, level) => {
   const value = which === 'hundreds' ? h : which === 'tens' ? t : o;
   // "1 tens" reads wrong to a child who is being taught to say it properly
   const say = (count, many) => `${count} ${count === 1 ? many.replace(/s$/, '') : many}`;
+  const breakdown = `${n} is ${say(h, 'hundreds')}, ${say(t, 'tens')} and ${say(o, 'ones')}.`;
+
+  // the same idea asked three ways, so five questions in a row are not five
+  // copies of one question
+  const form = level === 1 ? pick(r, ['count', 'worth']) : pick(r, ['count', 'worth', 'build']);
+
+  if (form === 'worth') {
+    const worth = which === 'hundreds' ? h * 100 : which === 'tens' ? t * 10 : o;
+    return {
+      kind: 'number',
+      prompt: `In ${n}, what is the ${which === 'ones' ? 'last' : which === 'tens' ? 'middle' : 'first'} digit really worth?`,
+      visual: { type: 'places', n },
+      answer: String(worth),
+      hint: 'A digit in the tens place is worth that many tens.',
+      why: `${breakdown} The ${which} digit is ${value}, and ${say(value, which)} is worth ${worth}.`,
+    };
+  }
+
+  if (form === 'build') {
+    return {
+      kind: 'number',
+      prompt: `What number is ${say(h, 'hundreds')}, ${say(t, 'tens')} and ${say(o, 'ones')}?`,
+      answer: String(n),
+      hint: 'Put each digit in its own place.',
+      why: `${h * 100} + ${t * 10} + ${o} = ${n}.`,
+    };
+  }
+
   return {
     kind: 'number',
     prompt: `How many ${which} are in ${n}?`,
     answer: String(value),
     hint: 'Look at the place each digit sits in.',
-    why: `${n} is ${say(h, 'hundreds')}, ${say(t, 'tens')} and ${say(o, 'ones')}. So there ${value === 1 ? 'is' : 'are'} ${say(value, which)}.`,
+    why: `${breakdown} So there ${value === 1 ? 'is' : 'are'} ${say(value, which)}.`,
   };
 };
 

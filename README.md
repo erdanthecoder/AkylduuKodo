@@ -1,61 +1,64 @@
 # Malika Study
 
-A short maths task every day, and a dashboard for whoever sets it.
+A maths lesson a day, for a seven-year-old. **malikastudy.web.app**
 
-- **malikastudy.web.app** — Malika's side. One task a day, three to ten minutes.
-- **malikastudy.web.app/forteachersonly** — set the work, see how it went.
+Sixteen lessons in order, each about five minutes. Built on the England
+Year 3 programme of study (ages 7–8).
 
-Built on the England Year 3 programme of study (ages 7–8): place value to 1000,
-column addition and subtraction, the 3, 4 and 8 times tables, fractions to
-tenths, measuring, perimeter, money, clocks, Roman numerals, shapes and charts.
-
-No build step, no dependencies. Plain ES modules, served as they are.
+No account, no sign-in, no server. Everything lives in the browser on her
+device, which is the whole of the privacy story: nothing about a child leaves
+her tablet.
 
 ```
 npm start     # http://localhost:5173
-npm test      # every generator, every level, 60 seeds each
+npm test      # every question, every level, 60 seeds each
 ```
 
-## How a question goes
+## How a lesson works
 
-She answers. A first miss gets a nudge and another go. A second miss shows how
-it works and moves on, because dwelling on it helps nobody. Nothing is marked
-wrong and left unexplained, and the review at the end shows every question
-again with the reason underneath.
+Every lesson is the same three parts, and that order *is* the teaching:
+
+1. **Learn** — the idea, said plainly, with a picture. Nothing to answer.
+2. **Watch** — one worked example, uncovered a step at a time, so she sees
+   somebody do it before she is asked to do it.
+3. **Try** — a few questions of her own.
+
+Being asked a question nobody showed you how to answer is a test, not a lesson.
+The Learn and Watch parts are what make this teaching rather than quizzing.
+
+In the Try part, a first wrong answer gets a nudge and another go. A second
+shows the working and moves on. Nothing is marked wrong and left unexplained,
+and anything she got wrong is shown again at the end with the reason.
 
 Marking is generous about how an answer is written and strict about whether it
-is right: `2/4` counts for `1/2`, `59p` counts for `£0.59`, `42.0` counts for
-`42`, and `41` does not count for `42`.
+is right: `2/4` counts for `1/2`, `59p` for `£0.59`, `42.0` for `42` — and `41`
+never counts for `42`.
+
+## The path
+
+There is always exactly one lesson that is next, and it is the biggest thing on
+the screen with the only button on it. Finished lessons sit behind it with a
+tick; the rest wait their turn. "Where do I start" has one answer.
+
+## Reading it out
+
+A speaker on every screen reads it aloud, with the maths rewritten for the ear:
+`3/4` is read "three quarters", not "three slash four". There is a setting to
+read everything automatically. A seven-year-old can do the maths in a word
+problem long before she can read the words of it.
 
 ## How it is put together
 
 ```
-src/maths/topics.js     the curriculum: 9 units, 39 skills
+src/lessons/index.js    the sixteen lessons: what to teach, and how
+src/maths/topics.js     the curriculum behind them: 9 units, 39 skills
 src/maths/gen/          a generator per skill — question, hint, explanation
-src/maths/task.js       turns "10 minutes on tenths" into a paper
 src/maths/check.js      marking
-src/views/              her three screens: today, the task, the review
-src/teacher/            the dashboard, Google sign-in, Classroom
+src/visuals.js          the pictures: arrays, number lines, place value,
+                        fraction bars, clocks, coins, charts
+src/views/path.js       where she is and what is next
+src/views/lesson.js     learn → watch → try
 tests/maths.test.mjs    66k checks, run before every deploy
 ```
 
-**A seed is a paper.** A task is generated from a seed, not stored question by
-question, so the same assignment produces the same questions on every device —
-which is how the dashboard can show exactly what she was given.
-
-## Accounts
-
-Malika has no Google account and does not need one. Her tablet signs in
-anonymously and is tied to a family by a long random code that lives in the
-link she opens once. Whoever sets the work signs in with Google, and their
-email must already be on the family.
-
-That makes the family code the one secret. Anyone holding it can read the
-homework and send results — the right trade for a seven-year-old who should not
-have to remember a password. What it cannot do is change the homework, so she
-cannot set herself an easier task.
-
-## Setting it up
-
-See [docs/setup.md](docs/setup.md). Three things need doing once in the Firebase
-console, and Google Classroom needs a little more.
+No build step and no dependencies. Plain ES modules, served as they are.
