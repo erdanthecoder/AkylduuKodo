@@ -10,6 +10,9 @@ import { mascot } from '../mascot.js';
 import { sticker, stickerIndex } from '../stickers.js';
 import { numbered } from '../lessons/index.js';
 
+/** Bumped whenever the lessons change, so a stale copy is visible at a glance. */
+export const BUILT = '25 October';
+
 function tick(size = 20) {
   const s = svg('svg', { viewBox: '0 0 24 24', width: size, height: size, 'aria-hidden': 'true' });
   s.append(svg('path', { d: 'M5 13 l5 5 l9 -11', fill: 'none', stroke: 'currentColor',
@@ -74,5 +77,8 @@ export function PathView({ onStart, onReplay, onAlbum }) {
       h('span', { class: 'album-count' },
         s.album.length ? `${s.album.length} sticker${s.album.length === 1 ? '' : 's'}` : 'Finish a lesson for your first sticker'),
     ),
+
+    // a quiet marker, so "has it updated?" is answerable by looking
+    h('p', { class: 'build' }, `Lessons · ${BUILT}`),
   );
 }
