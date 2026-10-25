@@ -32,7 +32,14 @@ jobs:
           firebaseServiceAccount: ${{ secrets.FIREBASE_SERVICE_ACCOUNT_AKYLDUUKODO }}
           channelId: live
           projectId: akylduukodo
-          # No deploy target on purpose. firebase.json already names the site,
-          # and passing a target sends the CLI down a path that additionally
-          # calls serviceusage.services.get — which this service account is not
-          # granted, so the deploy 403s before it uploads anything.
+          # Pinned on purpose. From firebase-tools v13 the CLI checks whether
+          # the Hosting API is enabled before deploying, which needs
+          # serviceusage.services.get — a permission this service account does
+          # not hold, so the deploy 403s before uploading anything. The action
+          # installs the newest CLI by default, which is why this project
+          # deployed fine for months and then stopped on its own.
+          #
+          # The durable fix is to grant the service account
+          # roles/serviceusage.serviceUsageConsumer in Google Cloud IAM. Until
+          # that is done, an older CLI skips the check and deploys.
+          firebaseToolsVersion: "12.9.1"
