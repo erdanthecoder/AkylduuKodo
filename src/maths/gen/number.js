@@ -18,6 +18,7 @@ export const countSteps = (r, level) => {
     kind: 'number',
     prompt: `Carry on counting in ${step}s.`,
     sequence: [...run, null],
+    visual: { type: 'numberline', from: start, step, count: 4 },
     answer: String(answer),
     hint: `Each jump adds ${step}.`,
     why: `You add ${step} every time. ${run[3]} + ${step} = ${answer}.`,
@@ -108,6 +109,7 @@ export const moreLess = (r, level) => {
   return {
     kind: 'number',
     prompt: `What is ${step} ${up ? 'more' : 'less'} than ${n}?`,
+    visual: level === 1 ? { type: 'numberline', from: up ? n : answer, step, count: 1 } : null,
     answer: String(answer),
     hint: step === 10 ? 'Only the tens digit moves.' : 'Only the hundreds digit moves.',
     why: `${n} ${up ? '+' : '−'} ${step} = ${answer}. The ${step === 10 ? 'tens' : 'hundreds'} digit goes ${up ? 'up' : 'down'} by one.`,

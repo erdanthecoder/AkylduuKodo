@@ -3,6 +3,8 @@
 // The device copy is the one that matters: if the network is down mid-task, she
 // must still be able to finish, and nothing she has done may be lost.
 
+import { stickerIndex } from './stickers.js';
+
 const KEY = 'malikastudy.v1';
 
 const BLANK = {
@@ -14,7 +16,9 @@ const BLANK = {
   history: {},           // skill id → { asked, right, accuracy, lastSeen }
   days: {},              // 'YYYY-MM-DD' → { minutes, right, asked, skills: [] }
   results: [],           // finished tasks waiting to be synced
+  album: [],             // sticker indexes she has earned, in order
   sound: true,
+  readAloud: false,      // read every question out without being asked
 };
 
 let state = load();
@@ -96,6 +100,12 @@ export function recordTask({ questions, answers, seconds, assignmentId }) {
     state.lastDone = day;
   }
   state.stickers += firstTime >= questions.length - 1 ? 2 : 1;
+  // one sticker per finished task, chosen by the day so there is nothing to
+  // re-roll for; a second only for a near-perfect run
+  const earned = [stickerIndex(day, state.album.length)];
+  if (firstTime >= questions.length - 1) earned.push(stickerIndex(day, state.album.length + 1));
+  state.album = [...state.album, ...earned];
+  state.lastEarned = earned;
 
   state.results.push({
     day,
@@ -111,7 +121,7 @@ export function recordTask({ questions, answers, seconds, assignmentId }) {
   state.results = state.results.slice(-40);
 
   save();
-  return { right, firstTime, streak: state.streak };
+  return { right, firstTime, streak: state.streak, earned };
 }
 
 /** The last 14 days, oldest first, for the little row of dots on her home screen. */

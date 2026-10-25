@@ -100,26 +100,50 @@ function familyScreen(err) {
 
 /* ------------------------------------------------------------- dashboard */
 
+let todaysAssignment = null;
+
 async function dashboard() {
   bar();
   show(h('div', { class: 'wrap' }, h('p', { class: 'muted' }, 'Loading…')));
   try {
     results = await data.recentResults(family.id);
     picture = data.skillPicture(results);
+    todaysAssignment = await data.getAssignment(family.id, today());
   } catch {
     results = [];
     picture = {};
+    todaysAssignment = null;
   }
   show(h('div', { class: 'wrap' },
     h('div', { class: 'row spread head' },
       h('h1', {}, family.learnerName || 'Malika'),
       linkCard(),
     ),
+    statusBar(),
     h('div', { class: 'cols' },
       h('div', {}, assignPanel()),
       h('div', {}, reviewPanel()),
     ),
   ));
+}
+
+/** Today, in one line: is there work, and has she done it? */
+function statusBar() {
+  const name = family.learnerName || 'she';
+  const doneToday = results.some((r) => r.day === today());
+  const set = Boolean(todaysAssignment);
+  const state = doneToday ? 'done' : set ? 'waiting' : 'none';
+  const says = {
+    done: `${name} has finished today's task.`,
+    waiting: 'Today is set. Not done yet.',
+    none: 'Nothing set for today — she will get a task picked for her.',
+  };
+  return h('div', { class: `status is-${state}` },
+    h('span', { class: 'status-dot' }),
+    h('span', {}, says[state]),
+    set ? h('span', { class: 'muted small' },
+      ` ${todaysAssignment.minutes} min · ${(todaysAssignment.skills || []).length} topic${(todaysAssignment.skills || []).length === 1 ? '' : 's'}`) : null,
+  );
 }
 
 /** The link that puts her tablet on this family. No typing, no password. */

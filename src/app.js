@@ -4,7 +4,7 @@ import { h } from './ui.js';
 import * as store from './state.js';
 import * as cloud from './cloud.js';
 import { buildTask, suggestSkills } from './maths/task.js';
-import { TodayView } from './views/today.js';
+import { TodayView, AlbumView } from './views/today.js';
 import { TaskView } from './views/task.js';
 import { DoneView } from './views/done.js';
 
@@ -44,7 +44,13 @@ function home() {
     minutes,
     onStart: () => start(skills, minutes, assignment?.id || store.today()),
     onExtra: () => start(suggestSkills(s.history), 3, `extra-${Date.now()}`),
+    onAlbum: album,
   }));
+}
+
+function album() {
+  chrome();
+  show(AlbumView({ onBack: home }));
 }
 
 function start(skills, minutes, seed) {
@@ -59,7 +65,7 @@ function start(skills, minutes, seed) {
       push();
       show(DoneView({
         questions, answers,
-        result: { ...result, stickers: store.get().stickers },
+        result,
         onHome: home,
         onAgain: () => start(suggestSkills(store.get().history), 3, `extra-${Date.now()}`),
       }));

@@ -27,22 +27,26 @@ function bar({ parts, filled }) {
 
 /** A rectangle with its sides labelled, for perimeter. */
 function rect({ w, h: tall }) {
-  const scale = Math.min(26, 260 / Math.max(w, tall));
+  const scale = Math.min(26, 220 / Math.max(w, tall));
   const bw = w * scale;
   const bh = tall * scale;
-  const pad = 34;
-  const box = svg('svg', { viewBox: `0 0 ${bw + pad * 2} ${bh + pad * 2}`, class: 'vis vis-rect', role: 'img',
+  // the side labels hang outside the rectangle, so the frame needs room for
+  // them or they are quietly clipped off
+  const padX = 54;
+  const padY = 32;
+  const box = svg('svg', { viewBox: `0 0 ${bw + padX * 2} ${bh + padY * 2}`, class: 'vis vis-rect', role: 'img',
     'aria-label': `a rectangle ${w} by ${tall} centimetres` });
-  box.append(svg('rect', { x: pad, y: pad, width: bw, height: bh, fill: 'var(--sky-soft)', stroke: INK, 'stroke-width': 3, rx: 2 }));
+  const pad = padX;
+  box.append(svg('rect', { x: padX, y: padY, width: bw, height: bh, fill: 'var(--sky-soft)', stroke: INK, 'stroke-width': 3, rx: 2 }));
   const label = (x, y, text, anchor) => {
     const t = svg('text', { x, y, 'text-anchor': anchor, class: 'vis-label' });
     t.textContent = text;
     return t;
   };
-  box.append(label(pad + bw / 2, pad - 10, `${w} cm`, 'middle'));
-  box.append(label(pad + bw / 2, pad + bh + 24, `${w} cm`, 'middle'));
-  box.append(label(pad - 8, pad + bh / 2 + 5, `${tall} cm`, 'end'));
-  box.append(label(pad + bw + 8, pad + bh / 2 + 5, `${tall} cm`, 'start'));
+  box.append(label(padX + bw / 2, padY - 10, `${w} cm`, 'middle'));
+  box.append(label(padX + bw / 2, padY + bh + 22, `${w} cm`, 'middle'));
+  box.append(label(padX - 8, padY + bh / 2 + 5, `${tall} cm`, 'end'));
+  box.append(label(padX + bw + 8, padY + bh / 2 + 5, `${tall} cm`, 'start'));
   return box;
 }
 
@@ -103,18 +107,28 @@ function coins({ coins: list }) {
   );
 }
 
+/** An axis a child can read: whole numbers, evenly spaced, counting in 1s,
+    2s, 5s or 10s rather than in halves. */
+function axisStep(max) {
+  for (const candidate of [1, 2, 5, 10, 20, 25, 50, 100]) {
+    if (max / candidate <= 6) return candidate;
+  }
+  return Math.ceil(max / 6);
+}
+
 function bars({ title, labels, values, step = 1 }) {
   const max = Math.max(...values, step);
-  const top = Math.ceil(max / step) * step;
+  const tick = axisStep(max);
+  const top = Math.ceil(max / tick) * tick;
   const w = 340;
   const hgt = 210;
   const left = 34;
   const bottom = hgt - 30;
   const bandW = (w - left) / labels.length;
   const box = svg('svg', { viewBox: `0 0 ${w} ${hgt}`, class: 'vis vis-chart', role: 'img', 'aria-label': title });
-  const ticks = Math.min(6, top / step);
+  const ticks = top / tick;
   for (let i = 0; i <= ticks; i++) {
-    const value = Math.round((top / ticks) * i);
+    const value = i * tick;
     const y = bottom - (value / top) * (bottom - 18);
     box.append(svg('line', { x1: left, y1: y, x2: w - 4, y2: y, stroke: LINE, 'stroke-width': 1 }));
     const t = svg('text', { x: left - 7, y: y + 4, 'text-anchor': 'end', class: 'vis-small' });
@@ -180,7 +194,77 @@ function lines({ want }) {
   );
 }
 
-const DRAW = { bar, rect, clock, coins, bars, picto, lines };
+/** Dots in rows and columns. 4 x 6 stops being a fact to recall and becomes
+    something you can count, which is how it turns into a fact you recall. */
+function array({ rows, cols, highlight }) {
+  const r = 20;
+  const pad = 10;
+  const w = cols * r + pad * 2;
+  const hgt = rows * r + pad * 2;
+  const box = svg('svg', { viewBox: `0 0 ${w} ${hgt}`, class: 'vis vis-array', role: 'img',
+    'aria-label': `${rows} rows of ${cols} dots` });
+  for (let y = 0; y < rows; y++) {
+    for (let x = 0; x < cols; x++) {
+      box.append(svg('circle', {
+        cx: pad + x * r + r / 2, cy: pad + y * r + r / 2, r: r * 0.33,
+        fill: highlight && y >= highlight ? 'var(--line)' : FILL,
+        stroke: INK, 'stroke-width': 2,
+      }));
+    }
+  }
+  return h('figure', { class: 'vis-figure' }, box,
+    h('figcaption', { class: 'vis-key' }, `${rows} rows of ${cols}`));
+}
+
+/** A number line with the jumps drawn on, for counting in steps. */
+function numberline({ from, step, count, to }) {
+  const w = 360;
+  const hgt = 86;
+  const marks = count + 1;
+  const gap = (w - 36) / Math.max(1, marks - 1);
+  const y = 58;
+  const box = svg('svg', { viewBox: `0 0 ${w} ${hgt}`, class: 'vis vis-line', role: 'img',
+    'aria-label': `a number line counting in ${step}s` });
+  box.append(svg('line', { x1: 14, y1: y, x2: w - 10, y2: y, stroke: INK, 'stroke-width': 3 }));
+  for (let i = 0; i < marks; i++) {
+    const x = 18 + i * gap;
+    const value = from + i * step;
+    const last = i === marks - 1;
+    box.append(svg('line', { x1: x, y1: y - 7, x2: x, y2: y + 7, stroke: INK, 'stroke-width': 3 }));
+    const t = svg('text', { x, y: y + 24, 'text-anchor': 'middle', class: 'vis-small' });
+    t.textContent = last && to === undefined ? '?' : String(value);
+    if (last && to === undefined) t.setAttribute('fill', 'var(--sky)');
+    box.append(t);
+    if (i < marks - 1) {
+      const nx = 18 + (i + 1) * gap;
+      const mid = (x + nx) / 2;
+      box.append(svg('path', {
+        d: `M ${x} ${y - 10} Q ${mid} ${y - 34} ${nx} ${y - 10}`,
+        fill: 'none', stroke: 'var(--sky)', 'stroke-width': 2.5,
+      }));
+      const jump = svg('text', { x: mid, y: y - 30, 'text-anchor': 'middle', class: 'vis-small' });
+      jump.setAttribute('fill', 'var(--sky)');
+      jump.textContent = `+${step}`;
+      box.append(jump);
+    }
+  }
+  return box;
+}
+
+/** Hundreds, tens and ones in their own columns, the way it is written out. */
+function columns({ a, b, op }) {
+  const head = ['H', 'T', 'O'];
+  const digits = (n) => String(n).padStart(3, ' ').split('');
+  const cell = (text, cls = '') => h('span', { class: cls }, text === ' ' ? '\u00a0' : text);
+  return h('div', { class: 'vis vis-columns' },
+    h('div', { class: 'col-head' }, ...head.map((x) => cell(x, 'col-h'))),
+    h('div', { class: 'col-row' }, ...digits(a).map((d) => cell(d))),
+    h('div', { class: 'col-row' }, cell(op, 'col-op'), ...digits(b).slice(1).map((d) => cell(d))),
+    h('div', { class: 'col-rule' }),
+  );
+}
+
+const DRAW = { bar, rect, clock, coins, bars, picto, lines, array, numberline, columns };
 
 export function visual(spec) {
   if (!spec || !DRAW[spec.type]) return null;

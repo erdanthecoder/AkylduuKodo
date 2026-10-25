@@ -7,6 +7,8 @@
 import { h, svg, sound, cheer } from '../ui.js';
 import { visual } from '../visuals.js';
 import { check, response } from '../maths/check.js';
+import { mascot, saysSomething } from '../mascot.js';
+import { say as say_, hush, canSpeak } from '../speak.js';
 import * as store from '../state.js';
 
 export function TaskView(task, { onFinish, onQuit }) {
@@ -19,13 +21,22 @@ export function TaskView(task, { onFinish, onQuit }) {
     ...task.questions.map(() => h('span', { class: 'pip' })),
   );
   const stage = h('div', { class: 'card q-card' });
+  const friend = h('div', { class: 'friend' }, mascot('hello', 54));
+  const friendSays = h('p', { class: 'friend-says' }, saysSomething('hello'));
   const el = h('div', { class: 'wrap' },
     h('div', { class: 'task-top' },
-      h('button', { class: 'btn btn-quiet small', onclick: onQuit }, 'Stop'),
+      h('button', { class: 'btn btn-quiet small', onclick: () => { hush(); onQuit(); } }, 'Stop'),
       pips,
     ),
     stage,
+    h('div', { class: 'friend-row' }, friend, friendSays),
   );
+
+  let moodCount = 0;
+  function setMood(mood) {
+    friend.replaceChildren(mascot(mood, 54));
+    friendSays.textContent = saysSomething(mood, moodCount++);
+  }
 
   function paintPips() {
     [...pips.children].forEach((pip, i) => {
@@ -38,8 +49,22 @@ export function TaskView(task, { onFinish, onQuit }) {
 
   /* ------------------------------------------------------- the question body */
 
+  /** Everything the question says, in the order it should be read out. */
+  function spoken(q) {
+    return [q.prompt, q.statement, q.kind === 'choice' ? q.choices.join(', ') : null]
+      .filter(Boolean).join('. ');
+  }
+
   function questionBody(q) {
-    const bits = [h('p', { class: 'q-skill' }, q.skillName)];
+    const bits = [h('div', { class: 'q-head' },
+      h('p', { class: 'q-skill' }, q.skillName),
+      canSpeak()
+        ? h('button', {
+            class: 'speaker', title: 'Read it to me', 'aria-label': 'Read the question out loud',
+            onclick: () => say_(spoken(q)),
+          }, speakerIcon())
+        : null,
+    )];
     bits.push(h('h2', { class: 'q-prompt' }, q.prompt));
     if (q.statement) bits.push(h('div', { class: 'q-statement' }, q.statement));
     if (q.sequence) {
@@ -85,6 +110,7 @@ export function TaskView(task, { onFinish, onQuit }) {
         h('div', { class: `choices${q.choices.length === 2 ? ' two' : ''}` }, ...buttons),
         say,
       );
+      if (store.get().readAloud) say_(spoken(q));
       return;
     }
 
@@ -116,6 +142,7 @@ export function TaskView(task, { onFinish, onQuit }) {
 
     input.addEventListener('keydown', (e) => { if (e.key === 'Enter') judge(q, input.value, { box, input, say }); });
     stage.replaceChildren(...questionBody(q), box, pad, go, say);
+    if (store.get().readAloud) say_(spoken(q));
     // once the question is over these are in the way, so judge() takes them out
     parts_ = { box, input, say, pad, go };
     input.focus({ preventScroll: true });
@@ -140,6 +167,7 @@ export function TaskView(task, { onFinish, onQuit }) {
         buttons.find((b) => b.textContent === chosen)?.classList.add('is-right');
       }
       sound('right', store.get().sound);
+      setMood('yes');
       say.className = 'say say-yes';
       say.textContent = tries === 1 ? pickWell() : 'Got it the second time — that counts.';
       answers[index] = { ...q, given, right: true, tries };
@@ -149,6 +177,7 @@ export function TaskView(task, { onFinish, onQuit }) {
     }
 
     sound('wrong', store.get().sound);
+    setMood('oops');
     if (box) { box.className = 'answer is-wrong'; setTimeout(() => { if (input) input.select(); }, 60); }
     if (buttons) buttons.find((b) => b.textContent === chosen)?.classList.add('is-wrong');
 
@@ -161,8 +190,10 @@ export function TaskView(task, { onFinish, onQuit }) {
 
     // second miss: show how it works, then move on. Dwelling helps nobody.
     locked = true;
+    setMood('thinking');
     say.className = 'say say-why';
     say.textContent = response(q, given, false);
+    if (store.get().readAloud) say_(response(q, given, false));
     if (buttons) {
       buttons.forEach((b) => { b.disabled = true; });
       buttons.find((b) => b.textContent === q.answer)?.classList.add('is-right');
@@ -180,6 +211,13 @@ export function TaskView(task, { onFinish, onQuit }) {
     on.focus({ preventScroll: true });
   }
 
+  function speakerIcon() {
+    const s = svg('svg', { viewBox: '0 0 24 24', width: 20, height: 20, 'aria-hidden': 'true' });
+    s.append(svg('path', { d: 'M4 9v6h4l5 4V5L8 9H4z', fill: 'currentColor' }));
+    s.append(svg('path', { d: 'M16 8.5a4.5 4.5 0 0 1 0 7', fill: 'none', stroke: 'currentColor', 'stroke-width': 2, 'stroke-linecap': 'round' }));
+    return s;
+  }
+
   const WELL = ['Yes!', 'That is right.', 'Well done.', 'Spot on.', 'Lovely.', 'Clever.'];
   let said = -1;
   function pickWell() {
@@ -188,6 +226,7 @@ export function TaskView(task, { onFinish, onQuit }) {
   }
 
   function next() {
+    hush();
     index += 1;
     if (index >= task.questions.length) return finish();
     ask();
@@ -195,6 +234,7 @@ export function TaskView(task, { onFinish, onQuit }) {
 
   function finish() {
     const seconds = Math.round((Date.now() - started) / 1000);
+    setMood('cheer');
     cheer(30);
     sound('done', store.get().sound);
     onFinish({ questions: task.questions, answers, seconds });

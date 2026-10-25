@@ -55,7 +55,7 @@ export const addColumn = (r, level) => {
   return {
     kind: 'number',
     prompt: `${a} + ${b} =`,
-    column: [a, b, '+'],
+    visual: { type: 'columns', a, b, op: '+' },
     answer: String(a + b),
     hint: 'Start with the ones column, on the right.',
     why: `Ones: ${a % 10} + ${b % 10}. Then the tens, then the hundreds. ${a} + ${b} = ${a + b}.`,
@@ -67,7 +67,7 @@ export const subColumn = (r, level) => {
   return {
     kind: 'number',
     prompt: `${a} − ${b} =`,
-    column: [a, b, '−'],
+    visual: { type: 'columns', a, b, op: '−' },
     answer: String(a - b),
     hint: 'Start with the ones. If the top is too small, borrow a ten.',
     why: `${a} − ${b} = ${a - b}. Check it: ${a - b} + ${b} = ${a}.`,

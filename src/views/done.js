@@ -6,6 +6,8 @@
 
 import { h } from '../ui.js';
 import * as store from '../state.js';
+import { mascot } from '../mascot.js';
+import { sticker, stickerName } from '../stickers.js';
 
 export function DoneView({ questions, answers, result, onHome, onAgain }) {
   const right = answers.filter((a) => a.right).length;
@@ -20,18 +22,22 @@ export function DoneView({ questions, answers, result, onHome, onAgain }) {
 
   return h('div', { class: 'wrap' },
     h('div', { class: 'card done' },
-      h('p', { class: 'q-skill' }, 'Finished'),
+      mascot(right === questions.length ? 'cheer' : 'yes', 84),
       h('div', { class: 'score' }, `${right}/${questions.length}`),
       h('h1', {}, headline),
       first < questions.length
         ? h('p', { class: 'muted' }, `${first} first time, and you worked the rest out.`)
         : null,
       s.streak > 1 ? h('p', {}, h('strong', {}, `${s.streak} days in a row.`)) : null,
-      h('div', { class: 'stickers' },
-        ...Array.from({ length: Math.min(10, result.stickers || 0) }, (_, i) =>
-          h('span', { class: 'sticker' + (i >= (result.stickers || 0) - 2 ? ' is-new' : '') }, '★'),
-        ),
-      ),
+      (result.earned || []).length
+        ? h('div', { class: 'earned' },
+            h('p', { class: 'label' }, (result.earned.length > 1 ? 'Two new stickers' : 'A new sticker')),
+            h('div', { class: 'earned-row' },
+              ...result.earned.map((i) => h('span', { class: 'earned-one' }, sticker(i, 64))),
+            ),
+            h('p', { class: 'muted small' }, result.earned.map(stickerName).join(' and ')),
+          )
+        : null,
       h('div', { class: 'row' },
         h('button', { class: 'btn btn-go', onclick: onHome }, 'Done'),
         h('button', { class: 'btn btn-quiet', onclick: onAgain }, 'Try some more'),

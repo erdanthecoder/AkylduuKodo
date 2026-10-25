@@ -12,6 +12,9 @@ function tableQuestion(r, table, level) {
   return {
     kind: 'number',
     prompt: `${flip ? n : table} × ${flip ? table : n} =`,
+    // while it is still being learned, show it as rows of dots: countable now,
+    // remembered later. By level 3 it should be recall, so the dots go away.
+    visual: level < 3 && table * n <= 48 ? { type: 'array', rows: table, cols: n } : null,
     answer: String(answer),
     hint: `Count up in ${table}s, ${n} times.`,
     why: `${table} × ${n} = ${answer}. ${table} lots of ${n} is the same as ${n} lots of ${table}.`,
@@ -34,6 +37,7 @@ export const divide = (r, level) => {
   return {
     kind: 'number',
     prompt: `${total} ÷ ${table} =`,
+    visual: level < 3 && total <= 48 ? { type: 'array', rows: table, cols: n } : null,
     answer: String(n),
     hint: `How many ${table}s fit into ${total}?`,
     why: `${table} × ${n} = ${total}, so ${total} ÷ ${table} = ${n}. Dividing undoes multiplying.`,
