@@ -32,4 +32,7 @@ jobs:
           firebaseServiceAccount: ${{ secrets.FIREBASE_SERVICE_ACCOUNT_AKYLDUUKODO }}
           channelId: live
           projectId: akylduukodo
-          target: malikastudy
+          # No deploy target on purpose. firebase.json already names the site,
+          # and passing a target sends the CLI down a path that additionally
+          # calls serviceusage.services.get — which this service account is not
+          # granted, so the deploy 403s before it uploads anything.
