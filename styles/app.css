@@ -459,3 +459,5 @@ p { margin: 0 0 12px; }
 .place-digit { font-size: 2.1rem; font-weight: 800; line-height: 1.05; }
 .place-worth { font-size: 0.86rem; font-weight: 700; color: var(--sky); }
 .place.is-zero .place-worth { color: var(--muted); }
+
+.build { text-align: center; font-size: 0.74rem; color: var(--muted); margin: 18px 0 0; opacity: 0.75; }
