@@ -1,0 +1,81 @@
+/* teacher.css — the dashboard.
+   Sits on the same tokens as Malika's side, but denser and calmer: this is a
+   page for reading and deciding, not for a seven-year-old to tap. */
+
+body.teacher { font-size: 16px; }
+body.teacher .wrap { max-width: 1060px; padding-bottom: 60px; }
+body.teacher .wrap.narrow { max-width: 460px; }
+body.teacher h1 { font-size: 1.6rem; }
+body.teacher h2 { font-size: 1.15rem; margin-bottom: 14px; }
+body.teacher .card { padding: 20px; border-radius: 20px; }
+
+.who { font-size: 0.85rem; color: var(--muted); }
+.head { align-items: flex-start; gap: 16px; margin-bottom: 16px; }
+.middle { text-align: center; display: grid; gap: 14px; justify-items: center; padding: 34px 24px; }
+
+.cols { display: grid; gap: 18px; grid-template-columns: 1fr; align-items: start; }
+@media (min-width: 900px) { .cols { grid-template-columns: 1fr 1fr; } }
+
+.label { font-size: 0.8rem; font-weight: 800; text-transform: uppercase; letter-spacing: 0.06em;
+  color: var(--muted); margin: 14px 0 6px; display: block; }
+.field {
+  font: inherit; width: 100%; padding: 11px 13px; border-radius: 12px;
+  border: 2px solid var(--line); background: var(--card); color: var(--ink); margin-top: 4px;
+}
+.field:focus { outline: 0; border-color: var(--sky); }
+.rule { border: 0; border-top: 2px dashed var(--line); margin: 22px 0; }
+
+.chip { cursor: pointer; font: inherit; font-size: 0.86rem; font-weight: 700;
+  background: var(--card); border: 2px solid var(--line); border-radius: 999px; padding: 6px 13px; color: var(--ink); }
+.chip:hover { border-color: var(--sky); }
+.chip-on { background: var(--sky-soft); border-color: var(--sky); }
+.pct { color: var(--muted); font-weight: 700; }
+
+.picker { margin: 10px 0; display: grid; gap: 4px; }
+.picker details { border: 2px solid var(--line); border-radius: 14px; padding: 8px 12px; background: var(--card); }
+.picker summary { cursor: pointer; font-weight: 800; padding: 4px 0; }
+.picker .chips { padding: 8px 0 4px; display: flex; gap: 7px; flex-wrap: wrap; }
+
+.preview { margin-top: 14px; }
+.qlist { margin: 6px 0; padding-left: 20px; display: grid; gap: 5px; font-size: 0.92rem; }
+.qlist li.is-wrong { color: var(--ink); }
+.qlist li.muted { list-style: none; margin-left: -8px; }
+.qlist li.is-wrong::marker { color: var(--coral); }
+.ans { color: var(--muted); font-weight: 700; }
+
+.linkcard { background: var(--paper-2); border: 2px dashed var(--line); border-radius: 16px; padding: 12px 14px; max-width: 420px; }
+.linkcard small { display: block; color: var(--muted); font-weight: 700; margin-bottom: 6px; }
+.code { font-family: ui-monospace, SFMono-Regular, Menlo, monospace; font-size: 0.78rem;
+  background: var(--card); border: 1px solid var(--line); border-radius: 8px; padding: 5px 8px;
+  word-break: break-all; flex: 1; min-width: 0; }
+
+.bars { display: grid; gap: 8px; margin-bottom: 8px; }
+.barrow { display: grid; grid-template-columns: minmax(0, 1fr) 110px 44px; gap: 10px; align-items: center; font-size: 0.9rem; }
+.barname { font-weight: 700; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.bartrack { height: 10px; border-radius: 999px; background: var(--line); overflow: hidden; }
+.barfill { display: block; height: 100%; background: var(--mint); }
+.barfill.is-fair { background: var(--sun); }
+.barfill.is-low { background: var(--coral); }
+.barpct { text-align: right; font-weight: 800; font-variant-numeric: tabular-nums; }
+
+.day { border: 2px solid var(--line); border-radius: 14px; padding: 9px 13px; background: var(--card); margin-bottom: 7px; }
+.day summary { cursor: pointer; display: flex; gap: 10px; align-items: center; flex-wrap: wrap; }
+.flag { margin-left: auto; font-size: 0.78rem; font-weight: 800; color: var(--coral); }
+.tick { margin-left: auto; font-size: 0.78rem; font-weight: 800; color: var(--mint); }
+
+.say-bad { background: var(--coral-soft); border: 2px solid var(--coral); }
+.card.inner { border-style: dashed; margin-top: 12px; }
+body.teacher .btn { padding: 11px 20px; min-height: 44px; }
+body.teacher .btn-big { font-size: 1rem; padding: 14px 26px; }
+
+.status {
+  display: flex; align-items: center; gap: 10px; flex-wrap: wrap;
+  padding: 11px 16px; border-radius: 14px; font-weight: 700; margin-bottom: 16px;
+  border: 2px solid var(--line); background: var(--card);
+}
+.status-dot { width: 11px; height: 11px; border-radius: 50%; background: var(--muted); flex: none; }
+.status.is-done { background: var(--mint-soft); border-color: var(--mint); }
+.status.is-done .status-dot { background: var(--mint); }
+.status.is-waiting { background: var(--sky-soft); border-color: var(--sky); }
+.status.is-waiting .status-dot { background: var(--sky); }
+.status.is-none .status-dot { background: var(--sun); }

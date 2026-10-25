@@ -1,21 +1,19 @@
 // firebase-config.js
 //
-// Paste your Firebase web config here to turn on real accounts (Google sign-in,
-// email sign-up) and cloud-saved progress.
+// The same Firebase project the old site used, because Malika Study is a second
+// Hosting site inside it: one project, one database, one sign-in setup.
 //
-// 1. console.firebase.google.com → your project → Project settings
-//   2. "Your apps" → Web app → copy the `firebaseConfig` object
-//   3. Replace `null` below with that object
-//   4. Authentication → Sign-in method → enable **Google** and **Email/Password**
-//   5. Authentication → Settings → Authorized domains → add `akylduukodo.web.app`
-//   6. Firestore Database → Create database (production mode) and use the rules
-//      in README ("Cloud save") so each learner can only read/write their own row
+// These values are not secrets. A Firebase web config is meant to be public —
+// what protects the data is firestore.rules, not hiding this file.
 //
-// These values are NOT secrets — a Firebase web config is meant to be public.
-// What protects the data is the Firestore rules, not hiding this file.
+// Still to do in the console, once:
+//   1. Hosting → Add another site → `malikastudy`
+//   2. Authentication → Settings → Authorized domains → add `malikastudy.web.app`
+//   3. Authentication → Sign-in method → turn on **Google** and **Anonymous**
+//      (Google is for the dashboard; anonymous is how Malika's tablet saves)
 //
-// Set this back to `null` at any time to fall back to device mode (sign-up still
-// works, but accounts and progress stay in one browser).
+// Set this to `null` to run with no server at all: everything still works, and
+// her progress simply stays on the one device.
 
 export const firebaseConfig = {
   apiKey: 'AIzaSyDXrMgT80j7-0M-Uwx4MRzKHTfX5LdPRsU',

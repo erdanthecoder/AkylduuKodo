@@ -1,7 +1,6 @@
 name: Deploy to Firebase Hosting
 
-# Runs whenever main changes (so merging a pull request publishes the site),
-# and can also be started by hand from the Actions tab.
+# Runs whenever main changes, and can be started by hand from the Actions tab.
 on:
   push:
     branches: [main]
@@ -12,7 +11,7 @@ permissions:
 
 jobs:
   test:
-    name: Check every lesson is solvable
+    name: Check every question is answerable
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
@@ -23,8 +22,8 @@ jobs:
       - run: npm test
 
   deploy:
-    name: Publish to akylduukodo.web.app
-    needs: test          # a broken lesson never reaches the live site
+    name: Publish to malikastudy.web.app
+    needs: test          # a broken question never reaches a child
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
@@ -33,3 +32,4 @@ jobs:
           firebaseServiceAccount: ${{ secrets.FIREBASE_SERVICE_ACCOUNT_AKYLDUUKODO }}
           channelId: live
           projectId: akylduukodo
+          target: malikastudy

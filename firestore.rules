@@ -1,12 +1,68 @@
 rules_version = '2';
 
-// Each learner owns exactly one document, named after their auth uid.
-// Nobody can read or write anyone else's progress — not even by guessing ids.
+// Malika Study.
+//
+// Two kinds of visitor, and they are not the same:
+//
+//   • whoever sets the work signs in with Google. Their email must already be
+//     listed on the family, so a stranger signing in gets nothing.
+//   • Malika's tablet signs in anonymously. It never has a Google account and
+//     never needs one. What links it to a family is the family code, which is
+//     a long random string that lives in the link she opens.
+//
+// So the family code is a secret, and it is the only secret. Anyone holding it
+// can read the homework and send results, which is the right trade for a child
+// who should not be made to remember a password. What the code does NOT allow
+// is changing the homework — only a listed teacher can do that, so she cannot
+// set herself an easier task.
+
 service cloud.firestore {
   match /databases/{database}/documents {
-    match /learners/{uid} {
-      allow read, write: if request.auth != null && request.auth.uid == uid;
+
+    match /families/{family} {
+
+      function teachers() {
+        return get(/databases/$(database)/documents/families/$(family)).data.teachers;
+      }
+      function isTeacher() {
+        return request.auth != null
+          && request.auth.token.email_verified == true
+          && request.auth.token.email in teachers();
+      }
+      function knowsTheCode() {
+        // any signed-in client that reached this path already had the code
+        return request.auth != null;
+      }
+
+      // reading the family doc is how a tablet checks the code it was given
+      allow get: if knowsTheCode();
+      allow list: if false;                       // no browsing for families
+      // the first teacher creates the family, and must put themselves on it
+      allow create: if request.auth != null
+        && request.auth.token.email_verified == true
+        && request.auth.token.email in request.resource.data.teachers;
+      allow update: if isTeacher()
+        // a teacher may not write themselves out of the family by accident
+        && request.auth.token.email in request.resource.data.teachers;
+      allow delete: if isTeacher();
+
+      // the homework. Malika reads it; only a teacher writes it.
+      match /assignments/{day} {
+        allow read: if knowsTheCode();
+        allow write: if isTeacher();
+      }
+
+      // her results. Her tablet writes them; both sides read them.
+      // Nothing may be deleted or rewritten after a teacher has marked it.
+      match /results/{id} {
+        allow read: if knowsTheCode();
+        allow create: if knowsTheCode();
+        allow update: if isTeacher()
+          || (knowsTheCode() && !('marked' in resource.data));
+        allow delete: if false;
+      }
     }
+
     match /{document=**} {
       allow read, write: if false;
     }

@@ -1,23 +1,13 @@
 {
-  "name": "akylduukodo",
+  "name": "malikastudy",
   "version": "1.0.0",
-  "description": "AkylduuKodo \u2014 an interactive course for learning to code: lessons, guided practice and a weekly study goal.",
+  "description": "A short daily maths task for Malika, and a dashboard for whoever sets it.",
   "type": "module",
   "scripts": {
     "start": "node server.mjs",
     "dev": "node server.mjs",
-    "test": "node tests/curriculum.test.mjs && node react/course.test.mjs",
-    "build:workshop": "node scripts/build-workshop.mjs"
+    "test": "node tests/maths.test.mjs"
   },
   "license": "MIT",
-  "private": true,
-  "devDependencies": {
-    "@tailwindcss/cli": "^4.3.3",
-    "esbuild": "^0.28.2",
-    "framer-motion": "^13.4.0",
-    "lucide-react": "^1.47.0",
-    "react": "^19.3.0",
-    "react-dom": "^19.3.0",
-    "tailwindcss": "^4.3.3"
-  }
+  "private": true
 }

@@ -1,7 +1,7 @@
 {
   "hosting": {
     "public": ".",
-    "site": "akylduukodo",
+    "site": "malikastudy",
     "ignore": [
       "firebase.json",
       "**/.*",
@@ -11,11 +11,14 @@
       "package.json",
       "package-lock.json",
       "README.md",
-      "react/**",
-      "scripts/**"
+      "docs/**"
     ],
     "cleanUrls": true,
     "rewrites": [
+      {
+        "source": "/forteachersonly/**",
+        "destination": "/forteachersonly/index.html"
+      },
       {
         "source": "**",
         "destination": "/index.html"
@@ -32,7 +35,7 @@
         ]
       },
       {
-        "source": "/index.html",
+        "source": "**/index.html",
         "headers": [
           {
             "key": "Cache-Control",
