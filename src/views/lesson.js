@@ -26,7 +26,9 @@ export function LessonView(lesson, { onFinish, onQuit }) {
 
   const stage = h('div', { class: 'card lesson-card' });
   const crumbs = h('div', { class: 'crumbs' });
-  const el = h('div', { class: 'wrap' },
+  // the lesson carries its unit's colour, so a lesson never feels detached
+  // from the part of the course it belongs to
+  const el = h('div', { class: `wrap page tint-${lesson.unit?.colour || 'sky'}` },
     h('div', { class: 'lesson-top' },
       h('button', { class: 'btn btn-quiet small', onclick: () => { hush(); onQuit(); } }, 'Back'),
       h('span', { class: 'lesson-name' }, `Lesson ${lesson.n} · ${lesson.title}`),
