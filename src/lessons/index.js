@@ -343,12 +343,45 @@ export const LESSONS = [
   },
 ];
 
+/**
+ * The lessons grouped the way the maths itself is grouped. Sixteen rows in a
+ * list is a wall; five named parts with their own progress is a course you can
+ * see the shape of, and can tell where you are in.
+ */
+export const UNITS = [
+  { id: 'numbers', name: 'Numbers', about: 'Reading, comparing and building numbers up to 1000.',
+    colour: 'sky', lessons: ['hto', 'compare', 'more-less'] },
+  { id: 'tables', name: 'Times tables', about: 'Counting in steps, then the 3s, 4s and 8s.',
+    colour: 'sun', lessons: ['count-4s', 'table-4', 'table-3', 'table-8', 'divide'] },
+  { id: 'addsub', name: 'Adding and taking away', about: 'Working with big numbers in columns.',
+    colour: 'mint', lessons: ['add-column', 'sub-column'] },
+  { id: 'fractions', name: 'Fractions', about: 'Parts of a whole, and parts of an amount.',
+    colour: 'grape', lessons: ['fraction', 'tenths', 'fraction-of'] },
+  { id: 'world', name: 'Time, money and shape', about: 'The maths you use outside a maths book.',
+    colour: 'berry', lessons: ['clock', 'money', 'perimeter'] },
+];
+
 export const BY_ID = new Map(LESSONS.map((l, i) => [l.id, { ...l, n: i + 1 }]));
+
+/** Which unit a lesson belongs to, for the label inside the lesson itself. */
+export const UNIT_OF = new Map(
+  UNITS.flatMap((u) => u.lessons.map((id) => [id, u])),
+);
 
 export function lesson(id) {
   return BY_ID.get(id) || null;
 }
 
 export function numbered() {
-  return LESSONS.map((l, i) => ({ ...l, n: i + 1 }));
+  return LESSONS.map((l, i) => ({ ...l, n: i + 1, unit: UNIT_OF.get(l.id) || null }));
+}
+
+/** The units, each carrying its lessons and how far through them she is. */
+export function unitsWith(isDone) {
+  const all = numbered();
+  return UNITS.map((u) => {
+    const lessons = u.lessons.map((id) => all.find((l) => l.id === id)).filter(Boolean);
+    const done = lessons.filter((l) => isDone(l.id)).length;
+    return { ...u, lessons, done, total: lessons.length };
+  });
 }

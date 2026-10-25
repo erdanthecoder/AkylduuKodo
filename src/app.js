@@ -29,7 +29,7 @@ function chrome() {
 function home() {
   chrome();
   show(h('div', {},
-    PathView({ onStart: start, onReplay: start, onAlbum: album }),
+    PathView({ onStart: start, onAlbum: album }),
     canSpeak()
       ? h('div', { class: 'wrap' },
           h('label', { class: 'setting' },
