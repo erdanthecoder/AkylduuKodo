@@ -15,6 +15,10 @@ service cloud.firestore {
     function me(uid) { return signedIn() && request.auth.uid == uid; }
     function onlyKeys(keys) { return request.resource.data.keys().hasOnly(keys); }
     function str(v, max) { return v is string && v.size() <= max; }
+    // the person who runs Quickzy; the same account carries the green check
+    function siteOwner() { return signedIn() && request.auth.uid == 'KWIRRSUM2VQVWnr1nUDbPP9bqMk2'; }
+    // the owner can stop an account from publishing
+    function banned() { return exists(/databases/$(database)/documents/bans/$(request.auth.uid)); }
 
     // ------------------------------------------------------------ profiles
     // Public: display name, username, blook. No email is ever stored here.
@@ -54,6 +58,11 @@ service cloud.firestore {
         && str(request.resource.data.blook, 20)
         && getAfter(/databases/$(database)/documents/usernames/$(request.resource.data.username)).data.uid == uid;
       allow delete: if me(uid);
+      // owner power: give coins and blooks
+      allow update: if siteOwner()
+        && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['coins', 'owned'])
+        && request.resource.data.get('coins', 0) is int && request.resource.data.get('coins', 0) >= 0
+        && request.resource.data.get('owned', {}).size() <= 40;
     }
 
     // A username belongs to whoever claimed it first.
@@ -87,23 +96,27 @@ service cloud.firestore {
           && d.authorUsername == get(/databases/$(database)/documents/users/$(request.auth.uid)).data.username;
       }
 
-      allow read: if resource.data.public == true || (signedIn() && resource.data.owner == request.auth.uid);
-      allow create: if account() && quizShape()
+      allow read: if resource.data.public == true || (signedIn() && resource.data.owner == request.auth.uid) || siteOwner();
+      allow create: if account() && !banned() && quizShape()
         && request.resource.data.plays == 0 && request.resource.data.createdAt == request.time;
-      allow update: if account() && resource.data.owner == request.auth.uid && quizShape()
+      allow update: if account() && !banned() && resource.data.owner == request.auth.uid && quizShape()
         && request.resource.data.plays == resource.data.plays
         && request.resource.data.createdAt == resource.data.createdAt;
       // anyone with an account who hosts it adds exactly one play
       allow update: if account() && resource.data.public == true
         && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['plays'])
         && request.resource.data.plays == resource.data.plays + 1;
-      allow delete: if signedIn() && resource.data.owner == request.auth.uid;
+      // owner power: unpublish anyone's quiz
+      allow update: if siteOwner()
+        && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['public', 'big'])
+        && request.resource.data.public == false && request.resource.data.big == false;
+      allow delete: if signedIn() && (resource.data.owner == request.auth.uid || siteOwner());
 
       // The answers. Players (guests) can never read them; accounts can when
       // the quiz is published, because hosting a quiz needs its answers.
       match /private/{doc} {
         allow read: if signedIn() && (
-          resource.data.owner == request.auth.uid ||
+          resource.data.owner == request.auth.uid || siteOwner() ||
           (account() && get(/databases/$(database)/documents/quizzes/$(id)).data.public == true));
         allow create, update: if account() && doc == 'key'
           && request.resource.data.keys().hasOnly(['owner', 'answers'])
@@ -112,7 +125,7 @@ service cloud.firestore {
           && (!exists(/databases/$(database)/documents/quizzes/$(id))
               || get(/databases/$(database)/documents/quizzes/$(id)).data.owner == request.auth.uid)
           && (resource == null || resource.data.owner == request.auth.uid);
-        allow delete: if signedIn() && resource.data.owner == request.auth.uid;
+        allow delete: if signedIn() && (resource.data.owner == request.auth.uid || siteOwner());
       }
     }
 
@@ -124,6 +137,23 @@ service cloud.firestore {
         && request.resource.data.players is list && request.resource.data.players.size() <= 60
         && request.resource.data.at == request.time;
       allow update: if false;
+    }
+
+    // ---------------------------------------------------------- owner only
+    // site-wide settings: the announcement banner and the owner's picks
+    match /site/{doc} {
+      allow read: if true;
+      allow write: if siteOwner() && doc in ['announce', 'featured'];
+    }
+    // accounts the owner has stopped from publishing
+    match /bans/{uid} {
+      allow read: if true;
+      allow write: if siteOwner() && uid != request.auth.uid;
+    }
+    // blue checks the owner gives by hand
+    match /badges/{uid} {
+      allow read: if true;
+      allow write: if siteOwner();
     }
 
     // everything else is closed

@@ -50,3 +50,4 @@ export const BADGES = {
   KWIRRSUM2VQVWnr1nUDbPP9bqMk2: 'owner',
 };
 export const OFFICIAL_UID = 'XH9Z5D7tLmRHStlxumgaJyTo1BP2';
+export const OWNER_UID = 'KWIRRSUM2VQVWnr1nUDbPP9bqMk2';

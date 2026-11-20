@@ -56,6 +56,7 @@ export async function saveQuiz(quiz, { publish } = {}) {
   const user = me();
   const profile = myProfile();
   if (!user || user.isAnonymous || !profile) throw new Error('Sign in to save quizzes.');
+  if (await net.store.get('bans', user.uid).catch(() => null)) throw new Error('The owner has paused publishing on this account.');
   const title = quiz.title.trim().slice(0, LIMITS.quizTitleMax);
   const description = (quiz.description || '').trim().slice(0, LIMITS.quizDescMax);
   const questions = quiz.questions.slice(0, LIMITS.questionsMax);
@@ -201,10 +202,16 @@ export async function countPlay(id) {
 
 const verifiedCache = new Map();
 
+const givenCache = new Map();
+
 /** 'official', 'owner', 'verified' or null: the badge an author carries. */
 export async function badgeOf(uid) {
   if (!uid) return null;
   if (BADGES[uid]) return BADGES[uid];
+  // a blue check the owner gave by hand, or one earned by publishing
+  if (!givenCache.has(uid)) givenCache.set(uid, net.store.get('badges', uid).then(Boolean).catch(() => false));
+  const given = await givenCache.get(uid);
+  if (given) return 'verified';
   return (await isVerified(uid)) ? 'verified' : null;
 }
 
