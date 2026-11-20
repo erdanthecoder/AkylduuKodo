@@ -1034,3 +1034,12 @@ button.bcard.is-slot { color: var(--violet); border-color: var(--violet); backgr
 .letter-to { font-weight: 900; font-size: 20px; }
 .letter-sign { text-align: right; }
 .pro-trial { display: inline-flex; align-items: center; gap: 8px; padding: 8px 16px; border-radius: 99px; background: #19c37d; color: #fff; font-weight: 900; }
+
+/* -------------------------------------------------------- question videos */
+.q-video { position: relative; width: min(900px, 100%); margin: 8px auto; display: grid; gap: 4px; justify-items: center; }
+.q-video iframe { width: 100%; aspect-ratio: 16 / 9; border: 0; border-radius: 18px; background: #000; box-shadow: 0 8px 0 #0003; }
+.q-video-time { font-weight: 800; opacity: .7; }
+.q-video.is-small { width: min(420px, 100%); }
+.video-edit { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; }
+.video-edit .q-video { margin: 0; width: 220px; }
+.together-note { display: flex; align-items: center; gap: 10px; margin-bottom: 14px; background: #eef7ff; color: #0f4c8a; font-weight: 800; }

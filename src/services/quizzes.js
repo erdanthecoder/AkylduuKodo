@@ -71,13 +71,29 @@ export async function saveQuiz(quiz, { publish } = {}) {
   const { pub, key } = split(questions);
   const isPublic = publish === undefined ? Boolean(quiz.public) : Boolean(publish);
   const plan = await myPlan();
+  const before = quiz.id ? await net.store.get(COL, quiz.id).catch(() => null) : null;
+  // a collaborator saves someone else's quiz: the owner, author line and
+  // published state stay the owner's; only the content changes
+  if (before && before.owner !== user.uid) {
+    await net.store.batch([
+      { op: 'update', col: COL, id: quiz.id, data: {
+        title: title || 'Untitled quiz', description,
+        cover: Number.isInteger(quiz.cover) ? quiz.cover % COVERS : 0,
+        questions: pub, questionCount: pub.length,
+        big: Boolean(before.public) && pub.length >= LIMITS.verifyMinQuestions,
+        keywords: words(`${title} ${description} ${pub.map((q) => q.text).join(' ')}`),
+        updatedAt: net.store.serverTime(),
+      } },
+      { op: 'set', col: keyCol(quiz.id), id: 'key', data: { owner: before.owner, answers: JSON.stringify(key) } },
+    ]);
+    return quiz.id;
+  }
   if (!quiz.id) {
     const mine = await net.store.count(COL, { where: [['owner', '==', user.uid]] }).catch(() => 0);
     if (mine >= plan.quizzes) throw new Error(`Free accounts can make ${plan.quizzes} quizzes. Delete one, or go Pro for ${PLANS.pro.quizzes}.`);
   }
   // when it goes live: Pro at once; free quizzes after the 3-5 day check,
   // and a quiz that is already live stays live
-  const before = quiz.id ? await net.store.get(COL, quiz.id).catch(() => null) : null;
   let liveAt = 0;
   if (isPublic && !plan.pro) liveAt = before && before.public ? (before.liveAt || 0) : Date.now() + reviewDelay();
   const doc = {
@@ -154,6 +170,36 @@ export async function duplicateQuiz(id) {
   const full = await loadForEditing(id);
   if (!full) throw new Error('That quiz could not be opened.');
   return saveQuiz({ ...full, id: null, title: `${full.title} (copy)`.slice(0, LIMITS.quizTitleMax), public: false });
+}
+
+/* ------------------------------------------------------- making together */
+
+export const EDITORS_MAX = 10;
+
+/** Quizzes other people invited me to edit. */
+export async function sharedWithMe() {
+  const user = me();
+  if (!user || user.isAnonymous) return [];
+  const rows = await net.store.query(COL, { where: [['editors', 'array-contains', user.uid]], limit: 100 }).catch(() => []);
+  return rows.sort((a, b) => (b.updatedAt || 0) - (a.updatedAt || 0));
+}
+
+/** The owner invites someone by username (free accounts too). Returns their profile. */
+export async function inviteEditor(quizId, username) {
+  const name = String(username || '').trim().toLowerCase().replace(/^@/, '');
+  const claim = /^[a-z0-9_]{3,20}$/.test(name) ? await net.store.get('usernames', name).catch(() => null) : null;
+  if (!claim) throw new Error('Nobody has that username.');
+  if (claim.uid === me().uid) throw new Error('That is you!');
+  const quiz = await net.store.get(COL, quizId);
+  const editors = [...new Set([...(quiz.editors || []), claim.uid])];
+  if (editors.length > EDITORS_MAX) throw new Error(`Up to ${EDITORS_MAX} people can edit a quiz together.`);
+  await net.store.update(COL, quizId, { editors, updatedAt: net.store.serverTime() });
+  return net.store.get('users', claim.uid);
+}
+
+export async function removeEditor(quizId, uid) {
+  const quiz = await net.store.get(COL, quizId);
+  await net.store.update(COL, quizId, { editors: (quiz.editors || []).filter((x) => x !== uid), updatedAt: net.store.serverTime() });
 }
 
 export async function myQuizzes() {

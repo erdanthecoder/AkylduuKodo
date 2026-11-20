@@ -18,6 +18,8 @@ export const NEWS = [
   ['bolt', '#ffcd1f', 'A brand new logo', 'Quickzy got a fresh look.'],
   ['trophy', '#12c9a6', 'Sky Climb', 'Six worlds to climb. Fall and you drop. Get questions right to keep going.'],
   ['check', '#ffb21f', 'Quickzy Pro, free to test', 'Everyone gets Pro for 3 months: gold badge, instant publishing, 100 players, every game mode, custom blooks and flags.'],
+  ['play', '#ff4772', 'Video quizzes', 'A YouTube clip plays, stops, and then the question is asked.'],
+  ['edit', '#12c9a6', 'Make quizzes together', 'Invite friends by username, even free accounts, to build a quiz with you.'],
   ['users', '#2f9bff', 'Team mode', 'Split into 2, 3 or 4 teams and win together. Small teams can still win.'],
   ['user', '#12c9a6', 'Channels', 'Follow your favourite quiz makers.'],
   ['play', '#a560ff', 'Better games', 'Rank-up shouts, streaks, comeback alerts and a final countdown in every game.'],

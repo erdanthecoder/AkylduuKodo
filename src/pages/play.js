@@ -98,7 +98,8 @@ export default async function Play({ params }) {
       if (state === key) return;
       state = key;
       const barI = h('i');
-      screen('is-intro', h('p', { class: 'muted-light' }, n), h('h1', {}, cur.q.text), h('div', { class: 'intro-bar' }, barI), h('p', {}, 'Get ready…'));
+      screen('is-intro', h('p', { class: 'muted-light' }, n), h('h1', {}, cur.q.text), h('div', { class: 'intro-bar' }, barI),
+        h('p', {}, cur.q.video ? 'Watch the video on the big screen…' : 'Get ready…'));
       requestAnimationFrame(() => { barI.style.transitionDuration = `${Math.max(0, cur.introEnds - live.now())}ms`; barI.style.width = '100%'; });
       return;
     }

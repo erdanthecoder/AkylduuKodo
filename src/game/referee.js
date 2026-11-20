@@ -12,7 +12,10 @@ import { isPro, PLANS } from '../services/plan.js';
 import { check, validChoice, points } from './questions.js';
 import { modeOf } from './modes/index.js';
 
-const INTRO_MS = (q) => Math.min(5000, 2500 + q.text.length * 25);
+// a question with a video clip waits for the clip to play out first
+const INTRO_MS = (q) => (q.video && q.video.end > q.video.start
+  ? Math.min(600000, (q.video.end - q.video.start) * 1000 + 2500)
+  : Math.min(5000, 2500 + q.text.length * 25));
 const GRACE_MS = 600;               // network leeway after the timer hits zero
 
 function shuffle(list) {

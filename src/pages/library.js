@@ -4,7 +4,7 @@ import { h, fill, ago, plural } from '../ui/dom.js';
 import { icon } from '../ui/icons.js';
 import { busy, toast, confirm, empty, segmented } from '../ui/kit.js';
 import { explain } from '../net/index.js';
-import { myQuizzes, deleteQuiz, duplicateQuiz, myReports, deleteReport, isLive } from '../services/quizzes.js';
+import { myQuizzes, deleteQuiz, duplicateQuiz, myReports, deleteReport, isLive, sharedWithMe } from '../services/quizzes.js';
 import { modeOf } from '../game/modes/index.js';
 import { cover, pageTitle } from './parts.js';
 import { downloadCSV } from '../game/report.js';
@@ -66,9 +66,15 @@ export default async function Library({ query }) {
     fill(body, h('div', { class: 'loading' }, h('div', { class: 'spinner' })));
     try {
       if (tab === 'quizzes') {
-        const list = await myQuizzes();
+        const [list, shared] = await Promise.all([myQuizzes(), sharedWithMe()]);
         fill(body, list.length ? list.map((q) => quizRow(q, draw)) : h('div', { class: 'card' }, empty('No quizzes yet', 'Make your first one. It takes a couple of minutes.',
-          h('a', { class: 'btn btn-main', href: '/create' }, icon('plus'), 'Make a quiz'))));
+          h('a', { class: 'btn btn-main', href: '/create' }, icon('plus'), 'Make a quiz'))),
+          shared.length ? h('h2', { style: { marginTop: '10px' } }, 'Made together with you') : null,
+          ...shared.map((q) => h('div', { class: 'card lib-row' },
+            h('div', { class: 'grow', style: { minWidth: '180px' } },
+              h('a', { href: `/edit/${q.id}`, class: 'quiz-title' }, q.title),
+              h('div', { class: 'row small muted', style: { gap: '10px', marginTop: '4px' } }, h('span', { class: 'pill' }, icon('users', { size: 12 }), `${q.authorName}'s quiz`), h('span', {}, plural(q.questionCount || 0, 'question')))),
+            h('div', { class: 'row' }, h('a', { class: 'btn btn-sm', href: `/edit/${q.id}` }, icon('edit', { size: 16 }), 'Edit together')))));
       } else {
         const list = await myReports();
         fill(body, list.length ? list.map((r) => reportRow(r, draw)) : h('div', { class: 'card' }, empty('No reports yet', 'When a game you host ends, its results are saved here.')));

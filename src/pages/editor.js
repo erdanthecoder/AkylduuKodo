@@ -10,10 +10,14 @@ import { field, input, busy, toast, confirm, modal, segmented } from '../ui/kit.
 import { navigate } from '../router.js';
 import { explain } from '../net/index.js';
 import { LIMITS } from '../config.js';
-import { TYPES, TYPE_BY_ID, TIMES, POINTS, blankQuestion, retype, problem, cleanPic } from '../game/questions.js';
+import { TYPES, TYPE_BY_ID, TIMES, POINTS, blankQuestion, retype, problem, cleanPic, cleanVideo, youTubeId, parseTime, fmtTime } from '../game/questions.js';
+import { videoClip } from '../ui/video.js';
+import { myPlan } from '../services/plan.js';
 import { picture } from '../ui/picture.js';
 import { BLOOKS, blook } from '../ui/blooks.js';
-import { saveQuiz, loadForEditing, publishProblems, COVERS, getQuiz, isLive } from '../services/quizzes.js';
+import { saveQuiz, loadForEditing, publishProblems, COVERS, getQuiz, isLive, inviteEditor, removeEditor } from '../services/quizzes.js';
+import { me } from '../services/session.js';
+import { net } from '../net/index.js';
 import { whenProfile } from '../services/session.js';
 import { COVER_BG, pageTitle } from './parts.js';
 import { aiPrompt, readAIQuiz, LEVELS } from '../game/import.js';
@@ -39,7 +43,8 @@ export default async function Editor({ params, query = {} }) {
         h('h2', {}, 'This quiz could not be opened'), h('p', { class: 'muted' }, 'It may have been deleted, or it belongs to someone else.'),
         h('a', { class: 'btn btn-main', href: '/library' }, 'My quizzes')));
     }
-    quiz = { id: quiz.id, title: quiz.title, description: quiz.description || '', cover: quiz.cover || 0, public: Boolean(quiz.public), questions: quiz.questions };
+    quiz = { id: quiz.id, title: quiz.title, description: quiz.description || '', cover: quiz.cover || 0, public: Boolean(quiz.public), questions: quiz.questions,
+      owner: quiz.owner, editors: quiz.editors || [], authorName: quiz.authorName };
     if (!quiz.questions.length) quiz.questions.push(blankQuestion('mc'));
   } else {
     quiz = SAMPLE();
@@ -120,6 +125,42 @@ export default async function Editor({ params, query = {} }) {
   };
   drawPublish();
 
+  // making quizzes together: the owner invites people (free accounts too);
+  // collaborators edit and save, the owner publishes
+  const mine = !quiz.owner || quiz.owner === me().uid;
+  if (!mine) publishBox.hidden = true;
+  const together = h('button', { class: 'btn', title: 'Make this quiz together' }, icon('users', { size: 18 }), 'Together');
+  together.addEventListener('click', async () => {
+    if (!mine) { toast(`You are editing ${quiz.authorName || 'someone'}'s quiz together. They publish it.`); return; }
+    const plan = await myPlan();
+    if (!plan.pro) { toast('Making quizzes together is for Pro members.', 'bad'); navigate('/pro'); return; }
+    if (!quiz.id) { if (!(await doSave())) return; }
+    await modal((close) => {
+      const list = h('div', { class: 'stack', style: { gap: '8px' } });
+      const name = input({ placeholder: 'Their username', autocapitalize: 'off', spellcheck: 'false' });
+      const err = h('p', { class: 'error-text' });
+      const draw = async () => {
+        const fresh = await getQuiz(quiz.id);
+        quiz.editors = (fresh && fresh.editors) || [];
+        const people = await Promise.all(quiz.editors.map((uid) => net.store.get('users', uid).catch(() => null)));
+        fill(list, ...(people.length ? people.map((p, i) => h('div', { class: 'owner-row' },
+          blook((p && p.blook) || 'dog', 36), h('div', { class: 'grow owner-row-main' }, h('b', {}, p ? p.displayName : 'Someone'), h('small', { class: 'muted' }, p ? `@${p.username}` : '')),
+          h('button', { class: 'btn btn-sm btn-ghost', onclick: async () => { await removeEditor(quiz.id, quiz.editors[i]); draw(); } }, icon('close', { size: 14 }), 'Remove')))
+          : [h('p', { class: 'muted', style: { margin: 0 } }, 'Nobody yet. Invite a friend by their username.')]));
+      };
+      const invite = h('button', { class: 'btn btn-main' }, icon('plus', { size: 16 }), 'Invite');
+      invite.addEventListener('click', busy(invite, async () => {
+        err.textContent = '';
+        try { const p = await inviteEditor(quiz.id, name.value); name.value = ''; toast(`${p ? p.displayName : 'They'} can now edit this quiz`, 'ok'); draw(); } catch (e) { err.textContent = e.code ? explain(e) : e.message; }
+      }));
+      draw();
+      return [h('h2', {}, 'Make it together'),
+        h('p', { class: 'small muted', style: { margin: 0 } }, 'People you invite can edit the questions and save. Free accounts can join too. Only you can publish or delete it. Save often: the newest save wins.'),
+        h('div', { class: 'row' }, name, invite), err, list,
+        h('div', { class: 'row end' }, h('button', { class: 'btn', onclick: () => close() }, 'Done'))];
+    });
+  });
+
   const host = h('button', { class: 'btn btn-dark' }, icon('play', { size: 18 }), 'Host');
   host.addEventListener('click', busy(host, async () => {
     if (dirty || !quiz.id) { if (!(await doSave())) return; }
@@ -197,6 +238,54 @@ export default async function Editor({ params, query = {} }) {
           if (v) { q.img = v; touch(); draw(); }
         } }, icon('plus', { size: 16 }), pic ? 'Change picture' : 'Add a picture'),
         pic ? h('button', { type: 'button', class: 'btn btn-sm btn-ghost', onclick: () => { delete q.img; touch(); draw(); } }, icon('trash', { size: 16 }), 'Remove') : null].filter(Boolean));
+    };
+    draw();
+    return row;
+  }
+
+  /* ----------------------------------------------------------- videos */
+
+  // Pro: a YouTube clip plays first, stops by itself, then the question is asked
+  function pickVideo(current) {
+    return modal((close) => {
+      const link = input({ type: 'url', placeholder: 'https://www.youtube.com/watch?v=…', value: current ? `https://youtu.be/${current.id}` : '', inputmode: 'url' });
+      const from = input({ placeholder: '0:00', value: current ? fmtTime(current.start) : '0:00', style: { maxWidth: '110px' } });
+      const to = input({ placeholder: '0:45', value: current ? fmtTime(current.end) : '0:30', style: { maxWidth: '110px' } });
+      const preview = h('div', { class: 'video-edit' });
+      const err = h('p', { class: 'error-text' });
+      const read = () => cleanVideo({ id: youTubeId(link.value), start: parseTime(from.value), end: parseTime(to.value) });
+      const show = () => { const v = read(); preview.replaceChildren(...(v ? [videoClip(v, { autoplay: false })] : [])); };
+      [link, from, to].forEach((x) => x.addEventListener('change', show));
+      show();
+      const use = () => {
+        if (!youTubeId(link.value)) { err.textContent = 'Paste a YouTube link.'; return; }
+        const v = read();
+        if (!v) { err.textContent = 'Check the times: the end must be after the start, and the clip at most 10 minutes.'; return; }
+        close(v);
+      };
+      return [h('h2', {}, 'Add a video clip'),
+        h('p', { class: 'small muted', style: { margin: 0 } }, 'The clip plays on the big screen, stops by itself, then the question is asked. Keep it friendly: everyone in the game sees it.'),
+        field('YouTube link', link),
+        h('div', { class: 'row' }, field('Start (m:ss)', from), field('Stop (m:ss)', to)),
+        preview, err,
+        h('div', { class: 'row end' }, h('button', { class: 'btn', onclick: () => close() }, 'Cancel'), h('button', { class: 'btn btn-main', onclick: use }, 'Use this clip'))];
+    }, { wide: true });
+  }
+
+  function videoRow(q) {
+    const row = h('div', { class: 'video-edit' });
+    const draw = async () => {
+      const plan = await myPlan();
+      const clip = cleanVideo(q.video);
+      row.replaceChildren(...[
+        clip ? videoClip(clip, { autoplay: false }) : null,
+        h('button', { type: 'button', class: 'btn btn-sm', onclick: async () => {
+          if (!plan.pro) { toast('Video clips are for Pro members.', 'bad'); return; }
+          const v = await pickVideo(clip);
+          if (v) { q.video = v; touch(); draw(); }
+        } }, icon('play', { size: 16 }), clip ? 'Change video' : 'Add a video clip', plan.pro ? null : h('span', { class: 'pro-tag', style: { position: 'static' } }, 'PRO')),
+        clip ? h('button', { type: 'button', class: 'btn btn-sm btn-ghost', onclick: () => { delete q.video; touch(); draw(); } }, icon('trash', { size: 16 }), 'Remove video') : null,
+      ].filter(Boolean));
     };
     draw();
     return row;
@@ -327,7 +416,7 @@ export default async function Editor({ params, query = {} }) {
       h('div', { class: 'row spread' }, h('div', { class: 'row' }, h('b', {}, `Question ${at + 1}`), typeSel), tools),
       issue ? h('p', { class: 'error-text', role: 'alert', style: { margin: 0 } }, issue) : null,
       text, count,
-      pictureRow(q),
+      h('div', { class: 'row', style: { gap: '18px' } }, pictureRow(q), videoRow(q)),
       ...body,
       h('div', { class: 'row', style: { gap: '18px', marginTop: '6px' } },
         h('label', { class: 'field' }, h('span', {}, 'Time limit'), timeSel),
@@ -433,7 +522,8 @@ export default async function Editor({ params, query = {} }) {
   const el = h('div', { class: 'page wide' },
     h('div', { class: 'card row', style: { marginBottom: '18px', position: 'sticky', top: '70px', zIndex: 5, padding: '12px 14px' } },
       title, details, aiBtn,
-      h('div', { class: 'row', style: { marginLeft: 'auto' } }, status, save, publishBox, host)),
+      h('div', { class: 'row', style: { marginLeft: 'auto' } }, status, save, together, publishBox, host)),
+    mine ? null : h('div', { class: 'card together-note' }, icon('users', { size: 18 }), `You are editing ${quiz.authorName || 'a friend'}'s quiz together. Your saves go straight into their quiz; they publish it.`),
     h('div', { class: 'editor' }, list, h('div', { class: 'card' }, edit)));
 
   return {

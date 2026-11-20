@@ -112,6 +112,35 @@ export function cleanPic(v) {
   return '';
 }
 
+/** A YouTube video id from any usual YouTube link (or the id itself). */
+export function youTubeId(text) {
+  const s = String(text ?? '').trim();
+  if (/^[A-Za-z0-9_-]{11}$/.test(s)) return s;
+  const m = s.match(/(?:youtube(?:-nocookie)?\.com\/(?:watch\?(?:.*&)?v=|embed\/|shorts\/|live\/)|youtu\.be\/)([A-Za-z0-9_-]{11})/);
+  return m ? m[1] : '';
+}
+
+/**
+ * A question's video clip: a YouTube video from `start` to `end` seconds.
+ * It plays first, stops, and then the question is asked. Up to 10 minutes.
+ */
+export function cleanVideo(v) {
+  if (!v || typeof v !== 'object') return null;
+  const id = youTubeId(v.id);
+  const start = Math.max(0, Math.floor(Number(v.start) || 0));
+  const end = Math.floor(Number(v.end) || 0);
+  if (!id || !(end > start) || end - start > 600 || end > 36000) return null;
+  return { id, start, end };
+}
+
+/** "1:05" or "65" -> 65 seconds. */
+export function parseTime(text) {
+  const parts = String(text ?? '').trim().split(':').map((x) => Number(x));
+  if (!parts.length || parts.some((x) => !Number.isFinite(x) || x < 0)) return NaN;
+  return parts.reduce((acc, x) => acc * 60 + x, 0);
+}
+export const fmtTime = (s) => `${Math.floor(s / 60)}:${String(Math.floor(s % 60)).padStart(2, '0')}`;
+
 /**
  * Turn the editor's full questions into the public half and the key.
  * For "order", the public options are shuffled: in the right order they would
@@ -124,6 +153,8 @@ export function split(questions, rand = Math.random) {
     const p = { id: q.id, type: q.type, text: trimmed(q.text), time: q.time, points: q.type === 'poll' ? 'none' : q.points };
     const pic = cleanPic(q.img);
     if (pic) p.img = pic;
+    const clip = cleanVideo(q.video);
+    if (clip) p.video = clip;
     let k = null;
     if (q.type === 'mc' || q.type === 'multi' || q.type === 'poll') {
       p.options = q.options.map(trimmed);
@@ -157,6 +188,7 @@ export function join(pub, key) {
     const k = key ? key[i] : null;
     const q = { id: p.id || uid(), type: p.type, text: p.text, time: p.time, points: p.points };
     if (cleanPic(p.img)) q.img = cleanPic(p.img);
+    if (cleanVideo(p.video)) q.video = cleanVideo(p.video);
     if (p.type === 'mc') Object.assign(q, { options: [...p.options], answer: k ?? 0 });
     if (p.type === 'multi') Object.assign(q, { options: [...p.options], answer: k ? [...k] : [0] });
     if (p.type === 'poll') Object.assign(q, { options: [...p.options] });

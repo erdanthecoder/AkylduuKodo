@@ -4,6 +4,7 @@
 // what the referee knows and gives the host the controls.
 
 import { listen } from '../ui/abuse.js';
+import { videoClip } from '../ui/video.js';
 import { TEAMS } from '../game/teams.js';
 import { picture } from '../ui/picture.js';
 import { h, fill, plural } from '../ui/dom.js';
@@ -233,16 +234,16 @@ export default async function HostLive({ params }) {
     nextBtn.addEventListener('click', busy(nextBtn, async () => { await ref.next(); }));
 
     if (cur.phase === 'intro') {
-      playMusic('game');
+      if (q.video) stopMusic(); else playMusic('game');
       const bar2 = h('div', { class: 'intro-bar' }, h('i'));
       const el = h('div', { class: 'host-screen q-screen' },
         bar(h('span', { class: 'pill pill-dark' }, progress)),
         h('div', { class: 'q-intro' },
           h('p', { class: 'q-type' }, typeLabel),
           h('h1', {}, q.text),
-          picture(q.img),
+          q.video ? videoClip(q.video) : picture(q.img),
           bar2),
-        h('div', { class: 'host-foot' }, pinText(false), h('button', { class: 'btn btn-dark', onclick: () => ref.next() }, 'Show answers now')));
+        h('div', { class: 'host-foot' }, pinText(false), h('button', { class: 'btn btn-dark', onclick: () => ref.next() }, q.video ? 'Skip the video' : 'Show answers now')));
       requestAnimationFrame(() => { bar2.firstChild.style.transitionDuration = `${Math.max(0, cur.introEnds - live.now())}ms`; bar2.firstChild.style.width = '100%'; });
       sfx('reveal');
       return { key: `intro${cur.n}`, el, update() {} };

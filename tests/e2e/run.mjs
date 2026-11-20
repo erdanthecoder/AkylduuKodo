@@ -139,6 +139,14 @@ await host.waitForSelector('text=Published. Anyone can find', { timeout: 8000 })
 const quizId = host.url().split('/edit/')[1];
 if (!quizId) fail('no quiz id in the address');
 
+say('make it together: invite by username');
+await host.click('button:has-text("Together")');
+await host.waitForSelector('.modal:has-text("Make it together")');
+await host.fill('.modal input[placeholder="Their username"]', 'nobody_here_42');
+await host.click('.modal button:has-text("Invite")');
+await host.waitForSelector('.modal .error-text:has-text("Nobody has that username")');
+await host.click('.modal button:has-text("Done")');
+
 say('discover finds it');
 await host.goto(`${BASE}/discover?q=planet`);
 await host.waitForSelector('.quiz-card:has-text("Space and Science")');

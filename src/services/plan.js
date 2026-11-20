@@ -40,11 +40,11 @@ export const PRO_PERKS = [
   ['play', 'Every game mode', 'Laser Tag and Spacecraft too, and games up to 30 minutes.'],
   ['list', '300 quizzes', 'Free accounts can make 10.'],
   ['star', 'Custom blooks and flags', 'All three custom blook slots and every part unlocked, plus the country flag blooks.'],
+  ['play', 'Video quizzes', 'A YouTube clip plays, stops, and then the question is asked.'],
+  ['edit', 'Make quizzes together', 'Invite anyone, even free accounts, to edit a quiz with you.'],
   ['mail', 'A thank-you letter', 'A personal letter from Quickzy, just for members.'],
 ];
 export const PRO_SOON = [
-  ['play', 'Video quizzes', 'A video plays, stops, and asks a question.'],
-  ['users', 'Make quizzes together', 'Invite anyone, even free accounts, to edit a quiz with you.'],
   ['shield', 'Tower Defense', 'A brand new game mode.'],
 ];
 
