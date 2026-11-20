@@ -234,7 +234,7 @@ if (which === 'classic' || which === 'all') {
 }
 
 if (which === 'arcade' || which === 'all') {
-  for (const [mode, name] of [['lasertag', 'Laser Tag'], ['robotrun', 'Robot Run'], ['spacecraft', 'Spacecraft'], ['obby', 'Obby']]) {
+  for (const [mode, name] of [['lasertag', 'Laser Tag'], ['robotrun', 'Robot Run'], ['spacecraft', 'Spacecraft'], ['obby', 'Sky Climb']]) {
     say(`${mode}: open the lobby`);
     const pin = await openLobby(name, () => host.click('.set-row:has-text("Game length") button:has-text("3 min")'));
     const cara = await join(pin, 'Cara', { width: 390, height: 780 });
@@ -274,6 +274,14 @@ if (which === 'arcade' || which === 'all') {
       .catch(() => fail('Cara should have points after a right answer'));
     await cara.screenshot({ path: `${SHOTS}/${mode}-player.png` });
     await dev.screenshot({ path: `${SHOTS}/${mode}-player-wide.png` });
+    if (mode === 'obby') {
+      say('obby: every world draws, up to the summit');
+      for (const n of [20, 37, 52, 67, 82, 90]) {
+        await dev.evaluate((k) => window.__quickzyClimb(k), n);
+        await dev.waitForTimeout(400);
+        await dev.screenshot({ path: `${SHOTS}/obby-level-${n}.png` });
+      }
+    }
     await host.screenshot({ path: `${SHOTS}/${mode}-host.png` });
     say(`${mode}: end`);
     await host.click('button:has-text("End now")');
