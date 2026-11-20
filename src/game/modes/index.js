@@ -38,6 +38,12 @@ export const MODES = [
     bg: 'linear-gradient(160deg, #070b26, #3a2380 35%, #7a80b8 55%, #7fdcff 75%, #78cbff)',
     durations: [3, 5, 7, 10],
   },
+  {
+    id: 'defense', name: 'Tower Defense', kind: 'arcade',
+    tagline: 'Build towers, stop the monsters, save the castle. Answers buy towers.',
+    bg: 'linear-gradient(140deg, #2e7d32, #66bb6a 60%, #a8703c)',
+    durations: [3, 5, 7, 10],
+  },
 ];
 
 export const MODE_BY_ID = new Map(MODES.map((m) => [m.id, m]));
@@ -88,6 +94,18 @@ export function modeArt(id) {
     add('rect', { x: 30, y: 20, width: 24, height: 10, rx: 4, fill: '#ff4772' });
     add('rect', { x: 66, y: 22, width: 14, height: 18, rx: 4, fill: '#17133f' });
     add('path', { d: 'M20 76 q14 -30 30 -18', fill: 'none', stroke: '#fff', 'stroke-width': 3, 'stroke-dasharray': '4 5' });
+  }
+  if (id === 'defense') {
+    add('path', { d: 'M0 30 H34 V70 H66 V40 H100', fill: 'none', stroke: '#d9a466', 'stroke-width': 12, 'stroke-linejoin': 'round' });
+    add('rect', { x: 14, y: 50, width: 16, height: 16, rx: 4, fill: '#4e4a75' });
+    add('circle', { cx: 22, cy: 58, r: 5, fill: '#59f0ff' });
+    add('rect', { x: 44, y: 22, width: 16, height: 16, rx: 4, fill: '#4e4a75' });
+    add('circle', { cx: 52, cy: 30, r: 5, fill: '#ff8a2a' });
+    add('rect', { x: 78, y: 18, width: 20, height: 18, rx: 3, fill: '#e8ecff' });
+    add('rect', { x: 78, y: 13, width: 5, height: 6, fill: '#6b4cff' });
+    add('rect', { x: 86, y: 13, width: 5, height: 6, fill: '#6b4cff' });
+    add('rect', { x: 94, y: 13, width: 4, height: 6, fill: '#6b4cff' });
+    add('circle', { cx: 36, cy: 72, r: 6, fill: '#ff4772' });
   }
   return s;
 }

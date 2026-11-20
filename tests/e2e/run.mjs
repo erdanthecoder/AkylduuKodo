@@ -287,7 +287,7 @@ if (which === 'teams' || which === 'classic' || which === 'all') {
 }
 
 if (which === 'arcade' || which === 'all') {
-  for (const [mode, name] of [['lasertag', 'Laser Tag'], ['robotrun', 'Robot Run'], ['spacecraft', 'Spacecraft'], ['obby', 'Sky Climb']]) {
+  for (const [mode, name] of [['lasertag', 'Laser Tag'], ['robotrun', 'Robot Run'], ['spacecraft', 'Spacecraft'], ['obby', 'Sky Climb'], ['defense', 'Tower Defense']]) {
     say(`${mode}: open the lobby`);
     const pin = await openLobby(name, () => host.click('.set-row:has-text("Game length") button:has-text("3 min")'));
     const cara = await join(pin, 'Cara', { width: 390, height: 780 });

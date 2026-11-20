@@ -66,7 +66,7 @@ export default async function Pro() {
         h('ul', { class: 'pro-list is-free' },
           perk(['list', `${free.quizzes} quizzes`, 'Plenty to start with.']),
           perk(['users', `${free.players} players a game`, 'Great for one class.']),
-          perk(['play', 'Classic, Robot Run and Sky Climb', 'Laser Tag and Spacecraft are Pro.']),
+          perk(['play', 'Classic, Robot Run and Sky Climb', 'Laser Tag, Spacecraft and Tower Defense are Pro.']),
           perk(['clock', 'Quizzes are checked', 'Published quizzes are checked automatically and go live in 3–5 days.'])),
         h('div', { class: 'row', style: { justifyContent: 'center', gap: '10px' } }, ...['fox', 'unicorn', 'dragon', 'kyrgyzstan'].map((id) => blook(id, 56))))));
 }
