@@ -334,16 +334,39 @@ if (which === 'account' || which === 'all') {
   await host.waitForSelector('h1 .verified');
   await host.waitForSelector('.quiz-card .verified');
 
+  say('solo practice: play a whole quiz alone');
+  await host.goto(`${BASE}/practice/${quizId}`);
+  await host.click('button:has-text("Start")');
+  for (let i = 0; i < 12; i++) {
+    const next = await Promise.race([
+      host.waitForSelector('.solo-q .pad', { timeout: 15000 }).then(() => 'q'),
+      host.waitForSelector('.big-score', { timeout: 15000 }).then(() => 'end'),
+    ]);
+    if (next === 'end') break;
+    if (i === 0) await host.screenshot({ path: `${SHOTS}/solo-question.png` });
+    await answer(host, true);
+    await host.waitForSelector('.play-screen.is-verdict');
+    await host.click('.play-screen button:has-text("Next")');
+  }
+  await host.waitForSelector('.big-score');
+  await host.waitForSelector('.review li');
+  await host.screenshot({ path: `${SHOTS}/solo-end.png`, fullPage: true });
+
   say('blooks: open boxes with starting coins');
   await host.goto(`${BASE}/blooks`);
   await host.waitForSelector('.level-badge');
-  for (let i = 0; i < 2; i++) {
-    await host.click('.box-card:has-text("Quickzy Box") button');
+  // starting coins plus the solo reward: open boxes until the coins run out
+  const boxBtn = host.locator('.box-card:has-text("Quickzy Box") button');
+  let opened = 0;
+  while (!(await boxBtn.isDisabled()) && opened < 6) {
+    await boxBtn.click();
     await host.waitForSelector('.reveal .bcard');
-    if (i === 0) await host.screenshot({ path: `${SHOTS}/box-reveal.png` });
+    if (opened === 0) await host.screenshot({ path: `${SHOTS}/box-reveal.png` });
     await host.click('.modal button:has-text("Nice")');
+    opened++;
   }
-  if (!(await host.locator('.box-card:has-text("Quickzy Box") button').isDisabled())) fail('should be out of coins');
+  if (opened < 2) fail(`only ${opened} boxes opened`);
+  if (!(await boxBtn.isDisabled())) fail('should be out of coins');
 
   say('blooks: a game reward levels you up and opens a custom slot');
   await host.evaluate(async () => {
@@ -351,7 +374,8 @@ if (which === 'account' || which === 'all') {
     await p.claimGame('test:1', { s: 20000, c: 10, r: 1 }, 5);
   });
   await host.goto(`${BASE}/blooks`);
-  await host.waitForSelector('.level-badge b:text("3")');
+  // solo play above earned XP too, so the level is at least 3
+  await host.waitForFunction(() => Number(document.querySelector('.level-badge b')?.textContent) >= 3);
   await host.click('button.bcard.is-slot');
   await host.click('.modal .part-btn:has-text("happy")');
   await host.locator('.modal .part-btn').first().click();
@@ -398,7 +422,7 @@ if (which === 'account' || which === 'all') {
   await host.goto(`${BASE}/u/quizmaster`);
   await host.waitForSelector('text=Nothing here');
   await host.goto(`${BASE}/discover`);
-  await host.waitForSelector('text=No published quizzes yet');
+  await host.waitForSelector('text=No quizzes yet');
 }
 
 await browser.close();

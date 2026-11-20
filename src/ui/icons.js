@@ -118,9 +118,13 @@ export function wordmark() {
   return word;
 }
 
-export function verifiedBadge(title = 'Verified creator') {
+const BADGE_TITLE = { verified: 'Verified creator', official: 'Official Quickzy', owner: 'Quickzy owner' };
+
+/** kind: 'verified' (blue), 'official' (black) or 'owner' (green). */
+export function verifiedBadge(title, kind = 'verified') {
+  title = title || BADGE_TITLE[kind];
   const b = document.createElement('span');
-  b.className = 'verified';
+  b.className = `verified is-${kind}`;
   b.title = title;
   b.setAttribute('aria-label', title);
   b.append(icon('check', { size: 12, stroke: 3.6 }));

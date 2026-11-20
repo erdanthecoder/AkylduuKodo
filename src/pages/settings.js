@@ -11,7 +11,7 @@ import * as session from '../services/session.js';
 import { myQuizzes, deleteQuiz, myReports, deleteReport, verifiedProgress, syncAuthor } from '../services/quizzes.js';
 import { strength } from './auth.js';
 import { pageTitle } from './parts.js';
-import { LIMITS } from '../config.js';
+import { LIMITS, BADGES } from '../config.js';
 import { sfx } from '../game/sound.js';
 
 export function blookPicker(current, onPick) {
@@ -91,6 +91,15 @@ function profileSection() {
 
 function verifiedSection() {
   const p = session.myProfile();
+  const special = BADGES[session.me().uid];
+  if (special) {
+    return section('Your badge', h('div', { class: 'row', style: { flexWrap: 'nowrap' } },
+      h('span', { style: { transform: 'scale(1.6)', margin: '0 8px 0 4px' } }, verifiedBadge(null, special)),
+      h('div', {}, h('b', {}, special === 'owner' ? 'Quickzy owner' : 'Official Quickzy'),
+        h('p', { class: 'small muted', style: { margin: '2px 0 0' } }, special === 'owner'
+          ? 'The green check shows next to your name everywhere. Only the owner has it.'
+          : 'The black check marks quizzes made by Quickzy itself.'))));
+  }
   const body = h('div', { class: 'muted' }, 'Checking…');
   verifiedProgress(session.me().uid).then(({ have, need, minQuestions }) => {
     const done = have >= need;

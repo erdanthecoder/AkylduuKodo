@@ -248,6 +248,11 @@ p { margin: 0 0 10px; }
   vertical-align: -3px;
 }
 .verified svg { width: 12px; height: 12px; }
+.verified.is-official { background: #111; box-shadow: 0 0 0 2px #ffcd1f inset; }
+.verified.is-owner { background: var(--ok); }
+.badge-pill.is-verified { background: #e3f1ff; color: #1a6fcc; }
+.badge-pill.is-official { background: #111; color: #fff; }
+.badge-pill.is-owner { background: #e3f9ef; color: var(--okd); }
 
 /* ----------------------------------------------------------------- blooks */
 
@@ -544,3 +549,20 @@ button.bcard.is-slot { color: var(--violet); border-color: var(--violet); backgr
 .roadmap li.is-done { border-color: #b7eed6; }
 .roadmap li.is-done .lv { background: var(--ok); color: #fff; }
 .roadmap li.is-done svg { color: var(--ok); }
+
+/* discover */
+.chips { display: flex; gap: 8px; flex-wrap: wrap; }
+.chip {
+  border: 2px solid var(--line-2); background: #fff; color: var(--ink); border-radius: 999px; padding: 7px 16px;
+  font: 900 0.92rem var(--sans); cursor: pointer; transition: transform 0.12s var(--spring);
+}
+.chip:hover { transform: translateY(-2px); }
+.chip.is-on { background: var(--night); border-color: var(--night); color: #fff; }
+.shelf { display: grid; grid-auto-flow: column; grid-auto-columns: minmax(240px, 260px); gap: 16px; overflow-x: auto; padding: 4px 2px 14px; scroll-snap-type: x mandatory; }
+.shelf > * { scroll-snap-align: start; }
+.quiz-play { justify-self: start; margin-top: 4px; }
+
+/* quiz of the day */
+.daily { display: flex; gap: 20px; align-items: center; margin-top: 22px; flex-wrap: wrap; }
+.daily .daily-cover { width: 260px; height: 170px; border-radius: 16px; flex: none; }
+@media (max-width: 640px) { .daily .daily-cover { width: 100%; } }

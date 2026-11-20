@@ -19,6 +19,7 @@ route('/join/:pin', () => import('./pages/join.js'), { chrome: false });
 route('/play/:pin', () => import('./pages/play.js'), { chrome: false });
 route('/discover', () => import('./pages/discover.js'));
 route('/quiz/:id', () => import('./pages/quiz.js'));
+route('/practice/:id', () => import('./pages/practice.js'), { chrome: false });
 route('/create', () => import('./pages/editor.js'), { auth: true });
 route('/edit/:id', () => import('./pages/editor.js'), { auth: true });
 route('/library', () => import('./pages/library.js'), { auth: true });
