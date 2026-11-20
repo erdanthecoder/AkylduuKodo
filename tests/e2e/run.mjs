@@ -1,0 +1,403 @@
+// run.mjs — the whole thing, end to end, in real browsers against dev/server.mjs.
+//
+//   node dev/server.mjs &      then      node tests/e2e/run.mjs [classic|arcade|all]
+//
+// A host signs up, builds a quiz in the editor, publishes it and hosts it;
+// two players join with the PIN and play. Fails loudly on any page error.
+
+import { createRequire } from 'node:module';
+import { mkdirSync } from 'node:fs';
+
+const require = createRequire(import.meta.url);
+const { chromium } = require('playwright');
+const BASE = process.env.BASE || 'http://localhost:5173';
+const SHOTS = process.env.SHOTS || '/tmp/quickzy-shots';
+mkdirSync(SHOTS, { recursive: true });
+const which = process.argv[2] || 'all';
+
+const browser = await chromium.launch(process.env.CHROME ? { executablePath: process.env.CHROME } : {});
+const errors = [];
+let step = '';
+const watch = (page, who) => {
+  page.on('pageerror', (e) => errors.push(`[${who}] ${step}: ${e.message}`));
+  page.on('console', (m) => {
+    // a refused read or write is a failure even where the app carries on
+    // the deliberate wrong password answers 400; that one is expected
+    if (step.startsWith('change password') && /status of 400/.test(m.text())) return;
+    if (m.type() === 'error' || /permission|refused|denied/i.test(m.text())) errors.push(`[${who}] ${step}: ${m.text().slice(0, 300)}`);
+  });
+};
+const say = (s) => { step = s; console.log(`- ${s}`); };
+const fail = (why) => { throw new Error(`${step}: ${why}`); };
+
+await fetch(`${BASE}/__dev/reset-all`, { method: 'POST' });
+if (process.env.EMULATOR === '1') {
+  // a clean slate in every emulator
+  await fetch('http://127.0.0.1:9099/emulator/v1/projects/akylduukodo/accounts', { method: 'DELETE' });
+  await fetch('http://127.0.0.1:8080/emulator/v1/projects/akylduukodo/databases/(default)/documents', { method: 'DELETE' });
+  await fetch('http://127.0.0.1:9000/.json?ns=akylduukodo-default-rtdb', { method: 'PUT', body: 'null', headers: { Authorization: 'Bearer owner' } });
+}
+
+// EMULATOR=1 plays against the Firebase emulators instead: the real SDK and
+// the real security rules (firebase emulators:start --only auth,firestore,database)
+const EMULATOR = process.env.EMULATOR === '1';
+
+async function newPage(who, viewport = { width: 1280, height: 800 }) {
+  const ctx = await browser.newContext({ viewport, hasTouch: who !== 'host' && viewport.width < 600 });
+  if (EMULATOR) await ctx.addInitScript(() => sessionStorage.setItem('quickzy.emulator', '1'));
+  const page = await ctx.newPage();
+  watch(page, who);
+  return page;
+}
+
+/* ---------------------------------------------------------- the host */
+
+const host = await newPage('host');
+say('sign up');
+await host.goto(`${BASE}/signup`);
+await host.fill('input[type=email]', 'host@example.com');
+const pw = host.locator('input[type=password]');
+await pw.nth(0).fill('Correct-Horse-9');
+await pw.nth(1).fill('Correct-Horse-9');
+await host.check('input[type=checkbox]');
+await host.click('button:has-text("Create account")');
+await host.waitForURL(/\/settings\?welcome=1/);
+await host.waitForSelector('text=Welcome to Quickzy');
+
+say('pick a username');
+const user = host.locator('label.field:has-text("Username") input');
+await user.fill('quizmaster');
+await host.click('button:has-text("Save profile")');
+await host.waitForSelector('text=Profile saved');
+
+say('build a quiz in the editor');
+await host.goto(`${BASE}/create`);
+await host.fill('input[aria-label="Quiz title"]', 'Space and Science');
+await host.fill('textarea.q-text', 'Which planet is the largest?');
+const opts = host.locator('.opt input[type=text]');
+for (const [i, t] of ['Mars', 'Jupiter', 'Venus', 'Mercury'].entries()) await opts.nth(i).fill(t);
+await host.locator('.opt .mark').nth(1).click();
+
+async function addQuestion(label) {
+  await host.click('button:has-text("Add question")');
+  await host.click(`.modal button:has-text("${label}")`);
+}
+await addQuestion('True or false');
+await host.fill('textarea.q-text', 'The Sun is a star.');
+await host.locator('.opt-grid button:has-text("True")').click();
+
+await addQuestion('Type the answer');
+await host.fill('textarea.q-text', 'What gas do plants breathe in?');
+await host.locator('.q-edit input.input').first().fill('Carbon dioxide');
+await host.click('button:has-text("Accept another answer")');
+await host.locator('.q-edit input.input').nth(1).fill('CO2');
+
+await addQuestion('Number');
+await host.fill('textarea.q-text', 'How many planets are in the Solar System?');
+await host.locator('.q-edit input[type=number]').first().fill('8');
+
+await addQuestion('Pick all that apply');
+await host.fill('textarea.q-text', 'Which of these are mammals?');
+for (const [i, t] of ['Whale', 'Shark', 'Bat', 'Frog'].entries()) await host.locator('.opt input[type=text]').nth(i).fill(t);
+await host.locator('.opt .mark').nth(2).click();     // Whale is marked already, add Bat
+
+await addQuestion('Put in order');
+await host.fill('textarea.q-text', 'Order from smallest to largest');
+for (const [i, t] of ['Atom', 'Cell', 'Mouse'].entries()) await host.locator('.opt input[type=text]').nth(i).fill(t);
+
+await addQuestion('Poll');
+await host.fill('textarea.q-text', 'Favourite planet?');
+for (const [i, t] of ['Saturn', 'Earth'].entries()) await host.locator('.opt input[type=text]').nth(i).fill(t);
+await host.locator('.opt .x').nth(3).click();
+await host.locator('.opt .x').nth(2).click();
+await host.screenshot({ path: `${SHOTS}/editor.png` });
+
+say('publish');
+await host.click('button:has-text("Publish")');
+await host.waitForSelector('text=Published. Anyone can find', { timeout: 8000 }).catch(async () => {
+  const issues = await host.locator('.modal').innerText().catch(() => '');
+  fail(`did not publish ${issues}`);
+});
+const quizId = host.url().split('/edit/')[1];
+if (!quizId) fail('no quiz id in the address');
+
+say('discover finds it');
+await host.goto(`${BASE}/discover?q=planet`);
+await host.waitForSelector('.quiz-card:has-text("Space and Science")');
+
+/* ------------------------------------------------------------- games */
+
+async function openLobby(modeName, extra) {
+  await host.goto(`${BASE}/host/${quizId}`);
+  await host.click(`.mode-opt:has-text("${modeName}")`);
+  if (extra) await extra();
+  await host.click('button:has-text("Open the lobby")');
+  await host.waitForURL(/\/lobby\/\d{6}/);
+  await host.waitForSelector('.pin-box');
+  return host.url().match(/lobby\/(\d{6})/)[1];
+}
+
+async function join(pin, name, viewport) {
+  const p = await newPage(name, viewport);
+  await p.goto(`${BASE}/join`);
+  await p.fill('input[aria-label="Game PIN"]', pin);
+  await p.waitForURL(new RegExp(`/join/${pin}`));
+  await p.fill('input[aria-label="Nickname"]', name);
+  await p.click('button:has-text("Join")');
+  await p.waitForURL(new RegExp(`/play/${pin}`));
+  await p.waitForSelector('text=You’re in!');
+  return p;
+}
+
+async function answer(p, right) {
+  // whatever the question type, give an answer (right or wrong on purpose)
+  const pad = p.locator('.pad').first();
+  await pad.waitFor({ timeout: 15000 });
+  const cls = await pad.getAttribute('class');
+  if (/pad-(mc|poll|tf)/.test(cls)) {
+    const text = await p.locator('.q-text-play').innerText();
+    const pick = { 'Which planet is the largest?': 'Jupiter', 'The Sun is a star.': 'True' }[text];
+    const btn = right && pick ? p.locator(`.pad-btn:has-text("${pick}")`) : p.locator('.pad-btn').last();
+    await btn.click();
+  } else if (/pad-multi/.test(cls)) {
+    if (right) { await p.click('.pad-btn:has-text("Whale")'); await p.click('.pad-btn:has-text("Bat")'); } else await p.click('.pad-btn:has-text("Shark")');
+    await p.click('.pad-submit');
+  } else if (/pad-order/.test(cls)) {
+    for (const t of right ? ['Atom', 'Cell', 'Mouse'] : ['Mouse', 'Cell', 'Atom']) await p.click(`.order-item:has-text("${t}")`);
+    await p.click('.pad-submit');
+  } else if (/pad-type/.test(cls)) {
+    await p.fill('.pad input', right ? 'carbon-dioxide!' : 'oxygen');
+    await p.click('.pad-submit');
+  } else if (/pad-number/.test(cls)) {
+    await p.fill('.pad input', right ? '8' : '9');
+    await p.click('.pad-submit');
+  }
+}
+
+if (which === 'classic' || which === 'all') {
+  say('classic: open the lobby');
+  const pin = await openLobby('Classic', () => host.click('.set-row:has-text("Speed scoring") button:has-text("Faster = more")'));
+  const ana = await join(pin, 'Ana', { width: 390, height: 780 });
+  const ben = await join(pin, 'Ben', { width: 390, height: 780 });
+  await host.waitForSelector('.player-chip:has-text("Ana")');
+  await host.waitForSelector('.player-chip:has-text("Ben")');
+  await host.screenshot({ path: `${SHOTS}/lobby.png` });
+
+  say('classic: a rude nickname is refused');
+  const rude = await newPage('rude', { width: 390, height: 780 });
+  await rude.goto(`${BASE}/join/${pin}`);
+  await rude.fill('input[aria-label="Nickname"]', 'Sh1t');
+  await rude.click('button:has-text("Join")');
+  await rude.waitForSelector('text=Pick a different nickname.');
+  await rude.close();
+
+  say('classic: start');
+  await host.click('button:has-text("Start")');
+  for (let q = 0; q < 7; q++) {
+    say(`classic: question ${q + 1}`);
+    await ana.waitForSelector('.pad', { timeout: 15000 }).catch(async (e) => {
+      await host.screenshot({ path: `${SHOTS}/fail-host.png` });
+      await ana.screenshot({ path: `${SHOTS}/fail-ana.png` });
+      console.log('host:', (await host.locator('body').innerText()).slice(0, 300));
+      console.log('ana:', (await ana.locator('body').innerText()).slice(0, 300));
+      console.log(errors.join('\n'));
+      throw e;
+    });
+    if (q === 0) await host.screenshot({ path: `${SHOTS}/question.png` });
+    if (q === 0) await ana.screenshot({ path: `${SHOTS}/player-question.png` });
+    await answer(ana, true);
+    await answer(ben, false);
+    await host.waitForSelector('.reveal-sum', { timeout: 15000 });
+    await ana.waitForSelector('.verdict');
+    const v = await ana.locator('.verdict h2').innerText();
+    const isPoll = q === 6;
+    if (!isPoll && v !== 'Correct') fail(`Ana should be right, saw "${v}"`);
+    if (!isPoll && (await ben.locator('.verdict h2').innerText()) !== 'Not quite') fail('Ben should be wrong');
+    if (q === 0) { await host.screenshot({ path: `${SHOTS}/reveal.png` }); await ana.screenshot({ path: `${SHOTS}/player-right.png` }); await ben.screenshot({ path: `${SHOTS}/player-wrong.png` }); }
+    await host.click('.host-foot button.btn-main');
+    await host.waitForSelector('.board');
+    if (q === 0) await host.screenshot({ path: `${SHOTS}/board.png` });
+    await host.click('.host-foot button.btn-main');
+  }
+  say('classic: podium');
+  await host.waitForSelector('.podium');
+  await host.waitForTimeout(1600);
+  await host.screenshot({ path: `${SHOTS}/podium.png` });
+  const first = await host.locator('.step.s1 .name').innerText();
+  if (first !== 'Ana') fail(`Ana should win, ${first} did`);
+  await ana.waitForSelector('.play-screen.is-end');
+  await ana.screenshot({ path: `${SHOTS}/player-end.png` });
+  const anaScore = await host.locator('.results tbody tr:first-child td:nth-child(3)').innerText();
+  console.log(`  Ana scored ${anaScore}`);
+  await ana.context().close();
+  await ben.context().close();
+}
+
+if (which === 'arcade' || which === 'all') {
+  for (const [mode, name] of [['lasertag', 'Laser Tag'], ['robotrun', 'Robot Run'], ['spacecraft', 'Spacecraft'], ['obby', 'Obby']]) {
+    say(`${mode}: open the lobby`);
+    const pin = await openLobby(name, () => host.click('.set-row:has-text("Game length") button:has-text("3 min")'));
+    const cara = await join(pin, 'Cara', { width: 390, height: 780 });
+    const dev = await join(pin, 'Dev', { width: 900, height: 600 });
+    await host.click('button:has-text("Start")');
+    say(`${mode}: countdown and play`);
+    await cara.waitForSelector('.hud', { timeout: 15000 });
+    await dev.waitForSelector('.hud', { timeout: 15000 });
+    await cara.waitForTimeout(800);
+    // play a little: move, act, and answer a question through the overlay
+    await dev.keyboard.down('ArrowRight');
+    for (let i = 0; i < 6; i++) { await dev.keyboard.press('Space'); await dev.waitForTimeout(250); }
+    await dev.keyboard.up('ArrowRight');
+    await dev.mouse.click(700, 300);
+    await dev.waitForTimeout(600);
+    // force a question: drain the meter by asking directly
+    for (const p of [cara, dev]) {
+      await p.evaluate(() => { if (window.__quickzyAsk) window.__quickzyAsk(); });
+    }
+    await cara.waitForTimeout(300);
+    let answered = 0;
+    for (const p of [cara, dev]) {
+      if (await p.locator('.q-overlay:not([hidden]) .pad').count()) { await answer(p, true); answered++; }
+    }
+    if (!answered) fail('no question overlay appeared');
+    await cara.waitForSelector('.verdict', { timeout: 10000 });
+    await cara.screenshot({ path: `${SHOTS}/${mode}-player-answer.png` });
+    await cara.waitForSelector('.q-overlay[hidden]', { state: 'attached', timeout: 10000 });
+    await cara.waitForTimeout(1500);
+    await cara.screenshot({ path: `${SHOTS}/${mode}-player.png` });
+    await dev.screenshot({ path: `${SHOTS}/${mode}-player-wide.png` });
+    await host.screenshot({ path: `${SHOTS}/${mode}-host.png` });
+    const score = Number((await cara.locator('.hud-cell').nth(2).innerText()).replace(/\D/g, ''));
+    if (!(score > 0)) fail(`Cara should have points after a right answer, has ${score}`);
+    say(`${mode}: end`);
+    await host.click('button:has-text("End now")');
+    await host.click('.modal button:has-text("End game")');
+    await host.waitForSelector('.podium');
+    await cara.waitForSelector('.play-screen.is-end', { timeout: 10000 });
+    await host.screenshot({ path: `${SHOTS}/${mode}-podium.png` });
+    await cara.context().close();
+    await dev.context().close();
+  }
+}
+
+if (which !== 'account') {
+  say('the quiz counts its plays');
+  await host.goto(`${BASE}/quiz/${quizId}`);
+  await host.waitForSelector('text=/[1-9]\\d* plays?/');
+
+  say('library has the reports');
+  await host.goto(`${BASE}/library?tab=reports`);
+  await host.waitForSelector('.lib-row');
+}
+
+if (which === 'account' || which === 'all') {
+  say('kick a player from the lobby');
+  const pin = await openLobby('Classic');
+  const eve = await join(pin, 'Eve', { width: 390, height: 780 });
+  await host.click('.player-chip:has-text("Eve")');
+  await host.click('.modal button:has-text("Remove")');
+  await eve.waitForSelector('text=The host removed you from this game.');
+  await eve.goto(`${BASE}/join/${pin}`);
+  await eve.waitForSelector('text=The host removed you from this game.');
+  await eve.context().close();
+  await host.click('button:has-text("Cancel game")');
+  await host.click('.modal button:has-text("Cancel game")');
+  await host.waitForURL(/\/library/);
+
+  say('rename: quizzes follow the new name');
+  await host.goto(`${BASE}/settings`);
+  const name = host.locator('label.field:has-text("Display name") input');
+  await name.fill('Professor Q');
+  await host.click('.blook-pick[aria-label="Kit"]');
+  await host.click('button:has-text("Save profile")');
+  await host.waitForSelector('text=Profile saved');
+  await host.waitForTimeout(1500);
+  await host.goto(`${BASE}/quiz/${quizId}`);
+  await host.waitForSelector('.author:has-text("Professor Q")');
+
+  say('verified badge after three full published quizzes');
+  await host.goto(`${BASE}/u/quizmaster`);
+  await host.waitForSelector('h1:has-text("Professor Q")');
+  if (await host.locator('h1 .verified').count()) fail('verified too early');
+  await host.evaluate(async (id) => {
+    const q = await import('/src/services/quizzes.js');
+    const full = await q.loadForEditing(id);
+    for (const t of ['Copy one', 'Copy two']) await q.saveQuiz({ ...full, id: null, title: t }, { publish: true });
+  }, quizId);
+  await host.goto(`${BASE}/u/quizmaster`);
+  await host.waitForSelector('h1 .verified');
+  await host.waitForSelector('.quiz-card .verified');
+
+  say('blooks: open boxes with starting coins');
+  await host.goto(`${BASE}/blooks`);
+  await host.waitForSelector('.level-badge');
+  for (let i = 0; i < 2; i++) {
+    await host.click('.box-card:has-text("Quickzy Box") button');
+    await host.waitForSelector('.reveal .bcard');
+    if (i === 0) await host.screenshot({ path: `${SHOTS}/box-reveal.png` });
+    await host.click('.modal button:has-text("Nice")');
+  }
+  if (!(await host.locator('.box-card:has-text("Quickzy Box") button').isDisabled())) fail('should be out of coins');
+
+  say('blooks: a game reward levels you up and opens a custom slot');
+  await host.evaluate(async () => {
+    const p = await import('/src/services/progress.js');
+    await p.claimGame('test:1', { s: 20000, c: 10, r: 1 }, 5);
+  });
+  await host.goto(`${BASE}/blooks`);
+  await host.waitForSelector('.level-badge b:text("3")');
+  await host.click('button.bcard.is-slot');
+  await host.click('.modal .part-btn:has-text("happy")');
+  await host.locator('.modal .part-btn').first().click();
+  await host.click('.modal button:has-text("Save blook")');
+  await host.waitForSelector('text=Custom blook saved');
+  await host.screenshot({ path: `${SHOTS}/blooks-page.png`, fullPage: true });
+  await host.click('.card-grid .stack button:has-text("Use")');
+  await host.waitForSelector('text=is now your blook');
+
+  say('change password, sign out, sign back in');
+  await host.goto(`${BASE}/settings`);
+  await host.click('button:has-text("Change")');
+  const pws = host.locator('.modal input[type=password]');
+  await pws.nth(0).fill('Correct-Horse-9');
+  await pws.nth(1).fill('Battery-Staple-42');
+  await host.click('.modal button:has-text("Change password")');
+  await host.waitForSelector('text=Password changed');
+  await host.click('button:has-text("Sign out")');
+  await host.waitForURL(`${BASE}/`);
+  await host.goto(`${BASE}/login`);
+  await host.fill('input[type=email]', 'host@example.com');
+  await host.fill('input[type=password]', 'Correct-Horse-9');
+  await host.click('form button[type=submit]');
+  await host.waitForSelector('text=That email or password is not right.');
+  await host.fill('input[type=password]', 'Battery-Staple-42');
+  await host.click('form button[type=submit]');
+  await host.waitForURL(/\/library/);
+
+  say('password reset email');
+  const other = await newPage('reset');
+  await other.goto(`${BASE}/reset`);
+  await other.fill('input[type=email]', 'host@example.com');
+  await other.click('button:has-text("Send reset link")');
+  await other.waitForSelector('text=Check your inbox');
+  await other.context().close();
+
+  say('delete the account and everything in it');
+  await host.goto(`${BASE}/settings`);
+  await host.click('button:has-text("Delete")');
+  await host.locator('.modal input[type=password]').fill('Battery-Staple-42');
+  await host.locator('.modal input[placeholder="DELETE"]').fill('DELETE');
+  await host.click('.modal button:has-text("Delete everything")');
+  await host.waitForSelector('text=Your account was deleted');
+  await host.goto(`${BASE}/u/quizmaster`);
+  await host.waitForSelector('text=Nothing here');
+  await host.goto(`${BASE}/discover`);
+  await host.waitForSelector('text=No published quizzes yet');
+}
+
+await browser.close();
+if (errors.length) {
+  console.log(`\n${errors.length} page error(s):\n${[...new Set(errors)].join('\n')}`);
+  process.exit(1);
+}
+console.log('\nall good');
