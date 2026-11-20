@@ -19,6 +19,14 @@ service cloud.firestore {
     function siteOwner() { return signedIn() && request.auth.uid == 'KWIRRSUM2VQVWnr1nUDbPP9bqMk2'; }
     // the owner can stop an account from publishing
     function banned() { return exists(/databases/$(database)/documents/bans/$(request.auth.uid)); }
+    // Pro members (the owner and the official account always are)
+    function pro() {
+      // the free test: everyone is Pro until 20 Feb 2027 (00:00 UTC)
+      return request.time.toMillis() < 1803081600000
+        || siteOwner() || request.auth.uid == 'XH9Z5D7tLmRHStlxumgaJyTo1BP2'
+        || (exists(/databases/$(database)/documents/members/$(request.auth.uid))
+            && get(/databases/$(database)/documents/members/$(request.auth.uid)).data.until > request.time.toMillis());
+    }
 
     // ------------------------------------------------------------ profiles
     // Public: display name, username, blook. No email is ever stored here.
@@ -81,7 +89,17 @@ service cloud.firestore {
       function quizShape() {
         let d = request.resource.data;
         return d.keys().hasOnly(['owner', 'title', 'description', 'cover', 'questions', 'questionCount', 'big', 'public',
-                                 'keywords', 'authorName', 'authorUsername', 'authorBlook', 'updatedAt', 'createdAt', 'plays'])
+                                 'keywords', 'authorName', 'authorUsername', 'authorBlook', 'updatedAt', 'createdAt', 'plays', 'liveAt', 'editors'])
+          // making it together: up to 10 people, invited by a Pro owner
+          && d.get('editors', []) is list && d.get('editors', []).size() <= 10
+          && (d.get('editors', []).size() == 0 || pro()
+              || (resource != null && d.get('editors', []) == resource.data.get('editors', [])))
+          && d.get('liveAt', 0) is int
+          // free accounts: a newly published quiz goes live 3 days or more later
+          // (it was checked automatically); a quiz already live stays live; Pro at once
+          && (!d.public || pro()
+              || d.get('liveAt', 0) >= request.time.toMillis() + 255600000
+              || (resource != null && resource.data.public == true && d.get('liveAt', 0) == resource.data.get('liveAt', 0)))
           && d.owner == request.auth.uid
           && str(d.title, 80) && d.title.size() > 0
           && str(d.description, 280)
@@ -98,7 +116,22 @@ service cloud.firestore {
           && d.authorUsername == get(/databases/$(database)/documents/users/$(request.auth.uid)).data.username;
       }
 
-      allow read: if resource.data.public == true || (signedIn() && resource.data.owner == request.auth.uid) || siteOwner();
+      function editor() { return signedIn() && request.auth.uid in resource.data.get('editors', []); }
+
+      allow read: if resource.data.public == true || (signedIn() && resource.data.owner == request.auth.uid) || siteOwner() || editor();
+      // someone invited to make it together: the content only, never the
+      // owner, the author line, who can edit, or whether it is published
+      allow update: if account() && !banned() && editor()
+        && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['title', 'description', 'cover', 'questions', 'questionCount', 'big', 'keywords', 'updatedAt'])
+        && str(request.resource.data.title, 80) && request.resource.data.title.size() > 0
+        && str(request.resource.data.description, 280)
+        && request.resource.data.cover is int
+        && request.resource.data.questions is list && request.resource.data.questions.size() <= 100
+        && request.resource.data.questionCount == request.resource.data.questions.size()
+        && request.resource.data.big == (resource.data.public && request.resource.data.questions.size() >= 5)
+        && (!resource.data.public || request.resource.data.questions.size() >= 3)
+        && request.resource.data.keywords is list && request.resource.data.keywords.size() <= 80
+        && request.resource.data.updatedAt == request.time;
       allow create: if account() && !banned() && quizShape()
         && request.resource.data.plays == 0 && request.resource.data.createdAt == request.time;
       allow update: if account() && !banned() && resource.data.owner == request.auth.uid && quizShape()
@@ -117,9 +150,17 @@ service cloud.firestore {
       // The answers. Players (guests) can never read them; accounts can when
       // the quiz is published, because hosting a quiz needs its answers.
       match /private/{doc} {
+        function quizEditor() {
+          return signedIn() && request.auth.uid in get(/databases/$(database)/documents/quizzes/$(id)).data.get('editors', []);
+        }
         allow read: if signedIn() && (
-          resource.data.owner == request.auth.uid || siteOwner() ||
+          resource.data.owner == request.auth.uid || siteOwner() || quizEditor() ||
           (account() && get(/databases/$(database)/documents/quizzes/$(id)).data.public == true));
+        // collaborators save the answers too; the key stays the owner's
+        allow update: if account() && doc == 'key' && quizEditor()
+          && request.resource.data.keys().hasOnly(['owner', 'answers'])
+          && request.resource.data.owner == resource.data.owner
+          && str(request.resource.data.answers, 200000);
         allow create, update: if account() && doc == 'key'
           && request.resource.data.keys().hasOnly(['owner', 'answers'])
           && request.resource.data.owner == request.auth.uid
@@ -164,6 +205,11 @@ service cloud.firestore {
     match /bans/{uid} {
       allow read: if true;
       allow write: if siteOwner() && uid != request.auth.uid;
+    }
+    // Pro memberships: only the owner (later, the payment system) gives them
+    match /members/{uid} {
+      allow read: if true;
+      allow write: if siteOwner();
     }
     // blue checks the owner gives by hand
     match /badges/{uid} {

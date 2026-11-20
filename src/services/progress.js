@@ -7,6 +7,7 @@
 import { myProfile, signedIn, patchProfile, reloadProfile, me as who } from './session.js';
 import { OWNER_UID } from '../config.js';
 import { currentEvent, eventBoosts } from './site.js';
+import { proNow } from './plan.js';
 import { STARTERS, CUSTOM_PARTS, drawFromBox, rarityOf, isCustom, isBlook, BLOOKS, REGULAR, LIMITED, EXCLUSIVE } from '../ui/blooks.js';
 
 export const MAX_LEVEL = 30;
@@ -84,7 +85,7 @@ export const me = () => {
 
 export function owns(id) {
   if (STARTERS.includes(id)) return true;
-  if (EXCLUSIVE.includes(id) && who()?.uid === OWNER_UID) return true;
+  if (EXCLUSIVE.includes(id) && (who()?.uid === OWNER_UID || proNow())) return true;
   const m = me();
   return Boolean(m.owned[id]) || m.customs.includes(id);
 }
@@ -93,12 +94,13 @@ export function owns(id) {
 export function usableBlooks() {
   const m = me();
   const order = ['legendary', 'epic', 'rare', 'uncommon', 'common'];
-  const flags = who()?.uid === OWNER_UID ? EXCLUSIVE : [];
+  const flags = who()?.uid === OWNER_UID || proNow() ? EXCLUSIVE : [];
   const mine = [...new Set([...m.customs, ...flags, ...Object.keys(m.owned).filter(isBlook), ...STARTERS])];
   return mine.sort((a, b) => order.indexOf(rarityOf(a).id) - order.indexOf(rarityOf(b).id));
 }
 
-export const customSlots = () => CUSTOM_SLOTS.filter((l) => levelOf(me().xp) >= l).length;
+// Pro members get all three custom slots and every part at once
+export const customSlots = () => (proNow() ? CUSTOM_SLOTS.length : CUSTOM_SLOTS.filter((l) => levelOf(me().xp) >= l).length);
 
 /** Spend coins on a box. Returns {id, duplicate, refund}. */
 export async function openBox(boxId, rand = Math.random) {
@@ -130,7 +132,7 @@ export async function saveCustom(slot, id) {
   const lvl = levelOf(me().xp);
   const parts = Object.keys(CUSTOM_PARTS);
   parts.forEach((part, i) => {
-    if (partLevel(part, Number(id[2 + i])) > lvl) throw new Error('One of those parts is not unlocked yet.');
+    if (!proNow() && partLevel(part, Number(id[2 + i])) > lvl) throw new Error('One of those parts is not unlocked yet.');
   });
   const customs = [...me().customs];
   while (customs.length <= slot) customs.push(null);

@@ -1,5 +1,6 @@
 // join.js — type or scan a PIN, pick a nickname and a blook, get in.
 
+import { isPro, PLANS } from '../services/plan.js';
 import { h, fill } from '../ui/dom.js';
 import { icon, logo, wordmark } from '../ui/icons.js';
 import { blook, randomBlook, blookName, STARTERS } from '../ui/blooks.js';
@@ -69,7 +70,9 @@ export default async function Join({ params }) {
   if (kicked) return problem('The host removed you from this game.');
 
   const others = (await net.live.get(gamePath(pin, 'players')).catch(() => null)) || {};
-  if (Object.keys(others).length >= LIMITS.playersMax) return problem(`This game is full (${LIMITS.playersMax} players).`);
+  // free games hold 40 players, Pro games 100
+  const cap = (await isPro(meta.host)) ? PLANS.pro.players : PLANS.free.players;
+  if (Object.keys(others).length >= cap) return problem(`This game is full (${cap} players).`);
   const taken = new Set(Object.values(others).map((p) => String(p.name).toLowerCase()));
 
   const profile = myProfile();

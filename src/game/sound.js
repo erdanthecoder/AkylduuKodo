@@ -93,17 +93,104 @@ export function sfx(name) {
 
 /* ------------------------------------------------------------------ music */
 
-// A short, cheerful loop built from a chord progression, scheduled ahead in
-// small chunks so it never stutters. Different tempo and mood per scene.
-const SCENES = {
-  lobby: { bpm: 112, chords: [[60, 64, 67], [57, 60, 64], [65, 69, 72], [67, 71, 74]], lead: [72, 74, 76, 79, 76, 74, 72, 67] },
-  game: { bpm: 132, chords: [[57, 60, 64], [65, 69, 72], [60, 64, 67], [67, 71, 74]], lead: [76, 79, 81, 79, 76, 74, 72, 74] },
-  tense: { bpm: 140, chords: [[57, 60, 64], [57, 60, 64], [53, 57, 60], [55, 59, 62]], lead: [69, 72, 69, 76, 74, 72, 71, 69] },
+// Little songs, written as patterns and played by a scheduler that looks a
+// little ahead, so nothing stutters. Every track has drums, a bass line,
+// chords, an arpeggio and a lead that switches between an A and a B part.
+//
+// Pattern letters: x = hit, . = rest. Melody arrays hold semitones above the
+// key (null = rest), one per sixteenth note; they loop.
+
+const N = null;
+const TRACKS = {
+  // calm and bouncy: home, menus, the intro
+  menu: {
+    bpm: 100, key: 60, swing: 0.12,
+    chords: [[0, 4, 7, 11], [9, 12, 16, 19], [5, 9, 12, 16], [7, 11, 14, 17]],
+    kick:  'x.......x.......', snare: '....x.......x...', hat: '..x...x...x...x.',
+    bass: [0, N, N, 0, N, N, 7, N, 0, N, N, 0, N, 12, N, 7],
+    arp: true, leadWave: 'triangle',
+    leadA: [12, N, 16, N, 19, N, 16, N, 14, N, 12, N, 9, N, N, N],
+    leadB: [16, N, 19, 21, 19, N, 16, N, 14, 16, 14, 12, 11, N, N, N],
+  },
+  // the lobby: funky, waiting for friends
+  lobby: {
+    bpm: 112, key: 62, swing: 0.16,
+    chords: [[0, 3, 7, 10], [5, 9, 12, 15], [-2, 2, 5, 9], [3, 7, 10, 14]],
+    kick:  'x..x....x.x.....', snare: '....x.......x..x', hat: 'x.xxx.xxx.xxx.xx',
+    bass: [0, N, 0, 12, N, 0, 10, N, 0, N, 0, 12, N, 7, 10, N],
+    arp: false, leadWave: 'square',
+    leadA: [12, N, 15, N, 17, 15, N, 12, N, N, 10, N, 12, N, N, N],
+    leadB: [19, N, 17, N, 15, N, 17, 19, 22, N, 19, N, 17, 15, 12, N],
+  },
+  // playing: fast and bright
+  game: {
+    bpm: 136, key: 64, swing: 0,
+    chords: [[0, 4, 7], [-3, 0, 4], [-7, -3, 0], [-5, -1, 2]],
+    kick:  'x...x...x...x...', snare: '....x.......x...', hat: '..x...x...x...xx',
+    bass: [0, 0, 12, 0, 0, 12, 0, 12, -3, -3, 9, -3, -5, -5, 7, -5],
+    arp: true, leadWave: 'square',
+    leadA: [12, N, 12, 14, 16, N, 12, N, 9, N, 9, 12, 14, N, N, N],
+    leadB: [19, N, 16, N, 19, 21, 19, 16, 14, N, 12, N, 14, 16, 12, N],
+  },
+  // a different feel for the arcade games
+  arcade: {
+    bpm: 128, key: 57, swing: 0.08,
+    chords: [[0, 3, 7], [-4, 0, 3], [-2, 2, 5], [-5, -1, 2]],
+    kick:  'x.....x...x.....', snare: '....x.......x...', hat: 'xxx.xxx.xxx.xxx.',
+    bass: [0, N, 0, N, 12, N, 0, 3, -4, N, -4, N, 8, N, -4, -2],
+    arp: true, leadWave: 'sawtooth',
+    leadA: [12, N, 15, N, 19, N, 15, 12, 10, N, 12, N, 7, N, N, N],
+    leadB: [24, 22, 19, N, 15, N, 19, 22, 20, N, 19, N, 15, N, 12, N],
+  },
+  // the last 30 seconds
+  tense: {
+    bpm: 150, key: 57, swing: 0,
+    chords: [[0, 3, 7], [0, 3, 7], [-4, 0, 3], [-2, 1, 5]],
+    kick:  'x.x.x.x.x.x.x.x.', snare: '....x.......x.xx', hat: 'xxxxxxxxxxxxxxxx',
+    bass: [0, 0, 0, 0, 0, 0, 0, 0, -4, -4, -4, -4, -2, -2, -2, -2],
+    arp: true, leadWave: 'square',
+    leadA: [12, N, 11, N, 12, N, 15, N, 14, N, 12, N, 11, N, 7, N],
+    leadB: [15, 14, 12, 11, 12, N, 15, N, 19, N, 17, 15, 14, N, 11, N],
+  },
+  // the podium
+  victory: {
+    bpm: 120, key: 60, swing: 0,
+    chords: [[0, 4, 7], [5, 9, 12], [7, 11, 14], [0, 4, 7]],
+    kick:  'x.......x.x.....', snare: '....x.......x...', hat: 'x.x.x.x.x.x.x.x.',
+    bass: [0, N, 7, N, 0, N, 7, N, 5, N, 12, N, 7, N, 14, N],
+    arp: true, leadWave: 'triangle',
+    leadA: [12, N, 12, N, 12, 16, 19, N, 17, N, 17, 21, 24, N, N, N],
+    leadB: [24, N, 23, N, 21, N, 19, N, 17, 19, 21, 19, 24, N, N, N],
+  },
 };
+// old scene names still work
+TRACKS.space = TRACKS.arcade;
 
 let music = null;
 
 const midi = (n) => 440 * 2 ** ((n - 69) / 12);
+
+function kick(at, out) {
+  const c = audio(); const t = c.currentTime + at;
+  const o = c.createOscillator(); const g = c.createGain();
+  o.frequency.setValueAtTime(150, t); o.frequency.exponentialRampToValueAtTime(42, t + 0.14);
+  g.gain.setValueAtTime(0.0001, t); g.gain.exponentialRampToValueAtTime(0.55, t + 0.004); g.gain.exponentialRampToValueAtTime(0.0001, t + 0.22);
+  o.connect(g).connect(out); o.start(t); o.stop(t + 0.25);
+}
+let noiseBuf = null;
+function hiss(at, out, { dur, gain, type, freq }) {
+  const c = audio(); const t = c.currentTime + at;
+  if (!noiseBuf) {
+    noiseBuf = c.createBuffer(1, c.sampleRate, c.sampleRate);
+    const d = noiseBuf.getChannelData(0);
+    for (let i = 0; i < d.length; i++) d[i] = Math.random() * 2 - 1;
+  }
+  const src = c.createBufferSource(); src.buffer = noiseBuf;
+  const f = c.createBiquadFilter(); f.type = type; f.frequency.value = freq;
+  const g = c.createGain();
+  g.gain.setValueAtTime(gain, t); g.gain.exponentialRampToValueAtTime(0.0001, t + dur);
+  src.connect(f).connect(g).connect(out); src.start(t, Math.random() * 0.5); src.stop(t + dur + 0.02);
+}
 
 export function playMusic(scene = 'lobby') {
   if (!prefs().music) { stopMusic(); return; }
@@ -111,28 +198,41 @@ export function playMusic(scene = 'lobby') {
   stopMusic();
   const c = audio();
   if (!c) return;
-  const s = SCENES[scene] || SCENES.lobby;
+  const s = TRACKS[scene] || TRACKS.lobby;
   const bus = c.createGain();
   bus.gain.value = 0.0001;
-  bus.gain.exponentialRampToValueAtTime(0.35, c.currentTime + 1.2);
+  bus.gain.exponentialRampToValueAtTime(0.32, c.currentTime + 1);
   bus.connect(master);
-  const beat = 60 / s.bpm;
+  // a soft echo on the lead makes it feel bigger
+  const echo = c.createDelay(); echo.delayTime.value = (60 / s.bpm) * 0.75;
+  const fb = c.createGain(); fb.gain.value = 0.28;
+  const wet = c.createGain(); wet.gain.value = 0.35;
+  echo.connect(fb).connect(echo); echo.connect(wet).connect(bus);
+  const lead = c.createGain(); lead.gain.value = 1; lead.connect(bus); lead.connect(echo);
+  const six = 60 / s.bpm / 4;
   let step = 0;
-  let next = c.currentTime + 0.1;
+  let next = c.currentTime + 0.12;
   const timer = setInterval(() => {
     if (!prefs().music) { stopMusic(); return; }
-    while (next < c.currentTime + 0.6) {
-      const at = next - c.currentTime;
-      const bar = Math.floor(step / 8) % s.chords.length;
-      const chord = s.chords[bar];
-      if (step % 8 === 0) chord.forEach((n) => tone(midi(n - 12), { at, dur: beat * 3.8, type: 'triangle', gain: 0.06, out: bus }));
-      if (step % 2 === 0) tone(midi(chord[0] - 24), { at, dur: beat * 0.9, type: 'sine', gain: 0.16, out: bus });
-      if (step % 4 === 2) tone(midi(s.lead[(step / 2) % s.lead.length | 0]), { at, dur: beat * 0.7, type: 'square', gain: 0.025, out: bus });
-      if (step % 2 === 1) tone(midi(chord[(step >> 1) % 3] + 12), { at, dur: beat * 0.35, type: 'triangle', gain: 0.035, out: bus });
+    while (next < c.currentTime + 0.5) {
+      const i = step % 16;
+      const swing = i % 2 ? six * s.swing : 0;
+      const at = next - c.currentTime + swing;
+      const bar = Math.floor(step / 16);
+      const chord = s.chords[bar % s.chords.length];
+      const part = Math.floor(bar / 4) % 2 ? s.leadB : s.leadA;
+      if (s.kick[i] === 'x') kick(at, bus);
+      if (s.snare[i] === 'x') hiss(at, bus, { dur: 0.16, gain: 0.22, type: 'bandpass', freq: 1800 });
+      if (s.hat[i] === 'x') hiss(at, bus, { dur: 0.04, gain: i % 4 === 2 ? 0.09 : 0.05, type: 'highpass', freq: 8000 });
+      if (s.bass[i] !== null) tone(midi(s.key - 24 + s.bass[i] + chord[0]), { at, dur: six * 1.6, type: 'triangle', gain: 0.2, out: bus });
+      if (i === 0) chord.forEach((n) => tone(midi(s.key + n - 12), { at, dur: six * 15, type: 'sine', gain: 0.045, out: bus }));
+      if (s.arp && i % 2 === 0) tone(midi(s.key + chord[(i / 2) % chord.length] + 12), { at, dur: six * 0.9, type: 'triangle', gain: 0.03, out: bus });
+      // the lead rests in the first bar of each part, so the song breathes
+      if (part[i] !== null && bar % 8 !== 0) tone(midi(s.key + part[i]), { at, dur: six * 1.5, type: s.leadWave, gain: s.leadWave === 'triangle' ? 0.07 : 0.03, out: lead });
       step += 1;
-      next += beat / 2;
+      next += six;
     }
-  }, 120);
+  }, 100);
   music = { scene, timer, bus };
 }
 

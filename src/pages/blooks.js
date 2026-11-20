@@ -7,6 +7,7 @@ import { blook, BLOOKS, RARITIES, rarityOf, blookName, CUSTOM_PARTS, PART_NAMES,
 import { modal, busy, toast } from '../ui/kit.js';
 import { signedIn, whenProfile, updateProfile } from '../services/session.js';
 import * as progress from '../services/progress.js';
+import { myPlan, proNow } from '../services/plan.js';
 import { sfx } from '../game/sound.js';
 import { celebrate } from '../ui/confetti.js';
 import { pageTitle } from './parts.js';
@@ -344,7 +345,7 @@ function builder(slot, existing, redraw) {
         h('b', {}, PART_NAMES[part]),
         h('div', { class: 'row', style: { gap: '6px' } }, ...options.map((opt, i) => {
           const need = progress.partLevel(part, i);
-          const locked = need > lvl;
+          const locked = need > lvl && !proNow();
           const on = parts[part] === i;
           const label = part === 'body'
             ? h('span', { class: 'swatch', style: { background: opt[0] } })
@@ -396,6 +397,7 @@ export default async function Blooks() {
         h('a', { class: 'btn btn-lg', href: '/login?next=/blooks' }, 'Sign in'))));
   }
   await whenProfile();
+  await myPlan();     // so Pro perks (all custom slots, flags) are known before drawing
   const root = h('div', { class: 'page stack', style: { gap: '22px' } });
   const draw = () => fill(root,
     h('h1', {}, 'Blooks'),

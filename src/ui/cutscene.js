@@ -72,6 +72,7 @@ function sceneEnd(close) {
 export function playIntro() {
   return new Promise((resolve) => {
     try { localStorage.setItem(SEEN, '1'); } catch { /* private mode */ }
+    import('./whatsnew.js').then((w) => w.markSeen()).catch(() => {});
     const calm = document.documentElement.dataset.motion === 'calm';
     const stage = h('div', { class: 'cs-stage' });
     const bar = h('div', { class: 'cs-bar' }, h('i'));
@@ -97,7 +98,7 @@ export function playIntro() {
 
     const show = (scene) => { stage.replaceChildren(scene); };
     const scenes = [
-      [0, () => { show(sceneLogo()); sfx('boost'); later(500, () => sfx('go')); later(900, () => playMusic('lobby')); }],
+      [0, () => { show(sceneLogo()); sfx('boost'); later(500, () => sfx('go')); later(900, () => playMusic('menu')); }],
       [3400, () => { show(sceneMake()); sfx('pick'); later(1500, () => sfx('right')); }],
       [6800, () => { show(sceneJoin()); for (let i = 0; i < 6; i++) later(i * 160, () => sfx('tick')); for (let i = 0; i < 8; i++) later(1000 + i * 140, () => sfx(i % 2 ? 'join' : 'pick')); }],
       [10600, () => { show(scenePlay()); sfx('laser'); later(400, () => sfx('jump')); later(800, () => sfx('boost')); later(1300, () => sfx('laser')); }],

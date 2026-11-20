@@ -45,6 +45,8 @@ const EMULATOR = process.env.EMULATOR === '1';
 async function newPage(who, viewport = { width: 1280, height: 800 }) {
   const ctx = await browser.newContext({ viewport, hasTouch: who !== 'host' && viewport.width < 600 });
   if (EMULATOR) await ctx.addInitScript(() => sessionStorage.setItem('quickzy.emulator', '1'));
+  // the free Pro test is switched off here, so the free plan gets tested too
+  await ctx.addInitScript(() => localStorage.setItem('quickzy.test.noTrial', '1'));
   const page = await ctx.newPage();
   watch(page, who);
   return page;
@@ -112,7 +114,23 @@ await host.locator('.opt .x').nth(3).click();
 await host.locator('.opt .x').nth(2).click();
 await host.screenshot({ path: `${SHOTS}/editor.png` });
 
-say('publish');
+say('publish (free account): sent for checking, not live yet');
+await host.click('button:has-text("Publish")');
+await host.waitForSelector('text=Sent for checking', { timeout: 8000 }).catch(async () => {
+  const issues = await host.locator('.modal').innerText().catch(() => '');
+  fail(`free publish did not go to review ${issues}`);
+});
+await host.click('button:has-text("Unpublish")');
+await host.waitForSelector('text=Unpublished');
+
+say('publish (Pro): live at once');
+// the owner would give Pro from the Owner panel; the test sets it directly
+await host.evaluate(async () => {
+  const { net, session } = window.__quickzy;
+  const uid = session.me().uid;
+  await net.store.set('members', uid, { plan: 'pro', since: Date.now(), until: Date.now() + 864e8 });
+  (await import('/src/services/plan.js')).forget(uid);
+});
 await host.click('button:has-text("Publish")');
 await host.waitForSelector('text=Published. Anyone can find', { timeout: 8000 }).catch(async () => {
   const issues = await host.locator('.modal').innerText().catch(() => '');
@@ -120,6 +138,14 @@ await host.waitForSelector('text=Published. Anyone can find', { timeout: 8000 })
 });
 const quizId = host.url().split('/edit/')[1];
 if (!quizId) fail('no quiz id in the address');
+
+say('make it together: invite by username');
+await host.click('button:has-text("Together")');
+await host.waitForSelector('.modal:has-text("Make it together")');
+await host.fill('.modal input[placeholder="Their username"]', 'nobody_here_42');
+await host.click('.modal button:has-text("Invite")');
+await host.waitForSelector('.modal .error-text:has-text("Nobody has that username")');
+await host.click('.modal button:has-text("Done")');
 
 say('discover finds it');
 await host.goto(`${BASE}/discover?q=planet`);
@@ -233,8 +259,35 @@ if (which === 'classic' || which === 'all') {
   await ben.context().close();
 }
 
+if (which === 'teams' || which === 'classic' || which === 'all') {
+  say('teams: two teams in the lobby');
+  const pin = await openLobby('Robot Run', async () => {
+    await host.click('.set-row:has-text("Team mode") button:has-text("2 teams")');
+    await host.click('.set-row:has-text("Game length") button:has-text("3 min")');
+  });
+  const cara = await join(pin, 'Cara', { width: 390, height: 780 });
+  const dan = await join(pin, 'Dan', { width: 390, height: 780 });
+  await host.waitForFunction(() => document.querySelectorAll('.team-col').length === 2
+    && [...document.querySelectorAll('.team-col')].every((c) => c.querySelectorAll('.team-chip').length === 1));
+  await cara.waitForSelector('.lobby-team .team-badge');
+  await host.screenshot({ path: `${SHOTS}/teams-lobby.png` });
+  await cara.screenshot({ path: `${SHOTS}/teams-player.png` });
+
+  say('teams: the race shows team scores, and a team wins');
+  await host.click('button:has-text("Start")');
+  await host.waitForFunction(() => document.querySelectorAll('.side-teams .team-bar').length === 2, null, { timeout: 15000 });
+  await host.click('button:has-text("End now")');
+  await host.click('.modal button:has-text("End game")');
+  await host.waitForSelector('.team-win');
+  await cara.waitForSelector('.play-screen.is-end .team-badge');
+  await host.waitForTimeout(1500);
+  await host.screenshot({ path: `${SHOTS}/teams-end.png` });
+  await cara.context().close();
+  await dan.context().close();
+}
+
 if (which === 'arcade' || which === 'all') {
-  for (const [mode, name] of [['lasertag', 'Laser Tag'], ['robotrun', 'Robot Run'], ['spacecraft', 'Spacecraft'], ['obby', 'Sky Climb']]) {
+  for (const [mode, name] of [['lasertag', 'Laser Tag'], ['robotrun', 'Robot Run'], ['spacecraft', 'Spacecraft'], ['obby', 'Sky Climb'], ['defense', 'Tower Defense']]) {
     say(`${mode}: open the lobby`);
     const pin = await openLobby(name, () => host.click('.set-row:has-text("Game length") button:has-text("3 min")'));
     const cara = await join(pin, 'Cara', { width: 390, height: 780 });
@@ -354,6 +407,22 @@ if ((which === 'owner' || which === 'all') && !EMULATOR) {
   await visitor.reload();
   await visitor.waitForTimeout(800);
   if (await visitor.locator('.announce:not([hidden])').count()) fail('dismissed announcement came back');
+
+  say('owner: a countdown ticks on every page, then celebrates');
+  await own.fill('input[placeholder^="e.g. Quickzy 1.2"]', 'Quickzy 1.2 lands in');
+  await own.evaluate(() => {
+    const d = new Date(Date.now() + 3 * 60000);
+    const p = (n) => String(n).padStart(2, '0');
+    const el = document.querySelector('input[type="datetime-local"]');
+    el.value = `${d.getFullYear()}-${p(d.getMonth() + 1)}-${p(d.getDate())}T${p(d.getHours())}:${p(d.getMinutes())}`;
+  });
+  await own.click('button:has-text("Start countdown")');
+  await own.waitForSelector('text=Countdown started for everyone');
+  await visitor.reload();
+  await visitor.waitForSelector('.count-bar:has-text("Quickzy 1.2 lands in")');
+  await visitor.screenshot({ path: `${SHOTS}/countdown.png` });
+  await own.click('button:has-text("Remove countdown")');
+  await own.waitForSelector('text=Countdown removed');
   await visitor.context().close();
 
   say('owner: players tab, give coins and a blue check');
@@ -470,6 +539,15 @@ if (which === 'account' || which === 'all') {
   await host.goto(`${BASE}/quiz/${quizId}`);
   await host.waitForSelector('.author:has-text("Professor Q")');
 
+  say('Pro members wear the gold PRO badge');
+  await host.goto(`${BASE}/u/quizmaster`);
+  await host.waitForSelector('h1 .verified.is-pro');
+  await host.evaluate(async () => {
+    const { net, session } = window.__quickzy;
+    await net.store.del('members', session.me().uid);
+    (await import('/src/services/plan.js')).forget(session.me().uid);
+  });
+
   say('verified badge after three full published quizzes');
   await host.goto(`${BASE}/u/quizmaster`);
   await host.waitForSelector('h1:has-text("Professor Q")');
@@ -510,7 +588,8 @@ if (which === 'account' || which === 'all') {
   if ((await host.locator('.q-thumb').count()) !== 6) fail('expected 6 questions in the editor');
   if ((await host.inputValue('input[aria-label="Quiz title"]')) !== 'Volcano Facts') fail('title not filled in');
   await host.click('button:has-text("Publish")');
-  await host.waitForSelector('text=Published. Anyone can find');
+  // the account is free again by now: its quiz goes to the 3-5 day check
+  await host.waitForSelector('text=Sent for checking');
 
   say('solo practice: play a whole quiz alone');
   await host.goto(`${BASE}/practice/${quizId}`);

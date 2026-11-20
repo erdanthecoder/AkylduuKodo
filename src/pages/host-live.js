@@ -4,6 +4,8 @@
 // what the referee knows and gives the host the controls.
 
 import { listen } from '../ui/abuse.js';
+import { videoClip } from '../ui/video.js';
+import { TEAMS } from '../game/teams.js';
 import { picture } from '../ui/picture.js';
 import { h, fill, plural } from '../ui/dom.js';
 import { icon, shape, logo, wordmark } from '../ui/icons.js';
@@ -137,18 +139,44 @@ export default async function HostLive({ params }) {
         fill(grid, h('p', { class: 'lobby-wait' }, 'Waiting for players…'));
         return;
       }
-      const chips = players.map((p) => {
+      const chip = (p) => {
         const chip = h('button', { class: `player-chip${shown.has(p.uid) ? '' : ' is-new'}`, title: `Remove ${p.name}`,
           onclick: async () => {
             if (await confirm({ title: `Remove ${p.name}?`, text: 'They cannot rejoin this game.', yes: 'Remove', danger: true })) ref.kick(p.uid);
           } }, blook(p.blook), h('span', {}, p.name), h('i', { class: 'x' }, icon('close', { size: 14 })));
         if (!shown.has(p.uid)) { shown.add(p.uid); sfx('join'); }
         return chip;
-      });
-      fill(grid, ...chips);
+      };
+      if (ref.nTeams) {
+        // one column per team, in its colours
+        grid.classList.add('is-teams');
+        fill(grid, ...TEAMS.slice(0, ref.nTeams).map((t, i) => {
+          const members = players.filter((p) => ref.teamOf[p.uid] === i);
+          return h('div', { class: 'team-col', style: { '--tc': t.colour, '--td': t.dark } },
+            h('div', { class: 'team-head' }, blook(t.blook, 40), h('b', {}, t.name), h('span', { class: 'team-n' }, String(members.length))),
+            h('div', { class: 'team-members' }, ...members.map((p) => {
+              const c = chip(p);
+              c.classList.remove('player-chip'); c.classList.add('player-chip', 'team-chip');
+              return c;
+            })));
+        }));
+        return;
+      }
+      fill(grid, ...players.map(chip));
     };
     playMusic('lobby');
     return { key: 'lobby', el, update };
+  }
+
+  /** The team race: one bar per team, longest = winning. */
+  function teamStrip() {
+    if (!ref.nTeams) return null;
+    const rows = ref.teams();
+    const best = Math.max(1, ...rows.map((t) => t.score));
+    return h('div', { class: 'team-strip' }, ...rows.map((t, k) => h('div', { class: `team-bar${k === 0 ? ' is-lead' : ''}`, style: { '--tc': t.colour, '--td': t.dark } },
+      blook(t.blook, 34), h('b', { class: 'team-name' }, t.name),
+      h('div', { class: 'team-track' }, h('i', { style: { width: `${Math.max(4, (t.score / best) * 100)}%` } })),
+      h('b', { class: 'team-score' }, fmt(t.score)))));
   }
 
   /* ---------------------------------------------------------- classic */
@@ -206,16 +234,16 @@ export default async function HostLive({ params }) {
     nextBtn.addEventListener('click', busy(nextBtn, async () => { await ref.next(); }));
 
     if (cur.phase === 'intro') {
-      playMusic('game');
+      if (q.video) stopMusic(); else playMusic('game');
       const bar2 = h('div', { class: 'intro-bar' }, h('i'));
       const el = h('div', { class: 'host-screen q-screen' },
         bar(h('span', { class: 'pill pill-dark' }, progress)),
         h('div', { class: 'q-intro' },
           h('p', { class: 'q-type' }, typeLabel),
           h('h1', {}, q.text),
-          picture(q.img),
+          q.video ? videoClip(q.video) : picture(q.img),
           bar2),
-        h('div', { class: 'host-foot' }, pinText(false), h('button', { class: 'btn btn-dark', onclick: () => ref.next() }, 'Show answers now')));
+        h('div', { class: 'host-foot' }, pinText(false), h('button', { class: 'btn btn-dark', onclick: () => ref.next() }, q.video ? 'Skip the video' : 'Show answers now')));
       requestAnimationFrame(() => { bar2.firstChild.style.transitionDuration = `${Math.max(0, cur.introEnds - live.now())}ms`; bar2.firstChild.style.width = '100%'; });
       sfx('reveal');
       return { key: `intro${cur.n}`, el, update() {} };
@@ -285,7 +313,8 @@ export default async function HostLive({ params }) {
     const board = h('ol', { class: 'board is-flip', style: { height: `${Math.max(1, list.length) * ROW}px` } }, ...rows.map((r) => r.li));
     const el = h('div', { class: 'host-screen board-screen pattern' },
       bar(h('span', { class: 'pill pill-dark' }, progress)),
-      h('h1', { class: 'center' }, 'Leaderboard'),
+      h('h1', { class: 'center' }, ref.nTeams ? 'Teams' : 'Leaderboard'),
+      teamStrip(),
       board,
       list.length ? null : h('p', { class: 'center muted-light' }, 'No players yet.'),
       h('div', { class: 'host-foot' }, pinText(false), nextBtn));
@@ -309,9 +338,10 @@ export default async function HostLive({ params }) {
   /* ----------------------------------------------------------- arcade */
 
   function arcadeView() {
-    playMusic('game');
+    playMusic('arcade');
     const time = h('b', { class: 'arcade-time' }, '');
     const side = h('ol', { class: 'side-board' });
+    const teamBox = h('div', { class: 'side-teams' });
     const stageEl = h('div', { class: 'host-stage' });
     const count = h('div', { class: 'count-in', hidden: true });
     const endBtn = h('button', { class: 'btn btn-dark btn-sm' }, icon('stop', { size: 16 }), 'End now');
@@ -324,6 +354,7 @@ export default async function HostLive({ params }) {
         h('div', { class: 'host-stage-wrap' }, stageEl, count),
         h('aside', { class: 'side' },
           h('div', { class: 'side-time' }, icon('clock'), time),
+          teamBox,
           side,
           h('div', { class: 'side-join' }, h('small', {}, `Join at ${location.host}`), pinText(false)))));
     let screenStop = null;
@@ -347,6 +378,7 @@ export default async function HostLive({ params }) {
     }, 200);
     const update = () => {
       const list = ref.ranked().slice(0, 10);
+      if (ref.nTeams) fill(teamBox, teamStrip());
       fill(side, ...list.map((p, i) => h('li', {}, h('span', { class: 'rank' }, String(i + 1)), blook(p.blook),
         h('span', { class: 'grow' }, h('b', {}, p.name), h('small', {}, p.extra.summary || '')), h('b', {}, fmt(p.score)))),
       list.length ? null : h('li', { class: 'muted-light' }, 'No players'));
@@ -365,6 +397,7 @@ export default async function HostLive({ params }) {
       setTimeout(() => sfx('reveal'), 1700),
       ...[2400, 2600, 2800, 3000, 3200].map((t) => setTimeout(() => sfx('drum'), t)),
       setTimeout(() => { sfx('win'); celebrate(); }, 3400),
+      setTimeout(() => playMusic('victory'), 4800),
     ];
     const podium = [list[1], list[0], list[2]];
     const report = {
@@ -379,9 +412,13 @@ export default async function HostLive({ params }) {
     }
     const close = h('button', { class: 'btn btn-dark' }, 'Close game');
     close.addEventListener('click', busy(close, async () => { await closeGame(); navigate('/library?tab=reports', { replace: true }); }));
+    const won = ref.nTeams ? ref.teams()[0] : null;
     const el = h('div', { class: 'host-screen end-screen pattern' },
       bar(),
-      h('h1', { class: 'center' }, 'Podium'),
+      won ? h('div', { class: 'team-win', style: { '--tc': won.colour, '--td': won.dark, animationDelay: '3400ms' } },
+        blook(won.blook, 72), h('div', {}, h('small', {}, 'Winning team'), h('b', {}, won.name), h('span', {}, `${fmt(won.score)} points · ${won.members.length} players`))) : null,
+      won ? teamStrip() : null,
+      h('h1', { class: 'center' }, won ? 'Top players' : 'Podium'),
       h('div', { class: 'podium' }, ...podium.map((p, k) => {
         const place = [2, 1, 3][k];
         if (!p) return h('div', { class: `step s${place} is-empty` });

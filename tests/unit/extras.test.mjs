@@ -45,3 +45,18 @@ test('sky climb: a wrong answer gives no energy', async () => {
   assert.equal(host.grant({}, false), 0);
   assert.ok(host.grant({}, true) > 0);
 });
+
+test('video clips: YouTube links, times, limits', async () => {
+  const q = await import('../../src/game/questions.js');
+  for (const link of ['https://www.youtube.com/watch?v=dQw4w9WgXcQ', 'https://youtu.be/dQw4w9WgXcQ', 'https://www.youtube.com/shorts/dQw4w9WgXcQ', 'dQw4w9WgXcQ', 'https://www.youtube.com/watch?t=3&v=dQw4w9WgXcQ'])
+    assert.equal(q.youTubeId(link), 'dQw4w9WgXcQ', link);
+  assert.equal(q.youTubeId('https://evil.example/watch?v=dQw4w9WgXcQ'), '');
+  assert.equal(q.parseTime('1:05'), 65);
+  assert.equal(q.parseTime('90'), 90);
+  assert.deepEqual(q.cleanVideo({ id: 'dQw4w9WgXcQ', start: 10, end: 40 }), { id: 'dQw4w9WgXcQ', start: 10, end: 40 });
+  assert.equal(q.cleanVideo({ id: 'dQw4w9WgXcQ', start: 40, end: 10 }), null);
+  assert.equal(q.cleanVideo({ id: 'dQw4w9WgXcQ', start: 0, end: 900 }), null);
+  const { pub, key } = q.split([{ id: 'a', type: 'tf', text: 'Watch', time: 10, points: 'standard', answer: true, video: { id: 'dQw4w9WgXcQ', start: 0, end: 20 } }]);
+  assert.equal(pub[0].video.end, 20);
+  assert.equal(q.join(pub, key)[0].video.id, 'dQw4w9WgXcQ');
+});

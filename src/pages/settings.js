@@ -16,6 +16,7 @@ import { sfx } from '../game/sound.js';
 import { nameBadges } from '../ui/badges.js';
 import * as siteSvc from '../services/site.js';
 import { unfollowAll } from '../services/channels.js';
+import { myPlan } from '../services/plan.js';
 
 export function blookPicker(current, onPick) {
   const grid = h('div', { class: 'blook-grid', role: 'radiogroup', 'aria-label': 'Blook' });
@@ -313,6 +314,7 @@ export default async function Settings({ query }) {
       deviceSection());
   }
   await session.whenProfile();
+  await myPlan();
   if (!session.myProfile()) {
     return h('div', { class: 'page narrow' }, h('div', { class: 'card center stack' },
       h('h2', {}, 'Your profile did not load'),

@@ -113,9 +113,13 @@ async function ensureProfile(u) {
 }
 
 /** Commons are everyone's; the rest come from boxes or the custom builder. */
+// set by plan.js once it knows (avoids an import loop)
+let proFlag = false;
+export const setProFlag = (v) => { proFlag = Boolean(v); };
+
 export function ownsBlook(id) {
   if (STARTERS.includes(id)) return true;
-  if (EXCLUSIVE.includes(id) && user?.uid === OWNER_UID) return true;
+  if (EXCLUSIVE.includes(id) && (user?.uid === OWNER_UID || proFlag)) return true;
   const p = profile || {};
   return Boolean(p.owned && p.owned[id]) || (Array.isArray(p.customs) && p.customs.includes(id));
 }

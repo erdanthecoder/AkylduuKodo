@@ -7,6 +7,7 @@
 // for each quiz is remembered on this device.
 
 import { picture } from '../ui/picture.js';
+import { videoClip } from '../ui/video.js';
 import { h, fill } from '../ui/dom.js';
 import { icon } from '../ui/icons.js';
 import { signedIn } from '../services/session.js';
@@ -104,7 +105,21 @@ export default async function Practice({ params }) {
     finish(log, score, best);
   }
 
-  function ask(q, i, n, total, score, streak) {
+  // a video question plays its clip first; the question comes when you are ready
+  function watch(q, n, total) {
+    if (!q.video) return Promise.resolve();
+    stopMusic();
+    return new Promise((resolve) => {
+      fill(root, h('div', { class: 'solo-q' },
+        h('div', { class: 'solo-top' }, h('span', {}, `${n + 1} / ${total}`), h('span', {}, 'Watch first')),
+        h('h2', { class: 'q-text-play' }, q.text),
+        videoClip(q.video),
+        h('button', { class: 'btn btn-main btn-lg', onclick: () => { playMusic('game'); resolve(); } }, icon('play', { size: 18 }), 'I watched it: answer')));
+    });
+  }
+
+  async function ask(q, i, n, total, score, streak) {
+    await watch(q, n, total);
     return new Promise((resolve) => {
       const started = performance.now();
       const bar = h('i');

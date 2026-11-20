@@ -1,5 +1,6 @@
 // host-setup.js — choose how to play a quiz, then open a lobby.
 
+import { myPlan } from '../services/plan.js';
 import { h, fill, plural } from '../ui/dom.js';
 import { icon } from '../ui/icons.js';
 import { toggle, segmented, busy, toast } from '../ui/kit.js';
@@ -27,24 +28,32 @@ export default async function HostSetup({ params }) {
   pageTitle(`Host ${quiz.title}`);
   const issues = hostProblems({ questions: join(quiz.questions || [], key) });
 
+  const plan = await myPlan();
   const saved = loadPrefs();
   const s = {
-    mode: MODES.some((m) => m.id === saved.mode) ? saved.mode : 'classic',
+    mode: plan.modes.includes(saved.mode) ? saved.mode : 'classic',
     speed: saved.speed !== false,
-    minutes: [3, 5, 7, 10].includes(saved.minutes) ? saved.minutes : 5,
+    minutes: plan.minutes.includes(saved.minutes) ? saved.minutes : 5,
     shuffle: Boolean(saved.shuffle),
     lateJoin: saved.lateJoin !== false,
     randomNames: Boolean(saved.randomNames),
     showText: saved.showText !== false,
+    teams: [0, 2, 3, 4].includes(saved.teams) ? saved.teams : 0,
   };
 
   const modeBox = h('div', { class: 'mode-pick' });
   const options = h('div', { class: 'card stack' });
-  const drawModes = () => fill(modeBox, ...MODES.map((m) => h('button', {
-    type: 'button', class: `mode-opt${m.id === s.mode ? ' is-on' : ''}`, style: { background: m.bg },
-    'aria-pressed': String(m.id === s.mode),
-    onclick: () => { s.mode = m.id; drawModes(); drawOptions(); },
-  }, modeArt(m.id), h('b', {}, m.name), h('small', {}, m.tagline))));
+  const drawModes = () => fill(modeBox, ...MODES.map((m) => {
+    const locked = !plan.modes.includes(m.id);
+    return h('button', {
+      type: 'button', class: `mode-opt${m.id === s.mode ? ' is-on' : ''}${locked ? ' is-pro-only' : ''}`, style: { background: m.bg },
+      'aria-pressed': String(m.id === s.mode),
+      onclick: () => {
+        if (locked) { toast(`${m.name} is for Pro members. Go Pro to host every game.`, 'bad'); navigate('/pro'); return; }
+        s.mode = m.id; drawModes(); drawOptions();
+      },
+    }, modeArt(m.id), h('b', {}, m.name), h('small', {}, m.tagline), locked ? h('span', { class: 'pro-tag' }, icon('lock', { size: 12 }), 'PRO') : null);
+  }));
 
   const opt = (title, text, control) => h('div', { class: 'set-row' },
     h('div', { class: 'grow' }, h('b', {}, title), h('p', { class: 'muted small' }, text)), control);
@@ -53,16 +62,20 @@ export default async function HostSetup({ params }) {
     const m = modeOf(s.mode);
     fill(options,
       h('h2', {}, `${m.name} settings`),
+      opt('Team mode', s.teams ? `Players are split into ${s.teams} teams. A team's score is the average of its players, so small teams can still win.` : 'Everyone plays for themselves. Turn on teams to play together.',
+        segmented([[0, 'Off'], [2, '2 teams'], [3, '3 teams'], [4, '4 teams']], s.teams, (v) => { s.teams = v; drawOptions(); })),
       opt('Speed scoring', s.speed ? 'Faster right answers earn more points: up to 1000, never less than 500.' : 'Every right answer earns the same points, however long it took.',
         segmented([[true, 'Faster = more'], [false, 'Same for all']], s.speed, (v) => { s.speed = v; drawOptions(); })),
       m.kind === 'arcade'
         ? opt('Game length', 'The game ends for everyone when the time runs out.',
-          segmented(m.durations.map((d) => [d, `${d} min`]), s.minutes, (v) => { s.minutes = v; }))
+          segmented(plan.minutes.map((d) => [d, `${d} min`]), s.minutes, (v) => { s.minutes = v; }))
         : null,
       opt('Shuffle questions', m.kind === 'arcade' ? 'Arcade games always give each player their own order.' : 'Ask the questions in a random order.',
         m.kind === 'arcade' ? h('span', { class: 'pill' }, 'Always') : toggle(s.shuffle, (v) => { s.shuffle = v; })),
       opt('Show answers on devices', 'Players see the answer text on their own screen, not only the colours and shapes. Best when the big screen is hard to read.',
         toggle(s.showText, (v) => { s.showText = v; })),
+      opt('Players', plan.pro ? 'Pro: up to 100 players in one game.' : 'Free games hold up to 40 players. Pro games hold 100.',
+        h('span', { class: `pill ${plan.pro ? 'pill-zing' : ''}` }, `${plan.players} max`)),
       opt('Let people join late', 'Players can still join after the game has started.', toggle(s.lateJoin, (v) => { s.lateJoin = v; })),
       opt('Random names', 'Players get a friendly made-up name instead of typing one. The safest choice for young classes.',
         toggle(s.randomNames, (v) => { s.randomNames = v; })));
@@ -79,6 +92,7 @@ export default async function HostSetup({ params }) {
         settings: {
           speed: s.speed, minutes: m.kind === 'arcade' ? s.minutes : 0, shuffle: m.kind === 'arcade' ? true : s.shuffle,
           lateJoin: s.lateJoin, randomNames: s.randomNames, showText: s.showText, locked: false,
+          ...(s.teams ? { teams: s.teams } : {}),
         },
       });
       navigate(`/lobby/${pin}`);
