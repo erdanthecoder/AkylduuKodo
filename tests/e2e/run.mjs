@@ -45,6 +45,8 @@ const EMULATOR = process.env.EMULATOR === '1';
 async function newPage(who, viewport = { width: 1280, height: 800 }) {
   const ctx = await browser.newContext({ viewport, hasTouch: who !== 'host' && viewport.width < 600 });
   if (EMULATOR) await ctx.addInitScript(() => sessionStorage.setItem('quickzy.emulator', '1'));
+  // the free Pro test is switched off here, so the free plan gets tested too
+  await ctx.addInitScript(() => localStorage.setItem('quickzy.test.noTrial', '1'));
   const page = await ctx.newPage();
   watch(page, who);
   return page;

@@ -6,7 +6,7 @@ import { icon, logo, verifiedBadge } from '../ui/icons.js';
 import { blook } from '../ui/blooks.js';
 import { modal } from '../ui/kit.js';
 import { signedIn, myProfile, me } from '../services/session.js';
-import { myPlan, membership, PRICE, PRO_PERKS, PRO_SOON, PLANS } from '../services/plan.js';
+import { myPlan, membership, PRICE, PRO_PERKS, PRO_SOON, PLANS, trialOn, TRIAL_ENDS } from '../services/plan.js';
 import { celebrate } from '../ui/confetti.js';
 import { sfx } from '../game/sound.js';
 import { pageTitle } from './parts.js';
@@ -50,9 +50,11 @@ export default async function Pro() {
       h('div', { class: 'pro-hero-badge' }, verifiedBadge(null, 'pro'), 'PRO'),
       h('h1', {}, 'Quickzy Pro'),
       h('p', {}, 'For the people who make Quickzy great. Publish instantly, host every game for up to 100 players, and wear the gold badge.'),
+      trialOn() ? h('div', { class: 'pro-trial' }, icon('star', { size: 18 }),
+        `Free test: everyone gets Pro until ${new Date(TRIAL_ENDS).toLocaleDateString(undefined, { day: 'numeric', month: 'long', year: 'numeric' })}`) : null,
       plan.pro
         ? h('div', { class: 'row', style: { justifyContent: 'center' } },
-          h('span', { class: 'pro-member' }, icon('check', { size: 18 }), m && m.until ? `You are a Pro member until ${new Date(m.until).toLocaleDateString()}` : 'You are a Pro member'),
+          h('span', { class: 'pro-member' }, icon('check', { size: 18 }), m && m.until ? `You are a Pro member until ${new Date(m.until).toLocaleDateString()}` : trialOn() ? 'You have Pro in the free test' : 'You are a Pro member'),
           h('button', { class: 'btn', onclick: () => proLetter() }, icon('mail', { size: 16 }), 'Read your letter'))
         : h('div', { class: 'pro-price' },
           h('b', {}, PRICE), h('span', {}, 'a year'),

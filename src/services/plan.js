@@ -10,6 +10,18 @@ import { OWNER_UID, BADGES } from '../config.js';
 
 export const PRICE = '$13.49';
 
+/** The free test: every account is Pro until this moment (UTC, 20 Feb 2027).
+ *  The security rules hold the same date. After it, only the owner (and any
+ *  paying members) stay Pro. */
+export const TRIAL_ENDS = Date.UTC(2027, 1, 20);
+export const trialOn = (now = Date.now()) => now < TRIAL_ENDS && !testsWithoutTrial();
+// the browser tests check the free plan too: on localhost only, they can switch the test off
+function testsWithoutTrial() {
+  try {
+    return ['localhost', '127.0.0.1'].includes(location.hostname) && localStorage.getItem('quickzy.test.noTrial') === '1';
+  } catch { return false; }
+}
+
 export const PLANS = {
   free: {
     quizzes: 10, players: 40, modes: ['classic', 'robotrun', 'obby'],
@@ -46,6 +58,7 @@ export const proNow = () => Boolean(signedIn() && known.get(me().uid));
 export function isPro(uid) {
   if (!uid) return Promise.resolve(false);
   if (uid === OWNER_UID || BADGES[uid] === 'official') { known.set(uid, true); return Promise.resolve(true); }
+  if (trialOn()) { known.set(uid, true); if (me() && me().uid === uid) setProFlag(true); return Promise.resolve(true); }
   if (!cache.has(uid)) {
     cache.set(uid, net.store.get('members', uid)
       .then((m) => Boolean(m && m.plan === 'pro' && (m.until || 0) > Date.now()))

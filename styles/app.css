@@ -1033,3 +1033,4 @@ button.bcard.is-slot { color: var(--violet); border-color: var(--violet); backgr
 .letter-seal .logo-mark { width: 70px; height: 70px; }
 .letter-to { font-weight: 900; font-size: 20px; }
 .letter-sign { text-align: right; }
+.pro-trial { display: inline-flex; align-items: center; gap: 8px; padding: 8px 16px; border-radius: 99px; background: #19c37d; color: #fff; font-weight: 900; }
