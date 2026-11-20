@@ -39,10 +39,24 @@ jobs:
         id: fs
         continue-on-error: true
         run: $FIREBASE deploy --only firestore:rules --project "$PROJECT" --non-interactive --debug 2>&1 | tail -40
+      - name: Firestore rules (direct, without the test step)
+        id: fs2
+        continue-on-error: true
+        run: |
+          set -o pipefail
+          npm install --no-save --no-package-lock firebase-admin@12.7.0 >/dev/null 2>&1
+          node -e "
+            const admin = require('firebase-admin');
+            const fs = require('fs');
+            admin.initializeApp({ credential: admin.credential.applicationDefault(), projectId: process.env.PROJECT });
+            admin.securityRules().releaseFirestoreRulesetFromSource(fs.readFileSync('rules/firestore.rules', 'utf8'))
+              .then((r) => { console.log('Firestore rules released:', r.name); process.exit(0); })
+              .catch((e) => { console.error('Firestore rules failed:', e.code, e.message); process.exit(1); });
+          "
       - name: Result
         run: |
           echo "Realtime Database rules: ${{ steps.rtdb.outcome }}"
-          echo "Firestore rules: ${{ steps.fs.outcome }}"
+          echo "Firestore rules: ${{ steps.fs.outcome }} / direct: ${{ steps.fs2.outcome }}"
           echo "### Realtime Database rules: ${{ steps.rtdb.outcome }} · Firestore rules: ${{ steps.fs.outcome }}" >> "$GITHUB_STEP_SUMMARY"
       - name: Forget the key
         if: always()
