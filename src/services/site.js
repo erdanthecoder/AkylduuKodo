@@ -18,7 +18,9 @@ export async function site(fresh = false) {
     siteCache = Promise.all([
       net.store.get('site', 'announce').catch(() => null),
       net.store.get('site', 'featured').catch(() => null),
-    ]).then(([a, f]) => ({
+      net.store.get('site', 'event').catch(() => null),
+    ]).then(([a, f, ev]) => ({
+      event: ev && ev.kind && ev.ends > Date.now() ? ev : null,
       announce: (a && a.text) || '', announceAt: (a && a.at) || 0,
       featured: (f && Array.isArray(f.ids)) ? f.ids : [],
       wear: cleanWear(f && f.wear),
@@ -38,6 +40,30 @@ export async function setFeatured(ids) {
   await net.store.set('site', 'featured', { ids: [...new Set(ids)].slice(0, 12), wear });
   siteCache = null;
 }
+
+/* Special events: the owner turns one on for a while. */
+export const EVENTS = {
+  coins: { name: 'Double Coins', blurb: 'Every game gives double coins', colour: 'linear-gradient(90deg, #ffcd1f, #ff8a2a)' },
+  xp: { name: 'Double XP', blurb: 'Every game gives double XP', colour: 'linear-gradient(90deg, #12c9a6, #2f9bff)' },
+  lucky: { name: 'Lucky Boxes', blurb: 'Boxes roll an extra time for something rarer', colour: 'linear-gradient(90deg, #a560ff, #ff4772)' },
+  party: { name: 'Mega Party', blurb: 'Double coins, double XP and lucky boxes', colour: 'linear-gradient(90deg, #ff4772, #ffcd1f, #12c9a6, #2f9bff, #a560ff)' },
+};
+export async function currentEvent() { return (await site()).event; }
+export async function startEvent(kind, hours, title = '') {
+  if (!EVENTS[kind]) throw new Error('Pick an event.');
+  const h = Math.max(1, Math.min(24 * 14, Number(hours) || 1));
+  await net.store.set('site', 'event', { kind, title: String(title || EVENTS[kind].name).slice(0, 60), ends: Date.now() + h * 3600 * 1000, at: Date.now() });
+  siteCache = null;
+}
+export async function stopEvent() {
+  await net.store.set('site', 'event', { kind: '', ends: 0 });
+  siteCache = null;
+}
+export const eventBoosts = (ev) => ({
+  coins: Boolean(ev && (ev.kind === 'coins' || ev.kind === 'party')),
+  xp: Boolean(ev && (ev.kind === 'xp' || ev.kind === 'party')),
+  lucky: Boolean(ev && (ev.kind === 'lucky' || ev.kind === 'party')),
+});
 
 /* The badges the owner wears next to their name, in this order. They live on
    the "featured" site document because only the owner may write it. */

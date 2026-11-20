@@ -3,7 +3,7 @@
 import { h, fill } from './ui/dom.js';
 import { icon, logo, wordmark, verifiedBadge } from './ui/icons.js';
 import { OWNER_UID } from './config.js';
-import { site } from './services/site.js';
+import { site, EVENTS } from './services/site.js';
 import { blook } from './ui/blooks.js';
 import { loader } from './ui/loader.js';
 import { connect, net } from './net/index.js';
@@ -96,8 +96,32 @@ let pageRoot = null;
 
 // the owner's announcement, under the top bar on every page until dismissed
 const banner = h('div', { class: 'announce', hidden: true });
+// a special event, while it runs: a bright strip with a countdown
+const eventBar = h('a', { class: 'event-bar', hidden: true, href: '/blooks' });
+let eventTimer = 0;
+function drawEvent(ev) {
+  clearInterval(eventTimer);
+  if (!ev || !EVENTS[ev.kind]) { eventBar.hidden = true; return; }
+  const info = EVENTS[ev.kind];
+  eventBar.hidden = false;
+  eventBar.style.background = info.colour;
+  const left = h('b', { class: 'event-left' });
+  const tick = () => {
+    const ms = ev.ends - Date.now();
+    if (ms <= 0) { eventBar.hidden = true; clearInterval(eventTimer); return; }
+    const hrs = Math.floor(ms / 3600000);
+    const min = Math.floor((ms % 3600000) / 60000);
+    const sec = Math.floor((ms % 60000) / 1000);
+    left.textContent = hrs >= 24 ? `${Math.floor(hrs / 24)}d ${hrs % 24}h left` : `${hrs}:${String(min).padStart(2, '0')}:${String(sec).padStart(2, '0')} left`;
+  };
+  tick();
+  eventTimer = setInterval(tick, 1000);
+  fill(eventBar, h('span', { class: 'event-spark' }, icon('star', { size: 16 })), h('b', {}, ev.title || info.name), h('span', { class: 'grow event-blurb' }, info.blurb), left);
+}
+
 async function loadBanner() {
-  const { announce, announceAt } = await site(true).catch(() => ({ announce: '' }));
+  const { announce, announceAt, event } = await site(true).catch(() => ({ announce: '' }));
+  drawEvent(event);
   let dismissed = '';
   try { dismissed = localStorage.getItem('quickzy.announce.closed') || ''; } catch { /* ignore */ }
   const id = `${announceAt}`;
@@ -117,7 +141,7 @@ onRoute(async (match, mod, query, keep) => {
   const chrome = match.opts.chrome !== false;
   document.body.classList.toggle('in-game', !chrome);
   pageRoot = h('main', { id: 'page' }, loader());
-  fill(app, chrome ? topbar(location.pathname) : null, chrome ? banner : null, pageRoot, chrome ? tabbar(location.pathname) : null);
+  fill(app, chrome ? topbar(location.pathname) : null, chrome ? eventBar : null, chrome ? banner : null, pageRoot, chrome ? tabbar(location.pathname) : null);
   window.scrollTo(0, 0);
 
   let page;
@@ -150,6 +174,14 @@ async function boot() {
       h('button', { class: 'btn btn-main', onclick: () => location.reload() }, 'Try again'))));
     return;
   }
+  // the owner's admin abuse reaches every open screen; coin rain is real coins
+  import('./ui/abuse.js').then(({ listen }) => listen(net.live, 'abuse', async (e) => {
+    if (!session.signedIn()) return;
+    const p = await session.reloadProfile();
+    if (!p || p.lastGift === e.id) return;
+    await session.patchProfile({ coins: (p.coins || 0) + e.coins, lastGift: e.id }).catch(() => {});
+  })).catch(() => {});
+
   // a first visit to the home page opens with the intro
   if (location.pathname === '/' && !navigator.webdriver) {
     import('./ui/cutscene.js').then((m) => { if (!m.introSeen()) m.playIntro(); }).catch(() => {});

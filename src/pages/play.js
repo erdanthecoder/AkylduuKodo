@@ -1,5 +1,6 @@
 // play.js — the player's own screen, from the lobby to the podium.
 
+import { listen } from '../ui/abuse.js';
 import { picture } from '../ui/picture.js';
 import { h, fill } from '../ui/dom.js';
 import { icon } from '../ui/icons.js';
@@ -227,6 +228,7 @@ export default async function Play({ params }) {
     if (arcadeStop) { arcadeStop(); arcadeStop = null; }
   }
 
+  unsubs.push(listen(live, P('abuse')));
   unsubs.push(live.on(P('meta'), (m) => {
     if (!m) { if (state !== 'end') kicked('The host closed this game.'); return; }
     meta = m;

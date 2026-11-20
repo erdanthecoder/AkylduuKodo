@@ -58,6 +58,7 @@ export default async function Profile({ params }) {
   pageTitle(user.displayName);
   const [quizzes, badge, followers] = await Promise.all([quizzesBy(claim.uid).catch(() => []), badgeOf(claim.uid), channels.followerCount(claim.uid)]);
   const mine = me() && me().uid === claim.uid;
+  const hasChannel = user.channel !== false;
   const plays = quizzes.reduce((n, q) => n + (q.plays || 0), 0);
   const questions = quizzes.reduce((n, q) => n + (q.questionCount || 0), 0);
   // the banner takes the colour of their most played quiz
@@ -83,12 +84,12 @@ export default async function Profile({ params }) {
         h('div', { class: 'channel-avatar' }, avatar),
         h('div', { class: 'grow', style: { minWidth: '220px' } },
           h('h1', { class: 'row', style: { gap: '10px', margin: 0 } }, user.displayName, badge ? nameBadges(badge) : null),
-          h('p', { class: 'muted', style: { margin: '2px 0 0' } }, `@${user.username} · Quickzy channel`)),
+          h('p', { class: 'muted', style: { margin: '2px 0 0' } }, `@${user.username}${hasChannel ? ' · Quickzy channel' : ''}`)),
         mine
-          ? h('a', { class: 'btn', href: '/settings' }, icon('gear', { size: 18 }), 'Edit channel')
-          : followButton(claim.uid, countEl)),
-      h('div', { class: 'channel-stats' },
-        h('div', {}, countEl, h('small', {}, followers === 1 ? 'follower' : 'followers')),
+          ? h('a', { class: 'btn', href: '/settings' }, icon('gear', { size: 18 }), hasChannel ? 'Edit channel' : 'Edit profile')
+          : hasChannel ? followButton(claim.uid, countEl) : null),
+      h('div', { class: `channel-stats${hasChannel ? '' : ' no-channel'}` },
+        hasChannel ? h('div', {}, countEl, h('small', {}, followers === 1 ? 'follower' : 'followers')) : null,
         h('div', {}, h('b', {}, fmt(quizzes.length)), h('small', {}, quizzes.length === 1 ? 'quiz' : 'quizzes')),
         h('div', {}, h('b', {}, fmt(plays)), h('small', {}, 'plays')),
         h('div', {}, h('b', {}, fmt(questions)), h('small', {}, 'questions')))),

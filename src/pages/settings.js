@@ -117,6 +117,10 @@ function profileSection() {
       h('div', { class: 'grow stack', style: { minWidth: '220px' } },
         field('Display name', name, 'Shown on your quizzes and profile.'),
         h('label', { class: 'field' }, h('span', {}, 'Username'), user, userHint))),
+    row('Have a channel', 'On: people can follow you and see your channel in Channels. Off: just a plain profile.',
+      toggle(p.channel !== false, async (on) => {
+        try { await session.patchProfile({ channel: on }); toast(on ? 'Your channel is on' : 'Your channel is off', 'ok'); } catch (err) { toast(explain(err), 'bad'); }
+      })),
     h('h3', {}, 'Your blook'),
     blookPicker(chosen, (id) => { chosen = id; fill(preview, blook(id)); preview.firstChild.style.width = '96px'; preview.firstChild.style.height = '96px'; sfx('pick'); }),
     errorBox,

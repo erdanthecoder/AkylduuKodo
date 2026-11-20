@@ -17,6 +17,8 @@ export async function isFollowing(uid) {
 export async function follow(uid) {
   if (!signedIn()) throw new Error('Sign in to follow channels.');
   if (uid === me().uid) throw new Error('That is your own channel.');
+  const them = await net.store.get('users', uid).catch(() => null);
+  if (them && them.channel === false) throw new Error('They do not have a channel.');
   await net.store.set('follows', fid(me().uid, uid), { from: me().uid, to: uid, at: net.store.serverTime() });
 }
 
@@ -49,7 +51,10 @@ export async function topChannels(limit = 24) {
     if (c.covers.length < 3) c.covers.push(q);
     by.set(q.owner, c);
   }
-  return [...by.values()].filter((c) => c.username).sort((a, b) => b.plays - a.plays || b.quizzes - a.quizzes).slice(0, limit);
+  const list = [...by.values()].filter((c) => c.username).sort((a, b) => b.plays - a.plays || b.quizzes - a.quizzes).slice(0, limit * 2);
+  // only people who chose to have a channel
+  const users = await Promise.all(list.map((c) => net.store.get('users', c.uid).catch(() => null)));
+  return list.filter((c, i) => users[i] && users[i].channel !== false).slice(0, limit);
 }
 
 /** Remove everything I follow (used when deleting an account). */
