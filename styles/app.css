@@ -996,3 +996,40 @@ button.bcard.is-slot { color: var(--violet); border-color: var(--violet); backgr
 .fl-card-head small { font-weight: 900; color: var(--ink-2); letter-spacing: 2px; text-transform: uppercase; }
 .fl-card-head h1 { margin: 0; font-family: 'Lilita One', sans-serif; font-size: clamp(32px, 7vw, 46px); background: linear-gradient(90deg, #6b4cff, #ff4772); -webkit-background-clip: text; background-clip: text; color: transparent; }
 .fl-card .wn-list li { animation: cs-pop .4s both; }
+
+.verified.is-pro { background: linear-gradient(135deg, #ffe45c, #ffb21f 60%, #e08a00); box-shadow: 0 0 0 2px #fff6 inset, 0 0 8px #ffcd1f99; color: #5a3300; }
+
+/* --------------------------------------------------------------------- pro */
+.btn-gold { background: linear-gradient(135deg, #ffe45c, #ffb21f); color: #5a3300; box-shadow: 0 4px 0 #d98c00; }
+.side-pro { color: #ffe45c !important; }
+.mode-opt { position: relative; }
+.mode-opt.is-pro-only { filter: saturate(.55); }
+.pro-tag { position: absolute; top: 8px; right: 8px; display: inline-flex; align-items: center; gap: 3px; padding: 2px 8px; border-radius: 99px;
+  background: linear-gradient(135deg, #ffe45c, #ffb21f); color: #5a3300; font-weight: 900; font-size: 11px; }
+.pro-hero { display: grid; justify-items: center; gap: 10px; text-align: center; padding: 34px 20px; border-radius: 28px; color: #fff;
+  background: radial-gradient(circle at 50% 0, #ffcd1f55, transparent 60%), linear-gradient(160deg, #2a1580, var(--night)); box-shadow: 0 0 0 3px #ffcd1f; }
+.pro-hero h1 { margin: 0; color: #fff; font-family: 'Lilita One', sans-serif; font-size: clamp(36px, 7vw, 58px);
+  background: linear-gradient(90deg, #ffe45c, #ffb21f, #ffe45c); -webkit-background-clip: text; background-clip: text; color: transparent; }
+.pro-hero p { margin: 0; max-width: 560px; font-weight: 700; opacity: .9; }
+.pro-hero-badge { display: inline-flex; align-items: center; gap: 6px; padding: 4px 12px 4px 6px; border-radius: 99px; background: #ffffff1a; font-weight: 900; letter-spacing: 2px; color: #ffe45c; }
+.pro-hero-badge .verified { transform: scale(1.3); }
+.pro-price { display: grid; justify-items: center; gap: 6px; margin-top: 6px; }
+.pro-price > b { font-family: 'Lilita One', sans-serif; font-size: 48px; color: #ffe45c; line-height: 1; }
+.pro-price > span { font-weight: 800; opacity: .85; margin-top: -4px; }
+.pro-price small { opacity: .8; font-weight: 700; }
+.pro-member { display: inline-flex; align-items: center; gap: 6px; padding: 8px 16px; border-radius: 99px; background: #ffcd1f; color: #3a2000; font-weight: 900; }
+.pro-cols { display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 18px; align-items: start; }
+.pro-list { list-style: none; margin: 0; padding: 0; display: grid; gap: 8px; }
+.pro-list li { display: flex; gap: 12px; align-items: flex-start; padding: 10px 12px; border-radius: 14px; background: #fff8e1; }
+.pro-list.is-free li { background: #f5f3ff; }
+.pro-list li.is-soon { opacity: .75; }
+.pro-list b { display: block; }
+.pro-list small { color: var(--ink-2); font-weight: 700; }
+.pro-ic { flex: none; display: grid; place-items: center; width: 34px; height: 34px; border-radius: 11px; background: linear-gradient(135deg, #ffe45c, #ffb21f); color: #5a3300; }
+.pro-list.is-free .pro-ic { background: var(--violet); color: #fff; }
+.letter { display: grid; gap: 12px; padding: 10px 6px; font-size: 17px; line-height: 1.55; background: repeating-linear-gradient(#fff, #fff 30px, #f1eefc 31px); }
+.letter p { margin: 0; }
+.letter-seal { justify-self: center; width: 70px; animation: cs-zap .9s both; }
+.letter-seal .logo-mark { width: 70px; height: 70px; }
+.letter-to { font-weight: 900; font-size: 20px; }
+.letter-sign { text-align: right; }

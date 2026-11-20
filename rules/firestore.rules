@@ -19,6 +19,12 @@ service cloud.firestore {
     function siteOwner() { return signedIn() && request.auth.uid == 'KWIRRSUM2VQVWnr1nUDbPP9bqMk2'; }
     // the owner can stop an account from publishing
     function banned() { return exists(/databases/$(database)/documents/bans/$(request.auth.uid)); }
+    // Pro members (the owner and the official account always are)
+    function pro() {
+      return siteOwner() || request.auth.uid == 'XH9Z5D7tLmRHStlxumgaJyTo1BP2'
+        || (exists(/databases/$(database)/documents/members/$(request.auth.uid))
+            && get(/databases/$(database)/documents/members/$(request.auth.uid)).data.until > request.time.toMillis());
+    }
 
     // ------------------------------------------------------------ profiles
     // Public: display name, username, blook. No email is ever stored here.
@@ -81,7 +87,13 @@ service cloud.firestore {
       function quizShape() {
         let d = request.resource.data;
         return d.keys().hasOnly(['owner', 'title', 'description', 'cover', 'questions', 'questionCount', 'big', 'public',
-                                 'keywords', 'authorName', 'authorUsername', 'authorBlook', 'updatedAt', 'createdAt', 'plays'])
+                                 'keywords', 'authorName', 'authorUsername', 'authorBlook', 'updatedAt', 'createdAt', 'plays', 'liveAt'])
+          && d.get('liveAt', 0) is int
+          // free accounts: a newly published quiz goes live 3 days or more later
+          // (it was checked automatically); a quiz already live stays live; Pro at once
+          && (!d.public || pro()
+              || d.get('liveAt', 0) >= request.time.toMillis() + 255600000
+              || (resource != null && resource.data.public == true && d.get('liveAt', 0) == resource.data.get('liveAt', 0)))
           && d.owner == request.auth.uid
           && str(d.title, 80) && d.title.size() > 0
           && str(d.description, 280)
@@ -164,6 +176,11 @@ service cloud.firestore {
     match /bans/{uid} {
       allow read: if true;
       allow write: if siteOwner() && uid != request.auth.uid;
+    }
+    // Pro memberships: only the owner (later, the payment system) gives them
+    match /members/{uid} {
+      allow read: if true;
+      allow write: if siteOwner();
     }
     // blue checks the owner gives by hand
     match /badges/{uid} {

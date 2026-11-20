@@ -133,7 +133,7 @@ export function wordmark() {
   return word;
 }
 
-export const BADGE_TITLE = { verified: 'Trusted quiz maker', official: 'Official Quickzy', owner: 'Quickzy owner', kg: 'Kyrgyzstan' };
+export const BADGE_TITLE = { verified: 'Trusted quiz maker', official: 'Official Quickzy', owner: 'Quickzy owner', kg: 'Kyrgyzstan', pro: 'Quickzy Pro member' };
 
 /** kind: 'verified' (blue), 'official' (black), 'owner' (green) or 'kg' (the Kyrgyz flag). */
 export function verifiedBadge(title, kind = 'verified') {

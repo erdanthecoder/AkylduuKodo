@@ -13,7 +13,7 @@ import { LIMITS } from '../config.js';
 import { TYPES, TYPE_BY_ID, TIMES, POINTS, blankQuestion, retype, problem, cleanPic } from '../game/questions.js';
 import { picture } from '../ui/picture.js';
 import { BLOOKS, blook } from '../ui/blooks.js';
-import { saveQuiz, loadForEditing, publishProblems, COVERS } from '../services/quizzes.js';
+import { saveQuiz, loadForEditing, publishProblems, COVERS, getQuiz, isLive } from '../services/quizzes.js';
 import { whenProfile } from '../services/session.js';
 import { COVER_BG, pageTitle } from './parts.js';
 import { aiPrompt, readAIQuiz, LEVELS } from '../game/import.js';
@@ -109,7 +109,12 @@ export default async function Editor({ params, query = {} }) {
     const b = h('button', { class: `btn ${quiz.public ? '' : 'btn-violet'}` }, icon(quiz.public ? 'lock' : 'globe', { size: 18 }), quiz.public ? 'Unpublish' : 'Publish');
     b.addEventListener('click', busy(b, async () => {
       const next = !quiz.public;
-      if (await doSave(next)) toast(next ? 'Published. Anyone can find and play it now.' : 'Unpublished. Only you can see it.', 'ok');
+      if (await doSave(next)) {
+        const fresh = next && quiz.id ? await getQuiz(quiz.id).catch(() => null) : null;
+        if (fresh && !isLive(fresh)) {
+          toast(`Sent for checking. It goes live on ${new Date(fresh.liveAt).toLocaleDateString()}. Pro quizzes go live at once.`, 'ok');
+        } else toast(next ? 'Published. Anyone can find and play it now.' : 'Unpublished. Only you can see it.', 'ok');
+      }
     }));
     fill(publishBox, b);
   };

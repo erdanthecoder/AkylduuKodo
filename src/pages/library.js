@@ -4,7 +4,7 @@ import { h, fill, ago, plural } from '../ui/dom.js';
 import { icon } from '../ui/icons.js';
 import { busy, toast, confirm, empty, segmented } from '../ui/kit.js';
 import { explain } from '../net/index.js';
-import { myQuizzes, deleteQuiz, duplicateQuiz, myReports, deleteReport } from '../services/quizzes.js';
+import { myQuizzes, deleteQuiz, duplicateQuiz, myReports, deleteReport, isLive } from '../services/quizzes.js';
 import { modeOf } from '../game/modes/index.js';
 import { cover, pageTitle } from './parts.js';
 import { downloadCSV } from '../game/report.js';
@@ -26,7 +26,8 @@ function quizRow(q, redraw) {
     h('div', { class: 'grow', style: { minWidth: '180px' } },
       h('a', { href: `/edit/${q.id}`, class: 'quiz-title' }, q.title),
       h('div', { class: 'row small muted', style: { gap: '10px', marginTop: '4px' } },
-        q.public ? h('span', { class: 'pill pill-ok' }, icon('globe', { size: 12 }), 'Published') : h('span', { class: 'pill' }, icon('lock', { size: 12 }), 'Draft'),
+        q.public && !isLive(q) ? h('span', { class: 'pill pill-zing', title: 'Free quizzes are checked before they go live. Pro quizzes go live at once.' }, icon('clock', { size: 12 }), `In review · live ${new Date(q.liveAt).toLocaleDateString()}`)
+          : q.public ? h('span', { class: 'pill pill-ok' }, icon('globe', { size: 12 }), 'Published') : h('span', { class: 'pill' }, icon('lock', { size: 12 }), 'Draft'),
         h('span', {}, plural(q.questionCount || 0, 'question')),
         h('span', {}, plural(q.plays || 0, 'play')),
         q.updatedAt ? h('span', {}, `Edited ${ago(q.updatedAt)}`) : null)),

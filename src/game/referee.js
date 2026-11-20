@@ -8,6 +8,7 @@
 import { net } from '../net/index.js';
 import { gamePath } from '../services/games.js';
 import { teamCount, smallestTeam, standings } from './teams.js';
+import { isPro, PLANS } from '../services/plan.js';
 import { check, validChoice, points } from './questions.js';
 import { modeOf } from './modes/index.js';
 
@@ -64,8 +65,12 @@ export async function createReferee({ pin, meta: initialMeta, quiz, key, onChang
 
   /* ------------------------------------------------------ players */
 
+  // free games hold 40 players, Pro games 100: anyone past the cap is removed
+  const cap = (await isPro(meta.host)) ? PLANS.pro.players : PLANS.free.players;
   unsubs.push(live.on(P('players'), (val) => {
     const now = val || {};
+    const order = Object.entries(now).sort((a, b) => (a[1].at || 0) - (b[1].at || 0));
+    for (const [uid] of order.slice(cap)) { if (!players.has(uid)) { kickOver(uid); delete now[uid]; } }
     for (const [uid, p] of Object.entries(now)) {
       if (!players.has(uid)) {
         const r = record(uid, p);
@@ -340,6 +345,8 @@ export async function createReferee({ pin, meta: initialMeta, quiz, key, onChang
     })();
     return finished;
   }
+
+  function kickOver(uid) { live.update(P(''), { [`kicked/${uid}`]: true, [`players/${uid}`]: null }).catch(() => {}); }
 
   async function kick(uid) {
     await live.update(P(''), { [`kicked/${uid}`]: true, [`players/${uid}`]: null, [`me/${uid}`]: null });

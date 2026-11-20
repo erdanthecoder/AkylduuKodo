@@ -14,6 +14,7 @@ import { BADGES } from '../config.js';
 import { pageTitle } from './parts.js';
 import { reloadProfile } from '../services/session.js';
 import { EFFECTS, GAME_EFFECTS, send } from '../ui/abuse.js';
+import { isPro, setPro, forget } from '../services/plan.js';
 import NotFound from './notfound.js';
 
 const fmt = (n) => Number(n || 0).toLocaleString();
@@ -98,11 +99,20 @@ async function users() {
     const badgeSlot = h('span', { style: { display: 'inline-flex' } });
     const verifyBtn = h('button', { class: 'btn btn-sm' });
     const banBtn = h('button', { class: 'btn btn-sm' });
+    const proBtn = h('button', { class: 'btn btn-sm' });
     const refresh = async () => {
       const [given, banned] = await Promise.all([siteSvc.hasGrantedBadge(u.id), siteSvc.isBanned(u.id)]);
       fill(badgeSlot, special ? nameBadges(special) : given ? verifiedBadge() : null);
       fill(verifyBtn, icon('check', { size: 14 }), given ? 'Remove blue check' : 'Give blue check');
       verifyBtn.hidden = Boolean(special);
+      const pro = await isPro(u.id);
+      fill(proBtn, icon('star', { size: 14 }), pro ? 'Remove Pro' : 'Give Pro (1 year)');
+      proBtn.className = `btn btn-sm${pro ? '' : ' btn-gold'}`;
+      proBtn.hidden = Boolean(special);
+      proBtn.onclick = async () => {
+        await busy(proBtn, async () => { try { await setPro(u.id, !pro); forget(u.id); toast(pro ? 'Pro removed' : `${u.displayName} is Pro for a year`, 'ok'); } catch (e) { toast(explain(e), 'bad'); } })();
+        refresh();
+      };
       fill(banBtn, icon(banned ? 'check' : 'stop', { size: 14 }), banned ? 'Allow publishing' : 'Stop publishing');
       banBtn.className = `btn btn-sm${banned ? ' btn-ok' : ''}`;
       banBtn.hidden = Boolean(special);
@@ -149,7 +159,7 @@ async function users() {
       h('a', { href: `/u/${u.username}`, class: 'grow owner-row-main' },
         h('b', { class: 'row', style: { gap: '6px' } }, u.displayName, badgeSlot),
         h('small', { class: 'muted' }, `@${u.username} · level ${levelOf(u.xp || 0)} · ${fmt(u.coins)} coins${u.createdAt ? ` · joined ${ago(u.createdAt)}` : ''}`)),
-      coins, gift, verifyBtn, banBtn);
+      coins, gift, proBtn, verifyBtn, banBtn);
   };
   const draw = () => {
     const q = find.value.trim().toLowerCase();

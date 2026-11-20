@@ -30,6 +30,7 @@ route('/host/:quizId', () => import('./pages/host-setup.js'), { auth: true });
 route('/lobby/:pin', () => import('./pages/host-live.js'), { chrome: false, auth: true });
 route('/u/:username', () => import('./pages/profile.js'));
 route('/channels', () => import('./pages/channels.js'));
+route('/pro', () => import('./pages/pro.js'));
 route('/blooks', () => import('./pages/blooks.js'));
 route('/owner', () => import('./pages/owner.js'), { auth: true });
 route('/settings', () => import('./pages/settings.js'));
@@ -64,7 +65,7 @@ function sidebar(path) {
     h('nav', { class: 'side-nav' },
       group('Play', link('/', 'Home', 'home'), link('/discover', 'Discover', 'compass'), link('/channels', 'Channels', 'users')),
       signed ? group('Make', link('/create', 'Create a quiz', 'plus'), link('/library', 'My quizzes', 'list')) : null,
-      group('Collect', link('/blooks', 'Blooks', 'star')),
+      group('Collect', link('/blooks', 'Blooks', 'star'), h('a', { href: '/pro', class: `side-link side-pro ${isOn(path, '/pro')}` }, verifiedBadge(null, 'pro'), h('span', {}, 'Quickzy Pro'))),
       user && user.uid === OWNER_UID ? group('Owner', h('a', { href: '/owner', class: `side-link nav-owner ${isOn(path, '/owner')}` }, verifiedBadge(null, 'owner'), h('span', {}, 'Owner panel'))) : null),
     h('div', { class: 'side-end' },
       h('button', { class: 'side-link', type: 'button', onclick: () => import('./ui/whatsnew.js').then((m) => m.showWhatsNew()) }, icon('bolt', { size: 20 }), h('span', {}, `What's new in ${VERSION}`)),
@@ -195,6 +196,9 @@ async function boot() {
       h('button', { class: 'btn btn-main', onclick: () => location.reload() }, 'Try again'))));
     return;
   }
+  // know early whether this account is Pro (badges, flags, custom blooks)
+  if (session.signedIn()) import('./services/plan.js').then((p) => p.myPlan()).catch(() => {});
+
   // the owner's admin abuse reaches every open screen; coin rain is real coins
   import('./ui/abuse.js').then(({ listen }) => listen(net.live, 'abuse', async (e) => {
     if (!session.signedIn()) return;
@@ -208,6 +212,7 @@ async function boot() {
     import('./ui/cutscene.js').then((m) => {
       if (!m.introSeen()) m.playIntro();
       else import('./ui/whatsnew.js').then((w) => w.maybeShowWhatsNew());
+      import('./pages/pro.js').then((p) => p.maybeShowLetter()).catch(() => {});
     }).catch(() => {});
   }
   // when someone signs in or out, or renames themselves, redraw the bars only:

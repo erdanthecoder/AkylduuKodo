@@ -15,6 +15,8 @@ import { myProfile, me } from './session.js';
 import { split, join, problem } from '../game/questions.js';
 import { isClean } from './names.js';
 
+import { isPro, myPlan, PLANS } from './plan.js';
+
 const COL = 'quizzes';
 const keyCol = (id) => `${COL}/${id}/private`;
 
@@ -34,9 +36,15 @@ export function publishProblems(quiz) {
   quiz.questions.forEach((q, i) => {
     const p = problem(q);
     if (p) out.push(`Question ${i + 1}: ${p}`);
+    // the automatic check: every question and answer must follow the rules
+    const words = [q.text, ...(q.options || []), ...(Array.isArray(q.answer) ? q.answer.filter((a) => typeof a === 'string') : [])].join(' ');
+    if (!isClean(words)) out.push(`Question ${i + 1} has a word that is not allowed.`);
   });
   return out;
 }
+
+/** Free accounts: a published quiz goes live 3 to 5 days later. */
+const reviewDelay = () => Math.round((3 + Math.random() * 2) * 86400000);
 
 /** Problems that stop a quiz being hosted at all (drafts can be hosted by their author). */
 export function hostProblems(quiz) {
@@ -62,7 +70,19 @@ export async function saveQuiz(quiz, { publish } = {}) {
   const questions = quiz.questions.slice(0, LIMITS.questionsMax);
   const { pub, key } = split(questions);
   const isPublic = publish === undefined ? Boolean(quiz.public) : Boolean(publish);
+  const plan = await myPlan();
+  if (!quiz.id) {
+    const mine = await net.store.count(COL, { where: [['owner', '==', user.uid]] }).catch(() => 0);
+    if (mine >= plan.quizzes) throw new Error(`Free accounts can make ${plan.quizzes} quizzes. Delete one, or go Pro for ${PLANS.pro.quizzes}.`);
+  }
+  // when it goes live: Pro at once; free quizzes after the 3-5 day check,
+  // and a quiz that is already live stays live
+  const before = quiz.id ? await net.store.get(COL, quiz.id).catch(() => null) : null;
+  let liveAt = 0;
+  if (isPublic && !plan.pro) liveAt = before && before.public ? (before.liveAt || 0) : Date.now() + reviewDelay();
   const doc = {
+    // only written when it matters, so older quizzes keep their shape
+    ...(liveAt || (before && before.liveAt) ? { liveAt } : {}),
     owner: user.uid,
     title: title || 'Untitled quiz',
     description,
@@ -143,14 +163,18 @@ export async function myQuizzes() {
   return rows.sort((a, b) => (b.updatedAt || 0) - (a.updatedAt || 0));
 }
 
+/** Live for everyone? (A free account's new quiz waits for its check.) */
+export const isLive = (q) => !(q && q.liveAt > Date.now());
+
 export async function quizzesBy(uid) {
-  const rows = await net.store.query(COL, { where: [['owner', '==', uid], ['public', '==', true]], limit: 100 });
+  const rows = (await net.store.query(COL, { where: [['owner', '==', uid], ['public', '==', true]], limit: 100 }))
+    .filter((q) => isLive(q) || (me() && me().uid === uid));
   return rows.sort((a, b) => (b.plays || 0) - (a.plays || 0));
 }
 
 /** Published quizzes, newest or most played. Small enough to sort here. */
 async function publicRows(extraWhere = []) {
-  return net.store.query(COL, { where: [['public', '==', true], ...extraWhere], limit: 120 });
+  return (await net.store.query(COL, { where: [['public', '==', true], ...extraWhere], limit: 120 })).filter(isLive);
 }
 
 export async function popularQuizzes(n = 12) {
@@ -208,6 +232,8 @@ const givenCache = new Map();
 export async function badgeOf(uid) {
   if (!uid) return null;
   if (BADGES[uid]) return BADGES[uid];
+  // members wear the gold PRO check
+  if (await isPro(uid)) return 'pro';
   // a blue check the owner gave by hand, or one earned by publishing
   if (!givenCache.has(uid)) givenCache.set(uid, net.store.get('badges', uid).then(Boolean).catch(() => false));
   const given = await givenCache.get(uid);

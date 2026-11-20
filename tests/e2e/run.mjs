@@ -112,7 +112,23 @@ await host.locator('.opt .x').nth(3).click();
 await host.locator('.opt .x').nth(2).click();
 await host.screenshot({ path: `${SHOTS}/editor.png` });
 
-say('publish');
+say('publish (free account): sent for checking, not live yet');
+await host.click('button:has-text("Publish")');
+await host.waitForSelector('text=Sent for checking', { timeout: 8000 }).catch(async () => {
+  const issues = await host.locator('.modal').innerText().catch(() => '');
+  fail(`free publish did not go to review ${issues}`);
+});
+await host.click('button:has-text("Unpublish")');
+await host.waitForSelector('text=Unpublished');
+
+say('publish (Pro): live at once');
+// the owner would give Pro from the Owner panel; the test sets it directly
+await host.evaluate(async () => {
+  const { net, session } = window.__quickzy;
+  const uid = session.me().uid;
+  await net.store.set('members', uid, { plan: 'pro', since: Date.now(), until: Date.now() + 864e8 });
+  (await import('/src/services/plan.js')).forget(uid);
+});
 await host.click('button:has-text("Publish")');
 await host.waitForSelector('text=Published. Anyone can find', { timeout: 8000 }).catch(async () => {
   const issues = await host.locator('.modal').innerText().catch(() => '');
@@ -497,6 +513,15 @@ if (which === 'account' || which === 'all') {
   await host.goto(`${BASE}/quiz/${quizId}`);
   await host.waitForSelector('.author:has-text("Professor Q")');
 
+  say('Pro members wear the gold PRO badge');
+  await host.goto(`${BASE}/u/quizmaster`);
+  await host.waitForSelector('h1 .verified.is-pro');
+  await host.evaluate(async () => {
+    const { net, session } = window.__quickzy;
+    await net.store.del('members', session.me().uid);
+    (await import('/src/services/plan.js')).forget(session.me().uid);
+  });
+
   say('verified badge after three full published quizzes');
   await host.goto(`${BASE}/u/quizmaster`);
   await host.waitForSelector('h1:has-text("Professor Q")');
@@ -537,7 +562,8 @@ if (which === 'account' || which === 'all') {
   if ((await host.locator('.q-thumb').count()) !== 6) fail('expected 6 questions in the editor');
   if ((await host.inputValue('input[aria-label="Quiz title"]')) !== 'Volcano Facts') fail('title not filled in');
   await host.click('button:has-text("Publish")');
-  await host.waitForSelector('text=Published. Anyone can find');
+  // the account is free again by now: its quiz goes to the 3-5 day check
+  await host.waitForSelector('text=Sent for checking');
 
   say('solo practice: play a whole quiz alone');
   await host.goto(`${BASE}/practice/${quizId}`);
