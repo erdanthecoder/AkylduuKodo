@@ -736,3 +736,53 @@ button.bcard.is-slot { color: var(--violet); border-color: var(--violet); backgr
 .pic-edit .q-pic-blook .blook { width: 72px; height: 72px; animation: none; }
 .q-pic.q-pic-host img { max-height: 38vh; max-width: 36vw; }
 .q-pic-host.q-pic-blook .blook { width: min(30vh, 220px); height: min(30vh, 220px); }
+
+/* ---------------------------------------------------------- box opening */
+.ub-root { position: fixed; inset: 0; z-index: 150; display: grid; place-content: center; justify-items: center; gap: 14px; padding: 16px; text-align: center;
+  color: #fff; background: radial-gradient(circle at 50% 45%, var(--night-3), var(--night) 70%); animation: cs-in .3s ease both; overflow: hidden; }
+.ub-root.ub-out { animation: cs-fade .25s ease both; }
+.ub-name { color: #fff; font-family: 'Lilita One', sans-serif; font-size: clamp(26px, 6vw, 40px); margin: 0; opacity: .9; }
+.ub-stage { position: relative; width: 240px; height: 260px; display: grid; place-items: center; cursor: pointer; user-select: none; -webkit-tap-highlight-color: transparent; }
+.ub-box { width: 190px; height: 190px; position: relative; z-index: 1; animation: ub-drop .6s cubic-bezier(.3, 1.6, .5, 1) both; filter: drop-shadow(0 12px 0 #0005); }
+.ub-box svg { width: 100%; height: 100%; }
+@keyframes ub-drop { from { transform: translateY(-120vh) rotate(-20deg); } }
+.ub-glow { position: absolute; inset: -40px; border-radius: 50%; opacity: 0; transition: opacity .3s, background .3s; animation: ub-pulse 1.2s ease-in-out infinite; }
+@keyframes ub-pulse { 50% { transform: scale(1.12); } }
+.ub-shake1 { animation: ub-shake .35s ease; }
+.ub-shake2 { animation: ub-shake .45s ease 2; }
+.ub-shake3 { animation: ub-shake-hard .45s ease infinite; }
+@keyframes ub-shake { 25% { transform: rotate(-9deg) scale(1.05); } 50% { transform: rotate(8deg) scale(.97); } 75% { transform: rotate(-5deg); } }
+@keyframes ub-shake-hard { 20% { transform: translate(-6px, 2px) rotate(-12deg) scale(1.12); } 40% { transform: translate(6px, -3px) rotate(12deg) scale(1.15); }
+  60% { transform: translate(-4px, 3px) rotate(-8deg) scale(1.18); } 80% { transform: translate(4px, -2px) rotate(9deg) scale(1.2); } }
+.ub-hint { font-weight: 900; font-size: 22px; margin: 0; min-height: 30px; animation: ub-bounce 1s ease-in-out infinite; }
+@keyframes ub-bounce { 50% { transform: translateY(-6px); } }
+.ub-dots { display: flex; gap: 10px; }
+.ub-dots i { width: 16px; height: 16px; border-radius: 50%; background: #ffffff33; transition: transform .2s; }
+.ub-dots i.is-on { transform: scale(1.3); box-shadow: 0 0 12px currentColor; }
+.ub-skip { position: absolute; top: 16px; right: 16px; }
+.ub-rays { position: absolute; inset: -50%; opacity: 0; pointer-events: none;
+  background: repeating-conic-gradient(from 0deg, var(--rc, #fff) 0deg 10deg, transparent 10deg 30deg); }
+.ub-burst .ub-rays { animation: ub-rays-in .6s ease both, ub-spin 14s linear infinite; }
+@keyframes ub-rays-in { to { opacity: .16; } }
+@keyframes ub-spin { to { transform: rotate(360deg); } }
+.ub-legendary .ub-rays, .ub-epic .ub-rays { animation: ub-rays-big .6s ease both, ub-spin 8s linear infinite; }
+@keyframes ub-rays-big { to { opacity: .32; } }
+.ub-burst .ub-box { animation: ub-pop .42s ease-in both; }
+@keyframes ub-pop { 60% { transform: scale(1.35); filter: brightness(2.5); } 100% { transform: scale(0); opacity: 0; } }
+.ub-burst::before { content: ''; position: fixed; inset: 0; background: var(--rc); pointer-events: none; animation: ub-flash .6s ease-out both; }
+@keyframes ub-flash { from { opacity: .85; } to { opacity: 0; } }
+.ub-spark { position: absolute; left: 50%; top: 50%; width: 12px; height: 12px; border-radius: 3px; animation: ub-fly .7s ease-out forwards; }
+@keyframes ub-fly { to { transform: translate(var(--dx), var(--dy)) rotate(200deg); opacity: 0; } }
+.ub-card { position: relative; z-index: 1; animation: ub-card-in .8s cubic-bezier(.2, 1.5, .4, 1) both; }
+@keyframes ub-card-in { 0% { transform: translateY(80px) rotateY(540deg) scale(.2); } 100% { transform: none; } }
+.ub-legendary .ub-card { box-shadow: 0 0 0 4px #fff, 0 0 50px var(--rc), 0 0 120px var(--rc); }
+.ub-legendary .ub-card::after { content: ''; position: absolute; inset: 0; border-radius: inherit; pointer-events: none;
+  background: linear-gradient(115deg, transparent 30%, #ffffffaa 48%, transparent 66%); background-size: 250% 100%; animation: ub-gleam 1.8s 1s ease-in-out infinite; }
+@keyframes ub-gleam { from { background-position: 150% 0; } to { background-position: -100% 0; } }
+.ub-shine { position: absolute; inset: -30px; border-radius: 50%; background: radial-gradient(circle, var(--rc) 0%, transparent 62%); opacity: .6; animation: ub-pulse 1.6s ease-in-out infinite; }
+.ub-result { display: grid; justify-items: center; gap: 8px; animation: cs-pop .45s .35s cubic-bezier(.2, 1.6, .4, 1) both; position: relative; z-index: 1; }
+.ub-result p { margin: 0; font-weight: 800; font-size: 18px; }
+.ub-rarity { font-family: 'Lilita One', sans-serif; font-size: clamp(40px, 10vw, 64px); margin: 0; text-shadow: 0 5px 0 #0007; animation: ub-slam .5s .3s cubic-bezier(.2, 1.8, .4, 1) both; }
+@keyframes ub-slam { from { transform: scale(3); opacity: 0; } }
+.ub-new { display: inline-block; background: var(--zing); color: var(--night); border-radius: 8px; padding: 1px 8px; font-weight: 900; animation: ub-bounce .8s ease-in-out infinite; }
+.ub-calm *, .ub-calm, .ub-calm::before { animation-duration: .01ms !important; animation-delay: 0ms !important; animation-iteration-count: 1 !important; }

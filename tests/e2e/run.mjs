@@ -463,9 +463,11 @@ if (which === 'account' || which === 'all') {
   let opened = 0;
   while (!(await boxBtn.isDisabled()) && opened < 15) {
     await boxBtn.click();
-    await host.waitForSelector('.reveal .bcard');
+    for (let t = 0; t < 3; t++) { await host.click('.ub-stage'); await host.waitForTimeout(120); }
+    await host.waitForSelector('.ub-card');
     if (opened === 0) await host.screenshot({ path: `${SHOTS}/box-reveal.png` });
-    await host.click('.modal button:has-text("Nice")');
+    await host.click('.ub-result button:has-text("Done")');
+    await host.waitForSelector('.ub-root', { state: 'detached' });
     opened++;
   }
   if (opened < 2) fail(`only ${opened} boxes opened`);
