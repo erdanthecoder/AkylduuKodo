@@ -75,8 +75,11 @@ export const forget = (uid) => { cache.delete(uid); known.delete(uid); };
 /** When a paid membership ends (ms), from the Stripe webhook's table; 0 if none. */
 export async function paidUntil(uid) {
   if (!uid || !/^[A-Za-z0-9]{10,40}$/.test(uid) || typeof fetch !== 'function') return 0;
+  // the local dev server and the browser tests have no real payments
+  if (typeof location !== 'undefined' && ['localhost', '127.0.0.1'].includes(location.hostname)) return 0;
   try {
-    const r = await fetch(`${SUPABASE.url}/rest/v1/pro_members?uid=eq.${uid}&select=until`, { headers: { apikey: SUPABASE.key } });
+    const signal = typeof AbortSignal !== 'undefined' && AbortSignal.timeout ? AbortSignal.timeout(4000) : undefined;
+    const r = await fetch(`${SUPABASE.url}/rest/v1/pro_members?uid=eq.${uid}&select=until`, { headers: { apikey: SUPABASE.key }, signal });
     if (!r.ok) return 0;
     const rows = await r.json();
     return Number(rows[0] && rows[0].until) || 0;
