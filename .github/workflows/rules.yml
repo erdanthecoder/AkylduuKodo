@@ -1,0 +1,49 @@
+name: Publish security rules
+
+# Uploads the Firestore and Realtime Database rules, each on its own, so one
+# missing permission does not hold up the other. Runs when the rules change.
+on:
+  push:
+    branches: [main, 'claude/**']
+    paths: ['rules/**', '.github/workflows/rules.yml']
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  rules:
+    name: Publish rules
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    env:
+      PROJECT: akylduukodo
+      FIREBASE: npx -y firebase-tools@12.9.1
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+      - name: Sign in with the service account
+        env:
+          SA: ${{ secrets.FIREBASE_SERVICE_ACCOUNT_AKYLDUUKODO }}
+        run: |
+          printf '%s' "$SA" > "$RUNNER_TEMP/sa.json"
+          echo "GOOGLE_APPLICATION_CREDENTIALS=$RUNNER_TEMP/sa.json" >> "$GITHUB_ENV"
+          echo "Signed in as: $(jq -r .client_email "$RUNNER_TEMP/sa.json")"
+      - name: Realtime Database rules
+        id: rtdb
+        continue-on-error: true
+        run: $FIREBASE deploy --only database --project "$PROJECT" --non-interactive
+      - name: Firestore rules
+        id: fs
+        continue-on-error: true
+        run: $FIREBASE deploy --only firestore:rules --project "$PROJECT" --non-interactive --debug 2>&1 | tail -40
+      - name: Result
+        run: |
+          echo "Realtime Database rules: ${{ steps.rtdb.outcome }}"
+          echo "Firestore rules: ${{ steps.fs.outcome }}"
+          echo "### Realtime Database rules: ${{ steps.rtdb.outcome }} · Firestore rules: ${{ steps.fs.outcome }}" >> "$GITHUB_STEP_SUMMARY"
+      - name: Forget the key
+        if: always()
+        run: rm -f "$RUNNER_TEMP/sa.json"
