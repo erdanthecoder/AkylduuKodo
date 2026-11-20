@@ -1,0 +1,134 @@
+rules_version = '2';
+
+// Firestore: accounts, quizzes and game reports.
+//
+// The guiding rules:
+//   * you can only ever change what is yours;
+//   * guests (anonymous players) can read public things and nothing else;
+//   * a quiz's answers live in a separate document that players never see.
+
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    function signedIn() { return request.auth != null; }
+    function account() { return signedIn() && request.auth.token.firebase.sign_in_provider != 'anonymous'; }
+    function me(uid) { return signedIn() && request.auth.uid == uid; }
+    function onlyKeys(keys) { return request.resource.data.keys().hasOnly(keys); }
+    function str(v, max) { return v is string && v.size() <= max; }
+
+    // ------------------------------------------------------------ profiles
+    // Public: display name, username, blook. No email is ever stored here.
+    match /users/{uid} {
+      // XP only grows, by one game's worth at a time, and only once per game;
+      // coins never go below zero; three custom blooks at most
+      function progressOk() {
+        let before = resource.data;
+        let after = request.resource.data;
+        let xp0 = before.get('xp', 0);
+        let xp1 = after.get('xp', 0);
+        return xp1 is int && xp1 >= xp0 && xp1 - xp0 <= 400
+          && (xp1 == xp0 || after.get('lastGame', '') != before.get('lastGame', ''))
+          && after.get('coins', 0) is int && after.get('coins', 0) >= 0
+          && after.get('coins', 0) - before.get('coins', 0) <= 150
+          && after.get('owned', {}).size() <= 40
+          && after.get('customs', []).size() <= 3
+          && str(after.get('lastGame', ''), 40);
+      }
+      allow read: if true;
+      allow create: if me(uid) && account()
+        && onlyKeys(['username', 'displayName', 'blook', 'createdAt', 'xp', 'coins', 'owned', 'customs'])
+        && request.resource.data.get('xp', 0) == 0
+        && request.resource.data.get('coins', 0) <= 50
+        && request.resource.data.get('owned', {}).size() == 0
+        && request.resource.data.get('customs', []).size() == 0
+        && str(request.resource.data.displayName, 30) && request.resource.data.displayName.size() > 0
+        && str(request.resource.data.blook, 20)
+        && request.resource.data.createdAt == request.time
+        && existsAfter(/databases/$(database)/documents/usernames/$(request.resource.data.username))
+        && getAfter(/databases/$(database)/documents/usernames/$(request.resource.data.username)).data.uid == uid;
+      allow update: if me(uid)
+        && onlyKeys(['username', 'displayName', 'blook', 'createdAt', 'xp', 'coins', 'owned', 'customs', 'lastGame'])
+        && progressOk()
+        && request.resource.data.createdAt == resource.data.createdAt
+        && str(request.resource.data.displayName, 30) && request.resource.data.displayName.size() > 0
+        && str(request.resource.data.blook, 20)
+        && getAfter(/databases/$(database)/documents/usernames/$(request.resource.data.username)).data.uid == uid;
+      allow delete: if me(uid);
+    }
+
+    // A username belongs to whoever claimed it first.
+    match /usernames/{name} {
+      allow read: if true;
+      allow create: if account() && onlyKeys(['uid']) && request.resource.data.uid == request.auth.uid
+        && name.matches('^[a-z0-9_]{3,20}$');
+      allow delete: if signedIn() && resource.data.uid == request.auth.uid;
+      allow update: if false;
+    }
+
+    // ------------------------------------------------------------- quizzes
+    match /quizzes/{id} {
+      function quizShape() {
+        let d = request.resource.data;
+        return d.keys().hasOnly(['owner', 'title', 'description', 'cover', 'questions', 'questionCount', 'big', 'public',
+                                 'keywords', 'authorName', 'authorUsername', 'authorBlook', 'updatedAt', 'createdAt', 'plays'])
+          && d.owner == request.auth.uid
+          && str(d.title, 80) && d.title.size() > 0
+          && str(d.description, 280)
+          && d.cover is int
+          && d.questions is list && d.questions.size() <= 100
+          && d.questionCount == d.questions.size()
+          && d.public is bool
+          // the verified badge counts only published quizzes of 5+ questions
+          && d.big == (d.public && d.questions.size() >= 5)
+          && (!d.public || d.questions.size() >= 3)
+          && d.keywords is list && d.keywords.size() <= 80
+          && d.updatedAt == request.time
+          // the author line must be the author's own profile
+          && d.authorUsername == get(/databases/$(database)/documents/users/$(request.auth.uid)).data.username;
+      }
+
+      allow read: if resource.data.public == true || (signedIn() && resource.data.owner == request.auth.uid);
+      allow create: if account() && quizShape()
+        && request.resource.data.plays == 0 && request.resource.data.createdAt == request.time;
+      allow update: if account() && resource.data.owner == request.auth.uid && quizShape()
+        && request.resource.data.plays == resource.data.plays
+        && request.resource.data.createdAt == resource.data.createdAt;
+      // anyone with an account who hosts it adds exactly one play
+      allow update: if account() && resource.data.public == true
+        && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['plays'])
+        && request.resource.data.plays == resource.data.plays + 1;
+      allow delete: if signedIn() && resource.data.owner == request.auth.uid;
+
+      // The answers. Players (guests) can never read them; accounts can when
+      // the quiz is published, because hosting a quiz needs its answers.
+      match /private/{doc} {
+        allow read: if signedIn() && (
+          resource.data.owner == request.auth.uid ||
+          (account() && get(/databases/$(database)/documents/quizzes/$(id)).data.public == true));
+        allow create, update: if account() && doc == 'key'
+          && request.resource.data.keys().hasOnly(['owner', 'answers'])
+          && request.resource.data.owner == request.auth.uid
+          && str(request.resource.data.answers, 200000)
+          && (!exists(/databases/$(database)/documents/quizzes/$(id))
+              || get(/databases/$(database)/documents/quizzes/$(id)).data.owner == request.auth.uid)
+          && (resource == null || resource.data.owner == request.auth.uid);
+        allow delete: if signedIn() && resource.data.owner == request.auth.uid;
+      }
+    }
+
+    // ------------------------------------------------------------- reports
+    match /reports/{id} {
+      allow read, delete: if signedIn() && resource.data.owner == request.auth.uid;
+      allow create: if account() && request.resource.data.owner == request.auth.uid
+        && request.resource.data.keys().hasOnly(['owner', 'quizId', 'quizTitle', 'mode', 'pin', 'players', 'at'])
+        && request.resource.data.players is list && request.resource.data.players.size() <= 60
+        && request.resource.data.at == request.time;
+      allow update: if false;
+    }
+
+    // everything else is closed
+    match /{document=**} {
+      allow read, write: if false;
+    }
+  }
+}

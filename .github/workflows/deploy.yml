@@ -1,45 +1,113 @@
-name: Deploy to Firebase Hosting
+name: Test and deploy Quickzy
 
-# Runs whenever main changes, and can be started by hand from the Actions tab.
+# Every pull request is tested. Every change to main is tested, then
+# published to https://quickzy.web.app (Firebase Hosting).
 on:
   push:
     branches: [main]
+  pull_request:
   workflow_dispatch:
 
 permissions:
   contents: read
 
+concurrency:
+  group: deploy-${{ github.ref }}
+  cancel-in-progress: false
+
 jobs:
   test:
-    name: Check every question is answerable
+    name: Tests (unit and full games in a browser)
     runs-on: ubuntu-latest
+    timeout-minutes: 20
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4
         with:
           node-version: '20'
-      # No dependencies to install — the test suite is plain Node.
-      - run: npm test
+      - name: Unit tests and import checks
+        run: npm test
+      - name: Install a browser for the game tests
+        run: |
+          npm install --no-save --no-package-lock playwright@1.49.1
+          npx playwright install --with-deps chromium
+      - name: Play every game mode end to end
+        run: |
+          node dev/server.mjs > dev-server.log 2>&1 &
+          for i in $(seq 1 30); do curl -sf http://localhost:5173/__dev/ping && break; sleep 0.5; done
+          SHOTS=shots node tests/e2e/run.mjs all
+      - name: Keep the screenshots
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: screenshots
+          path: shots/
+          if-no-files-found: ignore
+          retention-days: 7
 
-  deploy:
-    name: Publish to malikastudy.web.app
-    needs: test          # a broken question never reaches a child
+  site:
+    name: Package the site
+    needs: test
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
-      - uses: FirebaseExtended/action-hosting-deploy@v0
+      - name: Collect the files the site serves
+        run: |
+          mkdir _site
+          cp -r index.html manifest.webmanifest assets src styles vendor _site/
+          (cd _site && zip -qr ../quickzy-site.zip .)
+      - uses: actions/upload-artifact@v4
         with:
-          firebaseServiceAccount: ${{ secrets.FIREBASE_SERVICE_ACCOUNT_AKYLDUUKODO }}
-          channelId: live
-          projectId: akylduukodo
-          # Pinned on purpose. From firebase-tools v13 the CLI checks whether
-          # the Hosting API is enabled before deploying, which needs
-          # serviceusage.services.get — a permission this service account does
-          # not hold, so the deploy 403s before uploading anything. The action
-          # installs the newest CLI by default, which is why this project
-          # deployed fine for months and then stopped on its own.
-          #
-          # The durable fix is to grant the service account
-          # roles/serviceusage.serviceUsageConsumer in Google Cloud IAM. Until
-          # that is done, an older CLI skips the check and deploys.
-          firebaseToolsVersion: "12.9.1"
+          name: quickzy-site
+          path: |
+            _site/
+            quickzy-site.zip
+          retention-days: 30
+
+  firebase:
+    name: Publish to Firebase Hosting
+    needs: test
+    if: github.event_name != 'pull_request' && github.ref == 'refs/heads/main'
+    runs-on: ubuntu-latest
+    env:
+      PROJECT: akylduukodo
+      # Pinned: from v13 the CLI first checks that the Hosting API is enabled,
+      # which needs a permission this service account does not hold.
+      FIREBASE: npx -y firebase-tools@12.9.1
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+      - name: Sign in with the service account
+        env:
+          SA: ${{ secrets.FIREBASE_SERVICE_ACCOUNT_AKYLDUUKODO }}
+        run: |
+          printf '%s' "$SA" > "$RUNNER_TEMP/sa.json"
+          echo "GOOGLE_APPLICATION_CREDENTIALS=$RUNNER_TEMP/sa.json" >> "$GITHUB_ENV"
+      - name: Make sure the quickzy site exists
+        id: site
+        run: |
+          if ! $FIREBASE hosting:sites:get quickzy --project "$PROJECT" > /dev/null 2>&1; then
+            $FIREBASE hosting:sites:create quickzy --project "$PROJECT" --non-interactive || {
+              echo "::error::Could not create the Firebase Hosting site 'quickzy'. Create it in the Firebase console (Hosting, Add another site, quickzy) and run this workflow again."
+              exit 1
+            }
+          fi
+          echo "site=quickzy" >> "$GITHUB_OUTPUT"
+      - name: Publish
+        run: |
+          jq --arg s "${{ steps.site.outputs.site }}" '.hosting.site = $s' firebase.json > firebase.tmp && mv firebase.tmp firebase.json
+          $FIREBASE deploy --only hosting --project "$PROJECT" --non-interactive
+          echo "### Live at https://${{ steps.site.outputs.site }}.web.app" >> "$GITHUB_STEP_SUMMARY"
+      - name: Create the live-game database if it is missing
+        continue-on-error: true
+        run: $FIREBASE database:instances:create "$PROJECT-default-rtdb" --location us-central1 --project "$PROJECT" --non-interactive
+      - name: Publish the security rules
+        # needs the "Firebase Rules Admin" role; if the service account does
+        # not have it, paste the rules by hand (see docs/SETUP.md)
+        continue-on-error: true
+        run: $FIREBASE deploy --only firestore:rules,database --project "$PROJECT" --non-interactive
+      - name: Forget the key
+        if: always()
+        run: rm -f "$RUNNER_TEMP/sa.json"

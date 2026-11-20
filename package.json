@@ -1,13 +1,15 @@
 {
-  "name": "malikastudy",
+  "name": "quickzy",
   "version": "1.0.0",
-  "description": "A short daily maths task for Malika, and a dashboard for whoever sets it.",
+  "description": "Quickzy: make quizzes and play them live, Kahoot-style, or as arcade games.",
   "type": "module",
   "scripts": {
-    "start": "node server.mjs",
-    "dev": "node server.mjs",
-    "test": "node tests/maths.test.mjs"
+    "dev": "node dev/server.mjs",
+    "start": "node dev/server.mjs",
+    "test": "node --test tests/unit/*.test.mjs && node tests/check.mjs",
+    "e2e": "node tests/e2e/run.mjs",
+    "check": "node tests/check.mjs"
   },
-  "license": "MIT",
+  "license": "UNLICENSED",
   "private": true
 }
