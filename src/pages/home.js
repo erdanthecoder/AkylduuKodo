@@ -1,14 +1,15 @@
 // home.js — the front door: join a game, or make one.
 
-import { h } from '../ui/dom.js';
+import { h, fill } from '../ui/dom.js';
 import { icon } from '../ui/icons.js';
 import { blook } from '../ui/blooks.js';
 import { scanForPin } from '../ui/qr.js';
 import { navigate } from '../router.js';
 import { MODES, modeArt } from '../game/modes/index.js';
 import { signedIn } from '../services/session.js';
-import { popularQuizzes } from '../services/quizzes.js';
-import { quizCard } from './parts.js';
+import { popularQuizzes, quizzesBy } from '../services/quizzes.js';
+import { OFFICIAL_UID } from '../config.js';
+import { quizCard, cover, authorLine } from './parts.js';
 
 export function joinBox() {
   const pin = h('input', {
@@ -49,6 +50,26 @@ export default async function Home() {
     popular.append(...list.map(quizCard));
   }).catch(() => popular.replaceWith(h('p', { class: 'muted' }, 'Quizzes could not be loaded right now.')));
 
+  // one official quiz a day, the same for everyone that day
+  const daily = h('div');
+  quizzesBy(OFFICIAL_UID).then((list) => {
+    if (!list.length) return;
+    const day = Math.floor(Date.now() / 86400000);
+    const q = [...list].sort((a, b) => a.id.localeCompare(b.id))[day % list.length];
+    const c = cover(q);
+    c.classList.add('daily-cover');
+    fill(daily, h('section', { class: 'daily card' },
+      c,
+      h('div', { class: 'stack grow', style: { gap: '8px' } },
+        h('span', { class: 'pill pill-zing', style: { justifySelf: 'start' } }, icon('star', { size: 14 }), 'Quiz of the day'),
+        h('h2', {}, q.title),
+        h('p', { class: 'muted', style: { margin: 0 } }, q.description),
+        authorLine(q, { size: 24 }),
+        h('div', { class: 'row' },
+          h('a', { class: 'btn btn-main', href: `/practice/${q.id}` }, icon('play', { size: 18 }), 'Play now'),
+          h('a', { class: 'btn', href: `/host/${q.id}` }, icon('users', { size: 18 }), 'Host it')))));
+  }).catch(() => {});
+
   const floaters = [['dog', 47, 10], ['robot', 3, 84], ['frog', 41, 80], ['cupcake', 93, 86], ['alien', 51, 46], ['penguin', 25, 88]]
     .map(([id, left, top], i) => {
       const b = blook(id);
@@ -70,6 +91,8 @@ export default async function Home() {
       ),
       h('div', { style: { position: 'relative' } }, joinBox()),
     ),
+
+    daily,
 
     h('div', { class: 'section-head' }, h('h2', {}, 'Five ways to play')),
     h('div', { class: 'features' },

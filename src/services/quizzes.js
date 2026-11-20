@@ -10,7 +10,7 @@
 // else, and every query here asks only for what the rules allow.
 
 import { net } from '../net/index.js';
-import { LIMITS } from '../config.js';
+import { LIMITS, BADGES } from '../config.js';
 import { myProfile, me } from './session.js';
 import { split, join, problem } from '../game/questions.js';
 import { isClean } from './names.js';
@@ -201,9 +201,17 @@ export async function countPlay(id) {
 
 const verifiedCache = new Map();
 
+/** 'official', 'owner', 'verified' or null: the badge an author carries. */
+export async function badgeOf(uid) {
+  if (!uid) return null;
+  if (BADGES[uid]) return BADGES[uid];
+  return (await isVerified(uid)) ? 'verified' : null;
+}
+
 /** Has this author published enough full quizzes to carry the badge? */
 export function isVerified(uid) {
   if (!uid) return Promise.resolve(false);
+  if (BADGES[uid]) return Promise.resolve(true);
   if (!verifiedCache.has(uid)) {
     verifiedCache.set(uid, net.store.count(COL, { where: [['owner', '==', uid], ['public', '==', true], ['big', '==', true]] })
       .then((n) => n >= LIMITS.verifyMinQuizzes)

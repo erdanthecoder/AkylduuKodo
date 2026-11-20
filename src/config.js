@@ -37,3 +37,16 @@ export const LIMITS = {
   verifyMinQuizzes: 3,       // and an author needs this many of them
   playersMax: 60,
 };
+
+/**
+ * Special badges, fixed here in the code so nobody can give one to
+ * themselves: they are not stored anywhere a user can write.
+ *   official — the Quickzy account itself (black check)
+ *   owner    — the person who runs Quickzy (green check)
+ * Everyone else can earn the blue "verified creator" check by publishing.
+ */
+export const BADGES = {
+  XH9Z5D7tLmRHStlxumgaJyTo1BP2: 'official',
+  KWIRRSUM2VQVWnr1nUDbPP9bqMk2: 'owner',
+};
+export const OFFICIAL_UID = 'XH9Z5D7tLmRHStlxumgaJyTo1BP2';
