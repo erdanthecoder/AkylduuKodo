@@ -381,6 +381,68 @@ const DRAW = {
     mouth(s, 'smile', 64);
     cheeks(s);
   },
+  /* winter: the limited Christmas pack */
+  snowman(s) {
+    block(s, '#f7fbff', '#cfdcf0');
+    // top hat
+    s.append(svg('rect', { x: 28, y: 18, width: 44, height: 7, rx: 3, fill: '#22223a' }));
+    s.append(svg('rect', { x: 36, y: 2, width: 28, height: 18, rx: 4, fill: '#22223a' }));
+    s.append(svg('rect', { x: 36, y: 13, width: 28, height: 5, fill: '#e2384d' }));
+    s.append(svg('circle', { cx: 39, cy: 48, r: 4.5, fill: '#22223a' }));
+    s.append(svg('circle', { cx: 61, cy: 48, r: 4.5, fill: '#22223a' }));
+    s.append(svg('path', { d: 'M49 54 L66 58 L49 61 Z', fill: '#ff8a2a' }));
+    for (const x of [41, 47, 53, 59]) s.append(svg('circle', { cx: x, cy: 67 + Math.abs(50 - x) * 0.18, r: 1.8, fill: '#22223a' }));
+    // scarf
+    s.append(svg('rect', { x: 14, y: 72, width: 72, height: 8, fill: '#e2384d' }));
+    s.append(svg('rect', { x: 62, y: 72, width: 9, height: 18, rx: 2, fill: '#c1263a' }));
+    s.append(svg('path', { d: 'M20 76 h44', stroke: '#fff', 'stroke-width': 2, 'stroke-dasharray': '4 4', opacity: 0.7 }));
+  },
+  gingerbread(s) {
+    s.append(svg('circle', { cx: 24, cy: 30, r: 9, fill: '#c97b3d' }));
+    s.append(svg('circle', { cx: 76, cy: 30, r: 9, fill: '#c97b3d' }));
+    block(s, '#c97b3d', '#a35b24');
+    s.append(svg('path', { d: 'M18 33 q4 -5 8 0 q4 5 8 0 q4 -5 8 0 q4 5 8 0 q4 -5 8 0 q4 5 8 0 q4 -5 8 0 q4 5 8 0 q2 -2.5 4 0', fill: 'none', stroke: '#fff', 'stroke-width': 3, 'stroke-linecap': 'round' }));
+    eyes(s, { style: 'happy', y: 50 });
+    mouth(s, 'smile', 60);
+    cheeks(s, '#ff7a8a', 57);
+    for (const [y, c] of [[69, '#e2384d'], [77, '#19c37d']]) s.append(svg('circle', { cx: 50, cy: y, r: 3.2, fill: c }));
+  },
+  reindeer(s) {
+    const ant = { fill: 'none', stroke: '#7a4a24', 'stroke-width': 4.5, 'stroke-linecap': 'round', 'stroke-linejoin': 'round' };
+    s.append(svg('path', { d: 'M30 26 L22 8 M25 15 L14 12 M23 10 L28 3', ...ant }));
+    s.append(svg('path', { d: 'M70 26 L78 8 M75 15 L86 12 M77 10 L72 3', ...ant }));
+    ears(s, 'cat', '#a8693a', '#e8b98f');
+    block(s, '#a8693a', '#7f4c25');
+    s.append(svg('ellipse', { cx: 50, cy: 66, rx: 15, ry: 10, fill: '#e8c9a3' }));
+    eyes(s, { y: 48 });
+    s.append(svg('circle', { cx: 50, cy: 61, r: 6, fill: '#ff2b44' }));
+    s.append(svg('circle', { cx: 48, cy: 59, r: 1.8, fill: '#fff', opacity: 0.8 }));
+    mouth(s, 'smile', 71);
+  },
+  elf(s) {
+    // pointed hat with a bell, pointy ears
+    s.append(svg('path', { d: 'M8 46 L18 36 L20 56 Z M92 46 L82 36 L80 56 Z', fill: '#ffd2b0' }));
+    block(s, '#ffd2b0', '#e8a982', { top: 30 });
+    s.append(svg('path', { d: 'M14 36 Q30 2 74 6 Q60 14 86 36 Z', fill: '#19a35b' }));
+    s.append(svg('rect', { x: 12, y: 30, width: 76, height: 9, rx: 4, fill: '#e2384d' }));
+    s.append(svg('circle', { cx: 76, cy: 6, r: 5, fill: '#ffcd1f' }));
+    eyes(s, { y: 54, r: 7.5 });
+    mouth(s, 'smile', 68);
+    cheeks(s, '#ff8fae', 64);
+  },
+  santa(s) {
+    // red hat with white trim and bobble, white beard
+    s.append(svg('path', { d: 'M18 30 Q34 2 70 8 Q84 12 84 30 Z', fill: '#e2384d' }));
+    s.append(svg('circle', { cx: 84, cy: 14, r: 7, fill: '#fff' }));
+    block(s, '#ffd2b0', '#e8a982', { top: 30 });
+    s.append(svg('rect', { x: 12, y: 26, width: 76, height: 11, rx: 5.5, fill: '#fff' }));
+    s.append(svg('path', { d: 'M14 54 Q14 92 50 92 Q86 92 86 54 Q78 62 66 60 Q58 66 50 64 Q42 66 34 60 Q22 62 14 54 Z', fill: '#fff' }));
+    s.append(svg('path', { d: 'M36 60 Q50 54 64 60 Q50 66 36 60 Z', fill: '#f1f1f6' }));
+    eyes(s, { y: 47, r: 6.5, style: 'happy' });
+    s.append(svg('circle', { cx: 50, cy: 54, r: 4.5, fill: '#ff8f8f' }));
+    mouth(s, 'smile', 70);
+  },
+
   bot2(s) {
     // "Zap": the house mascot, a little spark in a box
     block(s, '#6b4cff', '#4a2fd6');
@@ -423,6 +485,11 @@ export const BLOOKS = [
   { id: 'dragon', name: 'Ember', set: 'Magic' },
   { id: 'unicorn', name: 'Glimmer', set: 'Magic' },
   { id: 'bot2', name: 'Zap', set: 'Magic' },
+  { id: 'snowman', name: 'Snowy', set: 'Winter', limited: true },
+  { id: 'gingerbread', name: 'Ginger', set: 'Winter', limited: true },
+  { id: 'reindeer', name: 'Jingle', set: 'Winter', limited: true },
+  { id: 'elf', name: 'Twinkle', set: 'Winter', limited: true },
+  { id: 'santa', name: 'Santa', set: 'Winter', limited: true },
 ];
 
 /* ---------------------------------------------------------------- rarity */
@@ -445,23 +512,35 @@ const RARITY_OF = {
   epic: ['yeti', 'astronaut', 'bot2'],
   legendary: ['dragon', 'unicorn'],
 };
+// the winter pack has its own spread, from a common snowman to a legendary Santa
+const WINTER_RARITY = { snowman: 'common', gingerbread: 'uncommon', reindeer: 'rare', elf: 'epic', santa: 'legendary' };
+for (const [id, r] of Object.entries(WINTER_RARITY)) RARITY_OF[r].push(id);
 for (const [r, ids] of Object.entries(RARITY_OF)) for (const id of ids) BLOOKS.find((b) => b.id === id).rarity = r;
 
 /** Everyone owns the commons from the start. */
-export const STARTERS = RARITY_OF.common;
+export const LIMITED = BLOOKS.filter((b) => b.limited).map((b) => b.id);
+/** Everything that is not a limited edition. */
+export const REGULAR = BLOOKS.filter((b) => !b.limited).map((b) => b.id);
+export const STARTERS = RARITY_OF.common.filter((id) => !LIMITED.includes(id));
 
 export function rarityOf(id) {
   if (isCustom(id)) return RARITY_BY_ID.get('legendary');
   return RARITY_BY_ID.get(BY_ID.get(id)?.rarity || 'common');
 }
 
-/** One draw from a box: first the rarity by its chance, then a blook of it. */
-export function drawFromBox(rand = Math.random) {
-  let roll = rand();
-  let tier = RARITIES[0];
-  for (const r of RARITIES) { if (roll < r.chance) { tier = r; break; } roll -= r.chance; }
-  const pool = RARITY_OF[tier.id];
-  return pool[Math.floor(rand() * pool.length) % pool.length];
+/**
+ * One draw from a box: first a rarity by its chance, then a blook of that
+ * rarity from the box's own pool. Rarities the pool lacks are left out and
+ * the others keep their proportions.
+ */
+export function drawFromBox(rand = Math.random, pool = REGULAR) {
+  const tiers = RARITIES.filter((r) => pool.some((id) => rarityOf(id).id === r.id));
+  const total = tiers.reduce((n, r) => n + r.chance, 0);
+  let roll = rand() * total;
+  let tier = tiers[tiers.length - 1];
+  for (const r of tiers) { if (roll < r.chance) { tier = r; break; } roll -= r.chance; }
+  const options = pool.filter((id) => rarityOf(id).id === tier.id);
+  return options[Math.floor(rand() * options.length) % options.length];
 }
 
 /* ---------------------------------------------------------------- custom */

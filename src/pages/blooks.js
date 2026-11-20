@@ -50,10 +50,24 @@ export function coin() {
 
 /* ------------------------------------------------------------------ boxes */
 
+/** The chance of each rarity from this box, given what is in its pool. */
+function boxOdds(box) {
+  const tiers = RARITIES.filter((r) => box.pool.some((id) => rarityOf(id).id === r.id));
+  const total = tiers.reduce((n, r) => n + r.chance, 0);
+  return tiers.map((r) => [r, box.luck === 1 ? r.chance / total : luckyChance(r.id, box.luck)]);
+}
+
+function daysLeft(ends) {
+  const d = Math.ceil((ends - Date.now()) / 86400000);
+  return d <= 1 ? 'Last day!' : `${d} days left`;
+}
+
 function boxes(redraw) {
   const m = progress.me();
   const lvl = progress.levelOf(m.xp);
-  return h('div', { class: 'boxes' }, ...progress.BOXES.map((box) => {
+  // limited editions first while they last; closed ones disappear
+  const list = progress.BOXES.filter((b) => progress.boxOpen(b)).sort((x, y) => Number(Boolean(y.limited)) - Number(Boolean(x.limited)));
+  return h('div', { class: 'boxes' }, ...list.map((box) => {
     const locked = lvl < box.level;
     const btn = h('button', { class: 'btn btn-main', disabled: locked || m.coins < box.price }, coin(), String(box.price));
     btn.addEventListener('click', busy(btn, async () => {
@@ -63,11 +77,16 @@ function boxes(redraw) {
         redraw();
       } catch (err) { toast(err.message, 'bad'); }
     }));
-    const odds = RARITIES.map((r) => h('li', {}, h('i', { style: { background: r.colour } }),
-      `${r.name} ${fmtPct(box.luck === 1 ? r.chance : luckyChance(r.id, box.luck))}`));
-    return h('div', { class: `box-card${locked ? ' is-locked' : ''}`, style: { background: box.colour } },
-      h('div', { class: 'box-art' }, boxArt()),
+    const odds = boxOdds(box).map(([r, p]) => h('li', {}, h('i', { style: { background: r.colour } }), `${r.name} ${fmtPct(p)}`));
+    const peek = h('div', { class: 'box-peek', 'aria-label': 'Blooks in this box' },
+      ...box.pool.slice().sort((x, y) => ORDER.indexOf(rarityOf(y).id) - ORDER.indexOf(rarityOf(x).id)).slice(0, 6)
+        .map((id) => { const el = blook(id); if (!progress.owns(id)) el.classList.add('is-unknown'); return el; }));
+    return h('div', { class: `box-card${locked ? ' is-locked' : ''}${box.limited ? ' is-limited' : ''}`, style: { background: box.colour } },
+      box.limited ? h('div', { class: 'snow', 'aria-hidden': 'true' }) : null,
+      box.limited ? h('span', { class: 'limited-tag' }, icon('star', { size: 12 }), box.blurb, ' · ', daysLeft(box.ends)) : null,
+      h('div', { class: 'box-art' }, boxArt(box.limited)),
       h('h3', {}, box.name),
+      peek,
       locked ? h('p', {}, icon('lock', { size: 14 }), ` Opens at level ${box.level}`) : h('ul', { class: 'odds' }, ...odds),
       btn);
   }));
@@ -84,13 +103,15 @@ function luckyChance(id, draws) {
 }
 const fmtPct = (p) => `${p < 0.1 ? (p * 100).toFixed(1) : Math.round(p * 100)}%`;
 
-function boxArt() {
+function boxArt(winter = false) {
   const s = document.createElementNS('http://www.w3.org/2000/svg', 'svg');
   s.setAttribute('viewBox', '0 0 100 100');
+  const ribbon = winter ? '#e2384d' : '#17133f';
   s.innerHTML = '<rect x="18" y="38" width="64" height="48" rx="10" fill="#fff" opacity=".95"/>'
     + '<rect x="12" y="26" width="76" height="20" rx="8" fill="#fff"/>'
-    + '<rect x="44" y="26" width="12" height="60" fill="#17133f" opacity=".85"/>'
-    + '<path d="M50 26 C36 6 22 16 34 26 Z M50 26 C64 6 78 16 66 26 Z" fill="#fff"/>';
+    + `<rect x="44" y="26" width="12" height="60" fill="${ribbon}" opacity=".9"/>`
+    + `<path d="M50 26 C36 6 22 16 34 26 Z M50 26 C64 6 78 16 66 26 Z" fill="${winter ? '#e2384d' : '#fff'}"/>`
+    + (winter ? '<path d="M14 28 q6 -6 12 0 q6 -6 12 0 q6 -6 12 0 q6 -6 12 0 q6 -6 12 0 q6 -6 12 0" fill="none" stroke="#dff1ff" stroke-width="5" stroke-linecap="round"/><circle cx="72" cy="62" r="5" fill="#19a35b"/><circle cx="64" cy="70" r="4" fill="#ffcd1f"/>' : '');
   return s;
 }
 
@@ -115,13 +136,19 @@ function reveal({ id, duplicate, refund }) {
 
 /* ------------------------------------------------------------- collection */
 
-function collection() {
+// the catalog, pack by pack: every blook there is, black shadows for the
+// ones not found yet
+const SETS = [['Winter', 'Winter (limited edition)'], ['Pets', 'Pets'], ['Farm', 'Farm'], ['Wild', 'Wild'], ['Snacks', 'Snacks'], ['Space', 'Space'], ['Magic', 'Magic']];
+
+function catalog() {
   const m = progress.me();
   const have = BLOOKS.filter((b) => progress.owns(b.id)).length;
-  const groups = RARITIES.slice().reverse().map((r) => {
-    const list = BLOOKS.filter((b) => b.rarity === r.id);
+  const groups = SETS.map(([set, label]) => {
+    const list = BLOOKS.filter((b) => b.set === set)
+      .sort((x, y) => ORDER.indexOf(rarityOf(x.id).id) - ORDER.indexOf(rarityOf(y.id).id));
+    const got = list.filter((b) => progress.owns(b.id)).length;
     return h('div', { class: 'stack', style: { gap: '8px' } },
-      h('h3', { style: { color: r.colour } }, `${r.name} · ${list.filter((b) => progress.owns(b.id)).length}/${list.length}`),
+      h('h3', { class: 'row', style: { gap: '8px' } }, label, h('span', { class: `pill${got === list.length ? ' pill-ok' : ''}` }, `${got}/${list.length}`)),
       h('div', { class: 'card-grid' }, ...list.map((b) => blookCard(b.id, {
         owned: progress.owns(b.id),
         count: m.owned[b.id] || 0,
@@ -129,8 +156,9 @@ function collection() {
       }))));
   });
   return h('section', { class: 'stack' },
-    h('div', { class: 'row spread' }, h('h2', {}, 'Collection'), h('span', { class: 'pill' }, `${have} of ${BLOOKS.length}`)),
-    h('p', { class: 'muted', style: { margin: 0 } }, 'Tap a blook you own to make it yours in games.'),
+    h('div', { class: 'row spread' }, h('h2', {}, 'Catalog'), h('span', { class: 'pill' }, `${have} of ${BLOOKS.length} found`)),
+    h('div', { class: 'xp-bar' }, h('i', { style: { width: `${Math.round((have / BLOOKS.length) * 100)}%` } })),
+    h('p', { class: 'muted', style: { margin: 0 } }, 'Every blook in Quickzy. Black shadows are the ones you have not found yet. Tap one you own to use it in games.'),
     ...groups);
 }
 
@@ -231,7 +259,7 @@ export default async function Blooks() {
     h('h2', {}, 'Boxes'),
     boxes(draw),
     customs(draw),
-    collection(),
+    catalog(),
     roadmap());
   draw();
   return root;

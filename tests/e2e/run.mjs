@@ -348,8 +348,10 @@ if ((which === 'owner' || which === 'all') && !EMULATOR) {
   if (await own.locator('.owner-row:has-text("@owner") button:has-text("blue check"):visible').count()) fail('owner row offers a blue check');
   const other = own.locator('.owner-row').filter({ hasText: '@quizmaster' }).first();
   {
-    await other.locator('button:has-text("+100 coins")').click();
-    await own.waitForSelector('text=100 coins');
+    await other.locator('button:has-text("Give coins")').click();
+    await own.fill('.modal input[type=number]', '250');
+    await own.click('.modal button:has-text("Give")');
+    await own.waitForSelector('text=Gave host 250 coins');
     await other.locator('button:has-text("Give blue check")').click();
     await other.locator('button:has-text("Remove blue check")').waitFor();
     // and take it back, so the earned-badge test later starts clean
@@ -405,6 +407,35 @@ if (which === 'account' || which === 'all') {
   await host.goto(`${BASE}/u/quizmaster`);
   await host.waitForSelector('h1 .verified');
   await host.waitForSelector('.quiz-card .verified');
+
+  say('make with AI: paste a chatbot reply, get a quiz');
+  await host.goto(`${BASE}/library`);
+  await host.click('a:has-text("Make with AI")');
+  await host.waitForSelector('.modal .ai-prompt');
+  await host.fill('.modal input', 'Volcanoes');
+  if (!(await host.locator('.modal .ai-prompt').inputValue()).includes('Volcanoes')) fail('prompt does not name the topic');
+  const reply = 'Sure! Here is your quiz:\n```json\n' + JSON.stringify({
+    title: 'Volcano Facts', description: 'Hot stuff.',
+    questions: [
+      { type: 'mc', question: 'What comes out of a volcano?', options: ['Lava', 'Snow', 'Sand', 'Milk'], answer: 'A' },
+      { type: 'tf', question: 'Mount Fuji is in Japan.', answer: true },
+      { type: 'multi', question: 'Which are volcanoes?', options: ['Etna', 'Everest', 'Vesuvius', 'K2'], answers: [0, 2] },
+      { type: 'type', question: 'Molten rock underground is called?', accept: ['magma'] },
+      { type: 'order', question: 'Order by size, smallest first', items: ['Pebble', 'Boulder', 'Mountain'] },
+      { type: 'number', question: 'How many continents are there?', answer: 7 },
+      { type: 'mc', question: 'Broken one', options: ['a', 'b'], answer: 9 },
+    ],
+  }, null, 2) + '\n```\nHope you enjoy it!';
+  await host.fill('.modal textarea:not([readonly])', reply);
+  await host.waitForSelector('.modal .ai-ok:has-text("6 questions ready")');
+  await host.waitForSelector('.modal .ai-skipped:has-text("1 left out")');
+  await host.screenshot({ path: `${SHOTS}/make-with-ai.png` });
+  await host.click('.modal button:has-text("Add to my quiz")');
+  await host.waitForSelector('text=Added 6 questions');
+  if ((await host.locator('.q-thumb').count()) !== 6) fail('expected 6 questions in the editor');
+  if ((await host.inputValue('input[aria-label="Quiz title"]')) !== 'Volcano Facts') fail('title not filled in');
+  await host.click('button:has-text("Publish")');
+  await host.waitForSelector('text=Published. Anyone can find');
 
   say('solo practice: play a whole quiz alone');
   await host.goto(`${BASE}/practice/${quizId}`);
