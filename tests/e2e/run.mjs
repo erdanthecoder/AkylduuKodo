@@ -339,7 +339,7 @@ if (which === 'arcade' || which === 'all') {
     if (mode === 'skyrace') {
       say('skyrace: charge and press BOOST');
       await dev.evaluate(() => window.__quickzySky.give());
-      await dev.click('.sr-boost.is-ready');
+      await dev.click('.sr-boost.is-ready', { force: true });
       await dev.waitForTimeout(1500);
       const st = await dev.evaluate(() => window.__quickzySky.state());
       if (st.used !== 1) fail(`boost not used: ${JSON.stringify(st)}`);

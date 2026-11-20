@@ -218,6 +218,7 @@ export function mountPlayer(game) {
   boostBtn.addEventListener('click', boost);
 
   const geo = { w: 0, h: 0 };
+  const px = () => (geo.w && geo.w < 600 ? 0.58 : 0.42);   // where your plane flies, across the screen
   const stop = loop((dt) => {
     t += dt;
     ctl.update();
@@ -255,11 +256,11 @@ export function mountPlayer(game) {
       const m = missiles[i];
       m.x += m.speed * dt;
       m.y = lerp(m.y, me.y, 0.008);
-      if (Math.abs(m.x - 0.38) < 0.03 && Math.abs(m.y - me.y) < 0.06) {
+      if (Math.abs(m.x - px()) < 0.03 && Math.abs(m.y - me.y) < 0.06) {
         missiles.splice(i, 1);
         gap = Math.max(0, gap - 28);
         shake.kick(10); sfx('boom');
-        fx.burst(geo.w * 0.38, geo.h * me.y, { n: 24, color: '#ff8a2a', speed: 220 });
+        fx.burst(geo.w * px(), geo.h * me.y, { n: 24, color: '#ff8a2a', speed: 220 });
         game.flash('Hit! The jets are closing in', 'is-bad');
       } else if (m.x > 1.1) missiles.splice(i, 1);
     }
@@ -268,7 +269,7 @@ export function mountPlayer(game) {
       me.d = Math.max(0, me.d - 120);
       missiles.length = 0;
       shake.kick(16); sfx('fall');
-      fx.burst(geo.w * 0.38, geo.h * me.y, { n: 40, color: '#ff4772', speed: 260 });
+      fx.burst(geo.w * px(), geo.h * me.y, { n: 40, color: '#ff4772', speed: 260 });
       game.flash('Shot down! -120 m', 'is-bad');
     }
     game.setMeter('Escape', Math.min(1, gap / START_GAP), gap < 40 ? 'DANGER' : `${Math.floor(gap)} m ahead`);
@@ -289,7 +290,7 @@ export function mountPlayer(game) {
       const info = names.get(u);
       if (!info) continue;
       const dx = (d - me.d) * 4;
-      const x = w * 0.38 + dx;
+      const x = w * px() + dx;
       if (x < -80 || x > w + 80) continue;
       const y = hh * (0.2 + (hashString(u) % 60) / 100);
       ctx.globalAlpha = 0.45;
@@ -298,7 +299,7 @@ export function mountPlayer(game) {
       nameTag(ctx, info.name, x, y - 30 * s, { size: 10, bg: 'rgba(23,19,63,.45)' });
     }
     // the jets, behind: closer when the gap is small
-    const jx = w * 0.38 - Math.min(w * 0.36, (gap / START_GAP) * w * 0.3) - 70 * s;
+    const jx = Math.max(40 * s, w * px() - (gap / START_GAP) * w * 0.3 - 70 * s);
     for (let k = 0; k < 2; k++) drawJet(ctx, jx - k * 40 * s, hh * (me.y + (k ? 0.1 : -0.06)) + Math.sin(t * 3 + k) * 6, s * 0.9, t);
     // missiles
     for (const m of missiles) {
@@ -309,7 +310,7 @@ export function mountPlayer(game) {
     }
     // you
     const tilt = me.down > 0 ? t * 3 : me.vy * 0.5;
-    drawPlane(ctx, w * 0.38, hh * me.y, s, { tilt, blookId: game.blook, boosting, t });
+    drawPlane(ctx, w * px(), hh * me.y, s, { tilt, blookId: game.blook, boosting, t });
     if (gap < 40 && me.down <= 0) {
       ctx.fillStyle = `rgba(255,40,60,${0.18 + Math.sin(t * 12) * 0.1})`;
       ctx.fillRect(0, 0, w, hh);

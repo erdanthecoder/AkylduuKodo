@@ -15,7 +15,7 @@ import { blook, REGULAR } from './blooks.js';
 import { confetti, celebrate } from './confetti.js';
 import { sfx, playMusic, stopMusic } from '../game/sound.js';
 import { VERSION } from '../config.js';
-import { NEWS } from './whatsnew.js';
+import { NEWS_11 as NEWS } from './whatsnew.js';
 
 const SEEN = 'quickzy.flight.seen';
 export const flightSeen = () => { try { return localStorage.getItem(SEEN) === VERSION; } catch { return true; } };
