@@ -234,7 +234,7 @@ if (which === 'classic' || which === 'all') {
 }
 
 if (which === 'arcade' || which === 'all') {
-  for (const [mode, name] of [['lasertag', 'Laser Tag'], ['robotrun', 'Robot Run'], ['spacecraft', 'Spacecraft'], ['obby', 'Obby']]) {
+  for (const [mode, name] of [['lasertag', 'Laser Tag'], ['robotrun', 'Robot Run'], ['spacecraft', 'Spacecraft'], ['obby', 'Sky Climb']]) {
     say(`${mode}: open the lobby`);
     const pin = await openLobby(name, () => host.click('.set-row:has-text("Game length") button:has-text("3 min")'));
     const cara = await join(pin, 'Cara', { width: 390, height: 780 });
@@ -274,6 +274,14 @@ if (which === 'arcade' || which === 'all') {
       .catch(() => fail('Cara should have points after a right answer'));
     await cara.screenshot({ path: `${SHOTS}/${mode}-player.png` });
     await dev.screenshot({ path: `${SHOTS}/${mode}-player-wide.png` });
+    if (mode === 'obby') {
+      say('obby: every world draws, up to the summit');
+      for (const n of [20, 37, 52, 67, 82, 90]) {
+        await dev.evaluate((k) => window.__quickzyClimb(k), n);
+        await dev.waitForTimeout(400);
+        await dev.screenshot({ path: `${SHOTS}/obby-level-${n}.png` });
+      }
+    }
     await host.screenshot({ path: `${SHOTS}/${mode}-host.png` });
     say(`${mode}: end`);
     await host.click('button:has-text("End now")');
@@ -376,6 +384,26 @@ if ((which === 'owner' || which === 'all') && !EMULATOR) {
   await stranger.goto(`${BASE}/owner`);
   await stranger.waitForURL(/\/login/);
   await stranger.context().close();
+
+  say('channels: follow a creator, see the count and the feed');
+  await host.goto(`${BASE}/`);
+  const hostChannel = await host.locator('.me-chip').getAttribute('href');
+  await own.goto(`${BASE}${hostChannel}`);
+  await own.waitForSelector('.channel .follow-btn:has-text("Follow")');
+  const before = Number(await own.locator('.channel-stats b').first().getAttribute('data-n'));
+  await own.click('.follow-btn');
+  await own.waitForSelector('.follow-btn:has-text("Following")');
+  await own.reload();
+  await own.waitForSelector('.follow-btn:has-text("Following")');
+  const after = Number(await own.locator('.channel-stats b').first().getAttribute('data-n'));
+  if (after !== before + 1) fail(`followers ${before} -> ${after}`);
+  await own.goto(`${BASE}/channels`);
+  await own.waitForSelector('text=New from channels you follow');
+  await own.waitForSelector(`.channel-card[href="${hostChannel}"]`);
+  await own.screenshot({ path: `${SHOTS}/channels.png`, fullPage: true });
+  await own.goto(`${BASE}${hostChannel}`);
+  await own.click('.follow-btn');
+  await own.waitForSelector('.follow-btn:has-text("Follow"):not(:has-text("Following"))');
   await own.context().close();
 }
 
@@ -473,7 +501,7 @@ if (which === 'account' || which === 'all') {
   while (!(await boxBtn.isDisabled()) && opened < 15) {
     await boxBtn.click();
     for (let t = 0; t < 3; t++) { await host.click('.ub-stage'); await host.waitForTimeout(120); }
-    await host.waitForSelector('.ub-card');
+    await host.waitForSelector('.ub-card', { timeout: 15000 });
     if (opened === 0) await host.screenshot({ path: `${SHOTS}/box-reveal.png` });
     await host.click('.ub-result button:has-text("Done")');
     await host.waitForSelector('.ub-root', { state: 'detached' });

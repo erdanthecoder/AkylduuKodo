@@ -129,6 +129,19 @@ service cloud.firestore {
       }
     }
 
+    // ------------------------------------------------------------ channels
+    // follows/{me_them}: I follow their channel. Anyone can count followers;
+    // only you can follow or unfollow, and never yourself.
+    match /follows/{id} {
+      allow read: if true;
+      allow create: if account() && onlyKeys(['from', 'to', 'at'])
+        && request.resource.data.from == request.auth.uid
+        && str(request.resource.data.to, 40) && request.resource.data.to != request.auth.uid
+        && id == request.auth.uid + '_' + request.resource.data.to
+        && request.resource.data.at == request.time;
+      allow delete: if signedIn() && resource.data.from == request.auth.uid;
+    }
+
     // ------------------------------------------------------------- reports
     match /reports/{id} {
       allow read, delete: if signedIn() && resource.data.owner == request.auth.uid;

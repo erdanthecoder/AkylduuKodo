@@ -790,3 +790,49 @@ button.bcard.is-slot { color: var(--violet); border-color: var(--violet); backgr
 .ub-new { display: inline-block; background: var(--zing); color: var(--night); border-radius: 8px; padding: 1px 8px; font-weight: 900; animation: ub-bounce .8s ease-in-out infinite; }
 .ub-calm *, .ub-calm, .ub-calm::before { animation-duration: .01ms !important; animation-delay: 0ms !important; animation-iteration-count: 1 !important; }
 .set-hero .badge-set, .set-hero h1 > .verified { transform: scale(1.45); transform-origin: left center; margin-left: 4px; }
+
+/* ---------------------------------------------------------------- channels */
+.channel { background: var(--card); border-radius: 28px; overflow: hidden; box-shadow: 0 8px 0 #0000001a; }
+.channel-banner { height: 150px; position: relative; overflow: hidden; }
+.channel-floaters i { position: absolute; width: 60px; height: 60px; border-radius: 18px; background: #ffffff2a; left: calc(var(--i) * 22% + 4%); top: 20%;
+  transform: rotate(calc(var(--i) * 17deg)); animation: chan-float calc(5s + var(--i) * 1s) ease-in-out infinite alternate; }
+.channel-floaters i:nth-child(even) { border-radius: 50%; top: 52%; width: 40px; height: 40px; }
+@keyframes chan-float { to { transform: translateY(-18px) rotate(calc(var(--i) * 17deg + 30deg)); } }
+.channel-body { display: flex; flex-wrap: wrap; align-items: flex-end; gap: 18px; padding: 0 24px 16px; margin-top: -56px; position: relative; }
+.channel-avatar { background: var(--card); border-radius: 30px; padding: 10px; box-shadow: 0 6px 0 #0000001a; }
+.channel-stats { display: grid; grid-template-columns: repeat(4, 1fr); border-top: 2px solid #0000000d; }
+.channel-stats > div { display: grid; justify-items: center; padding: 12px 6px; }
+.channel-stats b { font-family: 'Lilita One', sans-serif; font-size: 26px; color: var(--ink); }
+.channel-stats small { color: var(--ink-2); font-weight: 800; }
+.follow-btn { min-width: 130px; justify-content: center; }
+.follow-btn.is-following { background: var(--ok); color: #fff; box-shadow: 0 4px 0 var(--okd); }
+.channels-hero { padding: 26px; border-radius: 28px; color: #fff; background: radial-gradient(circle at 90% 0, #ff4772, transparent 50%), linear-gradient(135deg, var(--violet), var(--night)); }
+.channels-hero h1 { color: #fff; margin: 0; font-family: 'Lilita One', sans-serif; font-size: clamp(32px, 6vw, 48px); }
+.channels-hero p { margin: 6px 0 0; font-weight: 700; opacity: .9; }
+.channel-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(190px, 1fr)); gap: 14px; }
+.channel-card { display: grid; justify-items: center; gap: 6px; text-align: center; background: var(--card); border-radius: 22px; padding-bottom: 14px; overflow: hidden;
+  box-shadow: 0 6px 0 #0000001a; color: var(--ink); transition: transform .15s var(--spring); }
+.channel-card:hover { transform: translateY(-4px) rotate(-1deg); }
+.channel-card-top { width: 100%; height: 96px; display: grid; place-items: center; }
+@media (max-width: 560px) { .channel-stats b { font-size: 20px; } .channel-body { padding: 0 16px 14px; } }
+
+/* box opening: the mystery card, the fake-out, the legendary slam */
+.ub-mystery { --rc: #6b6790; position: relative; z-index: 1; background: linear-gradient(160deg, #2b2560, #17133f); border: 4px solid var(--rc);
+  box-shadow: 0 0 40px var(--rc); display: grid; place-items: center; transition: border-color .2s, box-shadow .2s; animation: ub-mspin 1s cubic-bezier(.2, 1.5, .4, 1) both, ub-wobble 1.2s .9s ease-in-out infinite; }
+.ub-mystery .blook.is-unknown svg { filter: brightness(0) drop-shadow(0 0 6px var(--rc)); }
+.ub-q { position: absolute; top: 8px; font-family: 'Lilita One', sans-serif; font-size: 40px; color: var(--rc); text-shadow: 0 3px 0 #0006; }
+@keyframes ub-mspin { from { transform: rotateY(720deg) scale(.2); } }
+@keyframes ub-wobble { 25% { transform: rotate(-3deg) scale(1.02); } 75% { transform: rotate(3deg) scale(1.02); } }
+.ub-mystery.ub-crack { animation: ub-shake-hard .3s ease infinite; }
+.ub-root { --rc: #fff; }
+.ub-root .ub-glow, .ub-root .ub-rays { transition: background .2s; }
+.ub-hint.ub-wait { font-family: 'Lilita One', sans-serif; font-size: 56px; color: #ff4772; animation: ub-slam .35s cubic-bezier(.2, 1.8, .4, 1) both; text-shadow: 0 5px 0 #0007; }
+.ub-hint.ub-up { font-family: 'Lilita One', sans-serif; font-size: 36px; color: var(--rc); animation: ub-slam .3s cubic-bezier(.2, 1.8, .4, 1) both; }
+.ub-dark::after { content: ''; position: fixed; inset: 0; background: #000; opacity: .88; animation: cs-in .25s both; z-index: 2; pointer-events: none; }
+.ub-word { position: fixed; inset: 0; z-index: 3; display: flex; justify-content: center; align-items: center; gap: .04em; pointer-events: none;
+  font-family: 'Lilita One', sans-serif; font-size: clamp(40px, 11vw, 110px); text-shadow: 0 0 30px currentColor, 0 6px 0 #0008; }
+.ub-word span { display: inline-block; animation: ub-slam .3s cubic-bezier(.2, 1.8, .4, 1) both; }
+.ub-ring { position: absolute; width: 220px; height: 220px; border-radius: 50%; border: 8px solid var(--rc); animation: ub-ring .8s ease-out forwards; pointer-events: none; }
+@keyframes ub-ring { from { transform: scale(.3); opacity: 1; } to { transform: scale(2.4); opacity: 0; } }
+.ub-coin { position: fixed; top: -40px; z-index: 4; animation: ub-rain linear both; pointer-events: none; }
+@keyframes ub-rain { to { transform: translateY(115vh) rotate(720deg); } }

@@ -23,7 +23,7 @@ function audio() {
 }
 
 // unlock on the first touch or key
-['pointerdown', 'keydown'].forEach((ev) => window.addEventListener(ev, () => audio(), { once: true, passive: true }));
+if (typeof window !== 'undefined') ['pointerdown', 'keydown'].forEach((ev) => window.addEventListener(ev, () => audio(), { once: true, passive: true }));
 
 function tone(freq, { at = 0, dur = 0.12, type = 'sine', gain = 0.3, slide = 0, out = master } = {}) {
   const c = audio();

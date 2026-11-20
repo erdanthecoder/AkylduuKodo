@@ -33,9 +33,9 @@ export const MODES = [
     durations: [3, 5, 7, 10],
   },
   {
-    id: 'obby', name: 'Obby', kind: 'arcade',
-    tagline: 'Climb the tower. Every right answer buys more jumps.',
-    bg: 'linear-gradient(140deg, #12c9a6, #2f9bff)',
+    id: 'obby', name: 'Sky Climb', kind: 'arcade',
+    tagline: 'Climb six worlds to the summit. Fall and you drop. Don\'t look down!',
+    bg: 'linear-gradient(160deg, #070b26, #3a2380 35%, #7a80b8 55%, #7fdcff 75%, #78cbff)',
     durations: [3, 5, 7, 10],
   },
 ];
