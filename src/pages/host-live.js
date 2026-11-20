@@ -3,6 +3,7 @@
 // The host's browser runs the referee (game/referee.js); this page only draws
 // what the referee knows and gives the host the controls.
 
+import { picture } from '../ui/picture.js';
 import { h, fill, plural } from '../ui/dom.js';
 import { icon, shape, logo, wordmark } from '../ui/icons.js';
 import { blook, preloadBlooks } from '../ui/blooks.js';
@@ -211,6 +212,7 @@ export default async function HostLive({ params }) {
         h('div', { class: 'q-intro' },
           h('p', { class: 'q-type' }, typeLabel),
           h('h1', {}, q.text),
+          picture(q.img),
           bar2),
         h('div', { class: 'host-foot' }, pinText(false), h('button', { class: 'btn btn-dark', onclick: () => ref.next() }, 'Show answers now')));
       requestAnimationFrame(() => { bar2.firstChild.style.transitionDuration = `${Math.max(0, cur.introEnds - live.now())}ms`; bar2.firstChild.style.width = '100%'; });
@@ -227,7 +229,7 @@ export default async function HostLive({ params }) {
         bar(h('span', { class: 'pill pill-dark' }, progress)),
         h('h1', { class: 'q-head' }, q.text),
         h('div', { class: 'q-mid' },
-          h('div', { class: 'q-mid-left' }, blook(ref.ranked()[0]?.blook || 'robot')),
+          h('div', { class: 'q-mid-left' }, picture(q.img, { cls: 'q-pic-host' }) || blook(ref.ranked()[0]?.blook || 'robot')),
           h('div', { class: 'q-mid-centre' }, ring.el, h('div', { class: 'q-mid-note' }, h('span', { class: 'pill pill-dark' }, typeLabel),
             q.points === 'double' ? h('span', { class: 'pill pill-zing' }, 'Double points') : null,
             q.points === 'none' ? h('span', { class: 'pill pill-dark' }, 'No points') : null)),
@@ -251,6 +253,7 @@ export default async function HostLive({ params }) {
       const el = h('div', { class: 'host-screen q-screen' },
         bar(h('span', { class: 'pill pill-dark' }, progress)),
         h('h1', { class: 'q-head' }, q.text),
+        picture(q.img, { cls: 'q-pic-small' }),
         h('div', { class: 'reveal-sum' }, q.type === 'poll' ? icon('chart', { size: 26 }) : icon('check', { size: 26 }), summary),
         tiles(q, r),
         h('div', { class: 'host-foot' }, pinText(false), nextBtn));

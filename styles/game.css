@@ -342,3 +342,16 @@ body.in-game { background: var(--night); color: #fff; overscroll-behavior: none;
 .review li.is-bad .mark { background: var(--bad); }
 .review .grow { display: grid; gap: 2px; }
 .review .pts { font-family: var(--display); color: var(--okd); }
+
+/* arcade extras: streak badge, rank bump, shake, final seconds */
+.hud-streak { position: absolute; top: 64px; left: 50%; transform: translateX(-50%); z-index: 6; display: inline-flex; align-items: center; gap: 5px;
+  padding: 6px 14px; border-radius: 99px; background: linear-gradient(90deg, #ff8a2a, #ff4772); color: #fff; font-weight: 900;
+  box-shadow: 0 4px 0 #0003; animation: streak-in .4s cubic-bezier(.2, 1.8, .4, 1) both; pointer-events: none; }
+@keyframes streak-in { from { transform: translateX(-50%) scale(0); } }
+.hud-rank.is-up { animation: rank-up .7s cubic-bezier(.2, 1.8, .4, 1); }
+@keyframes rank-up { 30% { transform: scale(1.35); background: var(--zing, #ffcd1f); color: #17133f; } }
+.arcade.is-shake { animation: arcade-shake .4s ease; }
+@keyframes arcade-shake { 20% { transform: translateX(-8px); } 40% { transform: translateX(7px); } 60% { transform: translateX(-5px); } 80% { transform: translateX(3px); } }
+.arcade.is-final::after { content: ''; position: absolute; inset: 0; pointer-events: none; z-index: 4; box-shadow: inset 0 0 0 6px #ff4772, inset 0 0 60px #ff477288;
+  animation: final-pulse 1s ease-in-out infinite; }
+@keyframes final-pulse { 50% { opacity: .35; } }

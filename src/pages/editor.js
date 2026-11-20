@@ -10,7 +10,9 @@ import { field, input, busy, toast, confirm, modal, segmented } from '../ui/kit.
 import { navigate } from '../router.js';
 import { explain } from '../net/index.js';
 import { LIMITS } from '../config.js';
-import { TYPES, TYPE_BY_ID, TIMES, POINTS, blankQuestion, retype, problem } from '../game/questions.js';
+import { TYPES, TYPE_BY_ID, TIMES, POINTS, blankQuestion, retype, problem, cleanPic } from '../game/questions.js';
+import { picture } from '../ui/picture.js';
+import { BLOOKS, blook } from '../ui/blooks.js';
 import { saveQuiz, loadForEditing, publishProblems, COVERS } from '../services/quizzes.js';
 import { whenProfile } from '../services/session.js';
 import { COVER_BG, pageTitle } from './parts.js';
@@ -154,6 +156,47 @@ export default async function Editor({ params, query = {} }) {
     if (t) t.focus();
   }
 
+  /* --------------------------------------------------------- pictures */
+
+  function pickPicture(current) {
+    return modal((close) => {
+      const url = input({ type: 'url', placeholder: 'https://… (a picture address)', value: current && !current.startsWith('blook:') ? current : '', inputmode: 'url' });
+      const preview = h('div', { class: 'pic-edit', style: { minHeight: '40px' } });
+      const err = h('p', { class: 'error-text' });
+      const show = () => { preview.replaceChildren(); const pic = picture(url.value); if (pic) preview.append(pic); };
+      url.addEventListener('input', show);
+      show();
+      const useUrl = () => {
+        const v = cleanPic(url.value);
+        if (!v || v.startsWith('blook:')) { err.textContent = 'Paste a picture address that starts with https://'; return; }
+        close(v);
+      };
+      return [h('h2', {}, 'Add a picture'),
+        h('h3', { style: { margin: 0 } }, 'Quickzy characters'),
+        h('div', { class: 'blook-grid', style: { maxHeight: '260px', overflowY: 'auto' } },
+          ...BLOOKS.filter((b) => !b.exclusive).map((b) => h('button', { type: 'button', class: 'blook-pick', 'aria-label': b.name, onclick: () => close(`blook:${b.id}`) }, blook(b.id), h('small', {}, b.name)))),
+        h('h3', { style: { margin: '8px 0 0' } }, 'Or a picture from the web'),
+        h('p', { class: 'small muted', style: { margin: 0 } }, 'Right-click a picture, choose "Copy image address", and paste it here. Keep it friendly: everyone in the game sees it.'),
+        url, preview, err,
+        h('div', { class: 'row end' }, h('button', { class: 'btn', onclick: () => close() }, 'Cancel'), h('button', { class: 'btn btn-main', onclick: useUrl }, 'Use this picture'))];
+    }, { wide: true });
+  }
+
+  function pictureRow(q) {
+    const row = h('div', { class: 'pic-edit' });
+    const draw = () => {
+      const pic = picture(q.img);
+      row.replaceChildren(...[pic,
+        h('button', { type: 'button', class: 'btn btn-sm', onclick: async () => {
+          const v = await pickPicture(q.img);
+          if (v) { q.img = v; touch(); draw(); }
+        } }, icon('plus', { size: 16 }), pic ? 'Change picture' : 'Add a picture'),
+        pic ? h('button', { type: 'button', class: 'btn btn-sm btn-ghost', onclick: () => { delete q.img; touch(); draw(); } }, icon('trash', { size: 16 }), 'Remove') : null].filter(Boolean));
+    };
+    draw();
+    return row;
+  }
+
   /* ------------------------------------------------------------ edit */
 
   const edit = h('div', { class: 'q-edit' });
@@ -279,6 +322,7 @@ export default async function Editor({ params, query = {} }) {
       h('div', { class: 'row spread' }, h('div', { class: 'row' }, h('b', {}, `Question ${at + 1}`), typeSel), tools),
       issue ? h('p', { class: 'error-text', role: 'alert', style: { margin: 0 } }, issue) : null,
       text, count,
+      pictureRow(q),
       ...body,
       h('div', { class: 'row', style: { gap: '18px', marginTop: '6px' } },
         h('label', { class: 'field' }, h('span', {}, 'Time limit'), timeSel),

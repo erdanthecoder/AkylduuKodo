@@ -1,5 +1,6 @@
 // play.js — the player's own screen, from the lobby to the podium.
 
+import { picture } from '../ui/picture.js';
 import { h, fill } from '../ui/dom.js';
 import { icon } from '../ui/icons.js';
 import { blook, preloadBlooks } from '../ui/blooks.js';
@@ -101,7 +102,7 @@ export default async function Play({ params }) {
           waiting();
         },
       });
-      screen('is-answer', h('div', { class: 'row spread play-top' }, h('span', {}, n), left), h('h2', { class: 'q-text-play' }, q.text), pad);
+      screen('is-answer', h('div', { class: 'row spread play-top' }, h('span', {}, n), left), h('h2', { class: 'q-text-play' }, q.text), picture(q.img, { cls: 'q-pic-small' }), pad);
       return;
     }
     if (cur.phase === 'reveal') {

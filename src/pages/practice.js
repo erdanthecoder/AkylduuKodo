@@ -6,6 +6,7 @@
 // Every run earns XP and coins once a day per quiz, and your best score
 // for each quiz is remembered on this device.
 
+import { picture } from '../ui/picture.js';
 import { h, fill } from '../ui/dom.js';
 import { icon } from '../ui/icons.js';
 import { signedIn } from '../services/session.js';
@@ -126,6 +127,7 @@ export default async function Practice({ params }) {
           clock),
         h('div', { class: 'solo-bar' }, bar),
         h('h2', { class: 'q-text-play' }, q.text),
+        picture(q.img, { cls: 'q-pic-small' }),
         pad));
       requestAnimationFrame(() => { bar.style.transitionDuration = `${q.time}s`; bar.style.width = '0%'; });
       let last = q.time;

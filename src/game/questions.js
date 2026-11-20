@@ -100,6 +100,19 @@ function shuffled(list, rand = Math.random) {
 }
 
 /**
+ * A question's picture: one of Quickzy's own characters ("blook:fox") or a
+ * picture on the web (an https address). Anything else is dropped.
+ */
+export function cleanPic(v) {
+  const s = String(v ?? '').trim();
+  if (/^blook:[a-z0-9-]{1,20}$/.test(s)) return s;
+  if (s.length <= 500 && /^https:\/\/[^\s"'<>()\\]+$/i.test(s)) {
+    try { return new URL(s).protocol === 'https:' ? s : ''; } catch { return ''; }
+  }
+  return '';
+}
+
+/**
  * Turn the editor's full questions into the public half and the key.
  * For "order", the public options are shuffled: in the right order they would
  * give the answer away.
@@ -109,6 +122,8 @@ export function split(questions, rand = Math.random) {
   const key = [];
   for (const q of questions) {
     const p = { id: q.id, type: q.type, text: trimmed(q.text), time: q.time, points: q.type === 'poll' ? 'none' : q.points };
+    const pic = cleanPic(q.img);
+    if (pic) p.img = pic;
     let k = null;
     if (q.type === 'mc' || q.type === 'multi' || q.type === 'poll') {
       p.options = q.options.map(trimmed);
@@ -141,6 +156,7 @@ export function join(pub, key) {
   return pub.map((p, i) => {
     const k = key ? key[i] : null;
     const q = { id: p.id || uid(), type: p.type, text: p.text, time: p.time, points: p.points };
+    if (cleanPic(p.img)) q.img = cleanPic(p.img);
     if (p.type === 'mc') Object.assign(q, { options: [...p.options], answer: k ?? 0 });
     if (p.type === 'multi') Object.assign(q, { options: [...p.options], answer: k ? [...k] : [0] });
     if (p.type === 'poll') Object.assign(q, { options: [...p.options] });

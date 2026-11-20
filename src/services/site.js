@@ -41,12 +41,17 @@ export async function allUsers() {
   return rows.sort((a, b) => (b.createdAt || 0) - (a.createdAt || 0));
 }
 
+// always read the latest copy first, so a gift never undoes a recent change
+const fresh = async (user) => ({ ...user, ...((await net.store.get('users', user.id)) || {}) });
+
 export async function giveCoins(user, n) {
-  await net.store.update('users', user.id, { coins: (user.coins || 0) + n });
+  const u = await fresh(user);
+  await net.store.update('users', user.id, { coins: (u.coins || 0) + n });
+  return (u.coins || 0) + n;
 }
 
 export async function giveBlook(user, blookId) {
-  const owned = { ...(user.owned || {}) };
+  const owned = { ...((await fresh(user)).owned || {}) };
   owned[blookId] = (owned[blookId] || 0) + 1;
   await net.store.update('users', user.id, { owned });
 }
