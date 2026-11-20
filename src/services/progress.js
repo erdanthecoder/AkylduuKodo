@@ -4,8 +4,9 @@
 // Coins open boxes; a box gives one blook, rarer ones less often. Levels
 // unlock custom blook slots, three at most, and more parts to build them from.
 
-import { myProfile, signedIn, patchProfile } from './session.js';
-import { STARTERS, CUSTOM_PARTS, drawFromBox, rarityOf, isCustom, isBlook, BLOOKS, REGULAR, LIMITED } from '../ui/blooks.js';
+import { myProfile, signedIn, patchProfile, reloadProfile, me as who } from './session.js';
+import { OWNER_UID } from '../config.js';
+import { STARTERS, CUSTOM_PARTS, drawFromBox, rarityOf, isCustom, isBlook, BLOOKS, REGULAR, LIMITED, EXCLUSIVE } from '../ui/blooks.js';
 
 export const MAX_LEVEL = 30;
 export const CUSTOM_SLOTS = [3, 6, 10];          // the levels that open slot 1, 2 and 3
@@ -28,7 +29,7 @@ export function levelInfo(xp = 0) {
   return { level, into, need, frac: into / need };
 }
 
-const fromSets = (...sets) => BLOOKS.filter((b) => sets.includes(b.set) && !b.limited).map((b) => b.id);
+const fromSets = (...sets) => BLOOKS.filter((b) => sets.includes(b.set) && !b.limited && !b.exclusive).map((b) => b.id);
 
 // limited editions can be opened until the end of this day (UTC)
 export const WINTER_ENDS = Date.UTC(2027, 0, 15, 23, 59, 59);
@@ -82,6 +83,7 @@ export const me = () => {
 
 export function owns(id) {
   if (STARTERS.includes(id)) return true;
+  if (EXCLUSIVE.includes(id) && who()?.uid === OWNER_UID) return true;
   const m = me();
   return Boolean(m.owned[id]) || m.customs.includes(id);
 }
@@ -90,7 +92,8 @@ export function owns(id) {
 export function usableBlooks() {
   const m = me();
   const order = ['legendary', 'epic', 'rare', 'uncommon', 'common'];
-  const mine = [...new Set([...m.customs, ...Object.keys(m.owned).filter(isBlook), ...STARTERS])];
+  const flags = who()?.uid === OWNER_UID ? EXCLUSIVE : [];
+  const mine = [...new Set([...m.customs, ...flags, ...Object.keys(m.owned).filter(isBlook), ...STARTERS])];
   return mine.sort((a, b) => order.indexOf(rarityOf(a).id) - order.indexOf(rarityOf(b).id));
 }
 
@@ -99,6 +102,7 @@ export const customSlots = () => CUSTOM_SLOTS.filter((l) => levelOf(me().xp) >= 
 /** Spend coins on a box. Returns {id, duplicate, refund}. */
 export async function openBox(boxId, rand = Math.random) {
   if (!signedIn()) throw new Error('Sign in to open boxes.');
+  await reloadProfile();
   const box = BOXES.find((b) => b.id === boxId);
   const m = me();
   if (!box) throw new Error('That box does not exist.');
@@ -119,6 +123,7 @@ export async function openBox(boxId, rand = Math.random) {
 /** Save a custom blook into a slot (0, 1 or 2). */
 export async function saveCustom(slot, id) {
   if (!isCustom(id)) throw new Error('That blook is not finished.');
+  await reloadProfile();
   if (slot >= customSlots()) throw new Error(`Slot ${slot + 1} opens at level ${CUSTOM_SLOTS[slot]}.`);
   const lvl = levelOf(me().xp);
   const parts = Object.keys(CUSTOM_PARTS);
@@ -145,6 +150,7 @@ export function rewardFor(row, players) {
 /** Award a finished game once. Returns the reward and any level reached, or null. */
 export async function claimGame(gameKey, row, players) {
   if (!signedIn() || !row) return null;
+  await reloadProfile();
   const p = myProfile() || {};
   if (p.lastGame === gameKey) return null;
   const m = me();

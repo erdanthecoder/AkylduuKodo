@@ -87,6 +87,7 @@ export default async function Home() {
         h('div', { class: 'row' },
           h('a', { class: 'btn btn-main btn-lg', href: signedIn() ? '/create' : '/signup' }, icon('plus'), 'Create a quiz'),
           h('a', { class: 'btn btn-dark btn-lg', href: '/discover' }, icon('compass'), 'Discover'),
+          h('button', { class: 'btn btn-lg btn-ghost', onclick: () => import('../ui/cutscene.js').then((m) => m.playIntro()) }, icon('play'), 'Watch the intro'),
         ),
       ),
       h('div', { style: { position: 'relative' } }, joinBox()),

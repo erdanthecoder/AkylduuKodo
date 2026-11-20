@@ -11,8 +11,8 @@
 // so the database itself guarantees no two people hold the same one.
 
 import { net } from '../net/index.js';
-import { LIMITS } from '../config.js';
-import { randomBlook, isBlook, STARTERS } from '../ui/blooks.js';
+import { LIMITS, OWNER_UID } from '../config.js';
+import { randomBlook, isBlook, STARTERS, EXCLUSIVE } from '../ui/blooks.js';
 import { cleanName, isClean } from './names.js';
 
 let user = null;
@@ -33,6 +33,12 @@ function emit() {
   for (const fn of listeners) {
     try { fn({ user, profile }); } catch (e) { console.error(e); }
   }
+}
+
+// coming back to the tab: pick up coins or blooks given meanwhile
+if (typeof window !== 'undefined') {
+  let last = 0;
+  window.addEventListener('focus', () => { if (Date.now() - last > 5000) { last = Date.now(); reloadProfile(); } });
 }
 
 export async function start() {
@@ -109,6 +115,7 @@ async function ensureProfile(u) {
 /** Commons are everyone's; the rest come from boxes or the custom builder. */
 export function ownsBlook(id) {
   if (STARTERS.includes(id)) return true;
+  if (EXCLUSIVE.includes(id) && user?.uid === OWNER_UID) return true;
   const p = profile || {};
   return Boolean(p.owned && p.owned[id]) || (Array.isArray(p.customs) && p.customs.includes(id));
 }
@@ -153,6 +160,16 @@ export async function changeUsername(next) {
   ]);
   profile = { ...profile, username: name };
   emit();
+}
+
+/** Read the profile again (coins or blooks may have been given meanwhile). */
+export async function reloadProfile() {
+  if (!signedIn()) return profile;
+  try {
+    const fresh = await net.store.get('users', user.uid);
+    if (fresh) { profile = { ...profile, ...fresh }; emit(); }
+  } catch { /* offline: keep what we have */ }
+  return profile;
 }
 
 export async function refresh() {

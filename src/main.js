@@ -30,7 +30,7 @@ route('/lobby/:pin', () => import('./pages/host-live.js'), { chrome: false, auth
 route('/u/:username', () => import('./pages/profile.js'));
 route('/blooks', () => import('./pages/blooks.js'));
 route('/owner', () => import('./pages/owner.js'), { auth: true });
-route('/settings', () => import('./pages/settings.js'), { auth: true });
+route('/settings', () => import('./pages/settings.js'));
 route('/login', () => import('./pages/auth.js'));
 route('/signup', () => import('./pages/auth.js'));
 route('/reset', () => import('./pages/auth.js'));
@@ -60,11 +60,12 @@ function topbar(path) {
       user && user.uid === OWNER_UID ? h('a', { href: '/owner', class: `nav-owner ${on('/owner')}` }, verifiedBadge(null, 'owner'), 'Owner') : null),
     h('div', { class: 'topbar-end' },
       h('a', { class: 'btn btn-main btn-sm', href: '/join' }, 'Join a game'),
+      h('a', { class: `btn btn-sm btn-dark gear-btn ${on('/settings')}`, href: '/settings', 'aria-label': 'Settings', title: 'Settings' }, icon('gear', { size: 18 })),
       signed && profile
         ? h('a', { class: 'me-chip', href: `/u/${profile.username}`, 'aria-label': 'Your profile' },
             blook(profile.blook), h('span', {}, profile.displayName))
         : signed
-          ? h('a', { class: 'btn btn-dark btn-sm', href: '/settings' }, 'Account')
+          ? h('a', { class: 'btn btn-dark btn-sm', href: '/settings' }, 'Settings')
           : h('a', { class: 'btn btn-dark btn-sm', href: '/login' }, 'Sign in'),
     ),
   );
@@ -146,6 +147,10 @@ async function boot() {
       h('p', { class: 'muted' }, 'The game servers did not answer. Check your connection — if you are on a school network, it may be blocking them.'),
       h('button', { class: 'btn btn-main', onclick: () => location.reload() }, 'Try again'))));
     return;
+  }
+  // a first visit to the home page opens with the intro
+  if (location.pathname === '/' && !navigator.webdriver) {
+    import('./ui/cutscene.js').then((m) => { if (!m.introSeen()) m.playIntro(); }).catch(() => {});
   }
   // when someone signs in or out, or renames themselves, redraw the bars only:
   // redrawing the page would throw away whatever they were typing

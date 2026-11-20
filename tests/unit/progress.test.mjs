@@ -85,3 +85,14 @@ test('limited blooks are never free and never in normal boxes', () => {
   const rand = seeded(5);
   for (let i = 0; i < 5000; i++) assert.ok(!LIMITED.includes(drawFromBox(rand)));
 });
+
+test('flag blooks are legendary, exclusive and never in a box or the starters', async () => {
+  const b = await import('../../src/ui/blooks.js');
+  const p = await import('../../src/services/progress.js');
+  for (const id of ['kyrgyzstan', 'azerbaijan', 'turkey', 'uzbekistan']) {
+    assert.ok(b.EXCLUSIVE.includes(id));
+    assert.equal(b.rarityOf(id).id, 'legendary');
+    assert.ok(!b.STARTERS.includes(id));
+    for (const box of p.BOXES) assert.ok(!box.pool.includes(id), `${id} in ${box.id}`);
+  }
+});

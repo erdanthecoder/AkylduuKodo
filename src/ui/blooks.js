@@ -14,6 +14,48 @@ const W = '#ffffff';
 const PUPIL = '#1d1a3a';
 const PINK = '#ff8fae';
 
+
+/* ---------------------------------------------------------- flag blooks */
+
+let clipSeq = 0;
+
+/** A block whose face is a flag: the flag is clipped to the block's shape. */
+function flagBlock(s, shade, paint) {
+  const id = `fc${++clipSeq}`;
+  const defs = svg('defs');
+  const cp = svg('clipPath', { id });
+  cp.append(svg('rect', { x: 14, y: 24, width: 72, height: 58, rx: 20 }));
+  defs.append(cp);
+  s.append(defs);
+  s.append(svg('rect', { x: 14, y: 24, width: 72, height: 66, rx: 20, fill: shade }));
+  const g = svg('g', { 'clip-path': `url(#${id})` });
+  paint(g);
+  s.append(g);
+  s.append(svg('rect', { x: 23, y: 31, width: 15, height: 6, rx: 3, fill: W, opacity: 0.3 }));
+}
+
+/** A star with `points` points; `inner` is the inner radius as a share of r. */
+function starPath(cx, cy, r, points = 5, inner = 0.4, turn = -90) {
+  let d = '';
+  for (let i = 0; i < points * 2; i++) {
+    const rr = i % 2 ? r * inner : r;
+    const a = ((turn + (i * 180) / points) * Math.PI) / 180;
+    d += `${i ? 'L' : 'M'}${(cx + Math.cos(a) * rr).toFixed(2)} ${(cy + Math.sin(a) * rr).toFixed(2)} `;
+  }
+  return `${d}Z`;
+}
+
+/** A crescent: a disc with an offset disc cut out, drawn as one path. */
+function crescent(g, cx, cy, r, cut, shift, fill, bg) {
+  g.append(svg('circle', { cx, cy, r, fill }));
+  g.append(svg('circle', { cx: cx + shift, cy, r: cut, fill: bg }));
+}
+
+function flagFace(s, { eyesY, mouthY, mouthColour = PUPIL }) {
+  eyes(s, { y: eyesY, r: 7 });
+  mouth(s, 'smile', mouthY, mouthColour);
+}
+
 /* ------------------------------------------------------------ the parts */
 
 function block(s, main, shade, { top = 24, rx = 20 } = {}) {
@@ -443,6 +485,74 @@ const DRAW = {
     mouth(s, 'smile', 70);
   },
 
+  /* flags: exclusive, given by the owner */
+  kyrgyzstan(s) {
+    // red field; a yellow sun with 40 rays; the tunduk (yurt crown) inside it
+    flagBlock(s, '#b5121b', (g) => {
+      g.append(svg('rect', { x: 0, y: 0, width: 100, height: 100, fill: '#e8112d' }));
+      const cx = 50; const cy = 45; const R = 17;
+      let rays = '';
+      for (let i = 0; i < 40; i++) {
+        const a = (i / 40) * Math.PI * 2;
+        const b = a + Math.PI / 40;
+        const c = a - Math.PI / 40;
+        rays += `M${(cx + Math.cos(c) * 9).toFixed(2)} ${(cy + Math.sin(c) * 9).toFixed(2)} L${(cx + Math.cos(a) * R).toFixed(2)} ${(cy + Math.sin(a) * R).toFixed(2)} L${(cx + Math.cos(b) * 9).toFixed(2)} ${(cy + Math.sin(b) * 9).toFixed(2)} Z `;
+      }
+      g.append(svg('path', { d: rays, fill: '#ffef00' }));
+      g.append(svg('circle', { cx, cy, r: 9.5, fill: '#ffef00' }));
+      g.append(svg('circle', { cx, cy, r: 6.4, fill: 'none', stroke: '#e8112d', 'stroke-width': 1.3 }));
+      const t = { fill: 'none', stroke: '#e8112d', 'stroke-width': 1.1 };
+      // the tunduk: two sets of three crossing laths, bowed like the crown of a yurt
+      for (const k of [-2.6, 0, 2.6]) {
+        const bow = k * 0.7;
+        g.append(svg('path', { d: `M${cx - 6.2} ${cy + k} Q${cx} ${cy + k + bow} ${cx + 6.2} ${cy + k}`, ...t }));
+        g.append(svg('path', { d: `M${cx + k} ${cy - 6.2} Q${cx + k + bow} ${cy} ${cx + k} ${cy + 6.2}`, ...t }));
+      }
+    });
+    flagFace(s, { eyesY: 67, mouthY: 75, mouthColour: '#3a0a0e' });
+  },
+  azerbaijan(s) {
+    // blue, red and green bands; a white crescent and eight-pointed star in the red
+    flagBlock(s, '#3a7a22', (g) => {
+      g.append(svg('rect', { x: 0, y: 24, width: 100, height: 19.4, fill: '#00b5e2' }));
+      g.append(svg('rect', { x: 0, y: 43.4, width: 100, height: 19.4, fill: '#ef3340' }));
+      g.append(svg('rect', { x: 0, y: 62.8, width: 100, height: 40, fill: '#509e2f' }));
+      crescent(g, 47, 53, 7, 5.8, 1.9, '#fff', '#ef3340');
+      g.append(svg('path', { d: starPath(54.6, 53, 3.4, 8, 0.45, -90), fill: '#fff' }));
+    });
+    // eyes in the blue, smile in the green
+    eyes(s, { y: 34, r: 6 });
+    mouth(s, 'smile', 71, '#123d0c');
+  },
+  turkey(s) {
+    // red field; a white crescent and five-pointed star
+    flagBlock(s, '#a8000f', (g) => {
+      g.append(svg('rect', { x: 0, y: 0, width: 100, height: 100, fill: '#e30a17' }));
+      crescent(g, 40, 45, 12, 9.6, 3.1, '#fff', '#e30a17');
+      g.append(svg('path', { d: starPath(54, 45, 5.6, 5, 0.4, 180), fill: '#fff' }));
+    });
+    flagFace(s, { eyesY: 66, mouthY: 75, mouthColour: '#4a0006' });
+  },
+  uzbekistan(s) {
+    // blue, white and green bands split by thin red lines; a crescent and 12 stars
+    flagBlock(s, '#168a2c', (g) => {
+      g.append(svg('rect', { x: 0, y: 24, width: 100, height: 19, fill: '#0099b5' }));
+      g.append(svg('rect', { x: 0, y: 43, width: 100, height: 1.6, fill: '#ce1126' }));
+      g.append(svg('rect', { x: 0, y: 44.6, width: 100, height: 17.6, fill: '#fff' }));
+      g.append(svg('rect', { x: 0, y: 62.2, width: 100, height: 1.6, fill: '#ce1126' }));
+      g.append(svg('rect', { x: 0, y: 63.8, width: 100, height: 40, fill: '#1eb53a' }));
+      crescent(g, 30, 34, 5.6, 4.6, 1.6, '#fff', '#0099b5');
+      // three rows of 3, 4 and 5 stars, lined up on the right
+      [[3, 28.6], [4, 33.4], [5, 38.2]].forEach(([n, y]) => {
+        for (let i = 0; i < n; i++) g.append(svg('path', { d: starPath(60 - i * 4.4, y, 1.6, 5, 0.42), fill: '#fff' }));
+      });
+    });
+    // a dark rim so the eyes show on the white band
+    for (const dx of [-12, 12]) s.append(svg('circle', { cx: 50 + dx, cy: 53, r: 7.6, fill: '#1d2a44' }));
+    eyes(s, { y: 53, r: 6 });
+    mouth(s, 'smile', 72, '#0b4a18');
+  },
+
   bot2(s) {
     // "Zap": the house mascot, a little spark in a box
     block(s, '#6b4cff', '#4a2fd6');
@@ -490,6 +600,10 @@ export const BLOOKS = [
   { id: 'reindeer', name: 'Jingle', set: 'Winter', limited: true },
   { id: 'elf', name: 'Twinkle', set: 'Winter', limited: true },
   { id: 'santa', name: 'Santa', set: 'Winter', limited: true },
+  { id: 'kyrgyzstan', name: 'Kyrgyzstan', set: 'Flags', exclusive: true },
+  { id: 'azerbaijan', name: 'Azerbaijan', set: 'Flags', exclusive: true },
+  { id: 'turkey', name: 'Türkiye', set: 'Flags', exclusive: true },
+  { id: 'uzbekistan', name: 'Uzbekistan', set: 'Flags', exclusive: true },
 ];
 
 /* ---------------------------------------------------------------- rarity */
@@ -515,12 +629,15 @@ const RARITY_OF = {
 // the winter pack has its own spread, from a common snowman to a legendary Santa
 const WINTER_RARITY = { snowman: 'common', gingerbread: 'uncommon', reindeer: 'rare', elf: 'epic', santa: 'legendary' };
 for (const [id, r] of Object.entries(WINTER_RARITY)) RARITY_OF[r].push(id);
+// flags are legendary and exclusive: never in any box, only given by the owner
+RARITY_OF.legendary.push('kyrgyzstan', 'azerbaijan', 'turkey', 'uzbekistan');
 for (const [r, ids] of Object.entries(RARITY_OF)) for (const id of ids) BLOOKS.find((b) => b.id === id).rarity = r;
 
 /** Everyone owns the commons from the start. */
 export const LIMITED = BLOOKS.filter((b) => b.limited).map((b) => b.id);
-/** Everything that is not a limited edition. */
-export const REGULAR = BLOOKS.filter((b) => !b.limited).map((b) => b.id);
+export const EXCLUSIVE = BLOOKS.filter((b) => b.exclusive).map((b) => b.id);
+/** Everything boxes can give: not limited, not exclusive. */
+export const REGULAR = BLOOKS.filter((b) => !b.limited && !b.exclusive).map((b) => b.id);
 export const STARTERS = RARITY_OF.common.filter((id) => !LIMITED.includes(id));
 
 export function rarityOf(id) {

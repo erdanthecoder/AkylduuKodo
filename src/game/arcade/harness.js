@@ -5,10 +5,11 @@
 // needs a question answered (out of energy, at a gate…) it calls game.ask(),
 // which shows the next question and resolves once the host has marked it.
 
+import { picture } from '../../ui/picture.js';
 import { h, fill } from '../../ui/dom.js';
 import { icon } from '../../ui/icons.js';
 import { answerPad, verdict } from '../answer-ui.js';
-import { sfx } from '../sound.js';
+import { sfx, playMusic } from '../sound.js';
 import { confetti } from '../../ui/confetti.js';
 
 function shuffled(n) {
@@ -30,7 +31,7 @@ export function createHarness(root, { live, P, uid, meta, qs, name, blook }) {
     h('div', { class: 'hud-cell' }, icon('clock', { size: 18 }), timeEl),
     h('div', { class: 'hud-cell hud-meter' }, meterLabel, h('div', { class: 'meter' }, meterFill, meterText)),
     h('div', { class: 'hud-cell' }, icon('star', { size: 18 }), scoreEl),
-    h('div', { class: 'hud-cell' }, icon('trophy', { size: 18 }), rankEl));
+    h('div', { class: 'hud-cell hud-rank' }, icon('trophy', { size: 18 }), rankEl));
   const overlay = h('div', { class: 'q-overlay', hidden: true });
   const flash = h('div', { class: 'flash-msg' });
   root.append(h('div', { class: 'arcade' }, hud, stage, overlay, flash));
@@ -50,17 +51,35 @@ export function createHarness(root, { live, P, uid, meta, qs, name, blook }) {
     if (w) { waiting.delete(id); w(r); } else early.set(id, r);
   }));
 
+  let lastRank = 0;
+  let bestStreak = 0;
+  const streakEl = h('div', { class: 'hud-streak', hidden: true });
+  root.querySelector('.arcade').append(streakEl);
   unsubs.push(live.on(P(`me/${uid}`), (m) => {
     if (!m) return;
+    // moving up the leaderboard deserves a shout
+    if (lastRank && m.r && m.r < lastRank) {
+      game.flash(m.r === 1 ? 'You took 1st place!' : `Up to #${m.r}!`, 'is-ok');
+      sfx(m.r === 1 ? 'checkpoint' : 'coin');
+      if (m.r === 1) confetti({ y: 0.3, count: 70, power: 700 });
+      rankEl.parentElement.classList.remove('is-up'); void rankEl.offsetWidth; rankEl.parentElement.classList.add('is-up');
+    } else if (lastRank && m.r && m.r > lastRank && lastRank === 1) {
+      game.flash('Someone passed you. Get it back!', 'is-bad');
+    }
+    lastRank = m.r || lastRank;
     mine = m;
     score = m.s || 0;
     scoreEl.textContent = score.toLocaleString();
     rankEl.textContent = `${m.r || '–'}${m.of ? `/${m.of}` : ''}`;
   }));
 
+  let warned30 = false;
+  let warned10 = false;
   const clock = setInterval(() => {
     const left = Math.max(0, meta.endsAt - live.now());
     const s = Math.ceil(left / 1000);
+    if (s <= 30 && s > 0 && !warned30) { warned30 = true; game.flash('30 seconds left!', 'is-bad'); playMusic('tense'); }
+    if (s <= 10 && s > 0 && !warned10) { warned10 = true; game.flash('Final 10 seconds!', 'is-bad'); sfx('countdown'); root.querySelector('.arcade')?.classList.add('is-final'); }
     timeEl.textContent = `${Math.floor(s / 60)}:${String(s % 60).padStart(2, '0')}`;
     timeEl.classList.toggle('is-low', s <= 30);
   }, 250);
@@ -83,6 +102,11 @@ export function createHarness(root, { live, P, uid, meta, qs, name, blook }) {
       flash.className = `flash-msg is-on ${kind}`;
       clearTimeout(flashTimer);
       flashTimer = setTimeout(() => { flash.className = 'flash-msg'; }, 1400);
+    },
+    shake() {
+      const a = root.querySelector('.arcade');
+      if (!a || document.documentElement.dataset.motion === 'calm') return;
+      a.classList.remove('is-shake'); void a.offsetWidth; a.classList.add('is-shake');
     },
     sendProg: (data) => live.set(P(`prog/${uid}`), data).catch(() => {}),
     sendAct: (data) => live.push(P('act'), { ...data, u: uid, t: live.TIMESTAMP }).catch(() => {}),
@@ -113,6 +137,10 @@ export function createHarness(root, { live, P, uid, meta, qs, name, blook }) {
             });
             if (result.skip || result.timeout) { finish(result); return; }
             sfx(result.ok || result.poll ? 'right' : 'wrong');
+            if (result.ok) bestStreak = Math.max(bestStreak, result.st || 1);
+            streakEl.hidden = !(result.ok && result.st >= 2);
+            if (result.ok && result.st >= 2) fill(streakEl, icon('bolt', { size: 16 }), `${result.st} streak`);
+            if (!result.ok && !result.poll) game.shake();
             if (result.ok && result.st >= 3) {
               setTimeout(() => game.flash(`On fire! ${result.st} in a row`, 'is-ok'), 1050);
               confetti({ y: 0.5, count: 60 + Math.min(result.st, 10) * 10, power: 750 });
@@ -125,6 +153,7 @@ export function createHarness(root, { live, P, uid, meta, qs, name, blook }) {
         fill(overlay, h('div', { class: 'q-card' },
           h('p', { class: 'q-title' }, title),
           h('h2', { class: 'q-text-play' }, q.text),
+          picture(q.img, { cls: 'q-pic-small' }),
           pad));
       });
       return asking;

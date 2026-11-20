@@ -138,7 +138,7 @@ function reveal({ id, duplicate, refund }) {
 
 // the catalog, pack by pack: every blook there is, black shadows for the
 // ones not found yet
-const SETS = [['Winter', 'Winter (limited edition)'], ['Pets', 'Pets'], ['Farm', 'Farm'], ['Wild', 'Wild'], ['Snacks', 'Snacks'], ['Space', 'Space'], ['Magic', 'Magic']];
+const SETS = [['Flags', 'Flags (exclusive)'], ['Winter', 'Winter (limited edition)'], ['Pets', 'Pets'], ['Farm', 'Farm'], ['Wild', 'Wild'], ['Snacks', 'Snacks'], ['Space', 'Space'], ['Magic', 'Magic']];
 
 function catalog() {
   const m = progress.me();

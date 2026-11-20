@@ -11,6 +11,7 @@ import { levelOf } from '../services/progress.js';
 import * as siteSvc from '../services/site.js';
 import { BADGES } from '../config.js';
 import { pageTitle } from './parts.js';
+import { reloadProfile } from '../services/session.js';
 import NotFound from './notfound.js';
 
 const fmt = (n) => Number(n || 0).toLocaleString();
@@ -132,14 +133,14 @@ async function users() {
           h('div', { class: 'row end' }, h('button', { class: 'btn', onclick: () => close() }, 'Cancel'), h('button', { class: 'btn btn-main', onclick: go }, 'Give'))];
       });
       if (!amount) return;
-      try { await siteSvc.giveCoins(u, amount); u.coins = (u.coins || 0) + amount; toast(`Gave ${u.displayName} ${fmt(amount)} coins`, 'ok'); } catch (e) { toast(explain(e), 'bad'); }
+      try { u.coins = await siteSvc.giveCoins(u, amount); toast(`Gave ${u.displayName} ${fmt(amount)} coins`, 'ok'); reloadProfile(); } catch (e) { toast(explain(e), 'bad'); }
     });
     const gift = h('button', { class: 'btn btn-sm' }, icon('star', { size: 14 }), 'Give a blook');
     gift.addEventListener('click', async () => {
       const pick = await modal((close) => [h('h2', {}, `Give ${u.displayName} a blook`),
         h('div', { class: 'blook-grid' }, ...BLOOKS.map((b) => h('button', { class: 'blook-pick', style: { '--rc': rarityOf(b.id).colour }, onclick: () => close(b.id) }, blook(b.id), h('small', {}, b.name))))], { wide: true });
       if (!pick) return;
-      try { await siteSvc.giveBlook(u, pick); u.owned = { ...(u.owned || {}), [pick]: 1 }; toast(`Gave ${u.displayName} ${blookName(pick)}`, 'ok'); } catch (e) { toast(explain(e), 'bad'); }
+      try { await siteSvc.giveBlook(u, pick); u.owned = { ...(u.owned || {}), [pick]: 1 }; toast(`Gave ${u.displayName} ${blookName(pick)}`, 'ok'); reloadProfile(); } catch (e) { toast(explain(e), 'bad'); }
     });
     return h('div', { class: 'owner-row' },
       blook(u.blook || 'dog', 40),

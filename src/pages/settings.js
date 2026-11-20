@@ -3,7 +3,7 @@
 import { h, fill, debounce } from '../ui/dom.js';
 import { icon, verifiedBadge } from '../ui/icons.js';
 import { blook, blookName, rarityOf } from '../ui/blooks.js';
-import { usableBlooks } from '../services/progress.js';
+import { usableBlooks, me as wallet, levelInfo } from '../services/progress.js';
 import { field, input, passwordInput, toggle, busy, toast, confirm, modal } from '../ui/kit.js';
 import { net, explain } from '../net/index.js';
 import { navigate } from '../router.js';
@@ -28,7 +28,38 @@ export function blookPicker(current, onPick) {
 }
 
 function section(title, ...rows) {
-  return h('section', { class: 'card stack' }, h('h2', {}, title), ...rows);
+  const ic = { Profile: 'user', Account: 'key', 'Sound & screen': 'volume', 'Verified creator': 'check', 'Your badge': 'shield' }[title] || 'gear';
+  const id = `set-${title.toLowerCase().replace(/[^a-z]+/g, '-')}`;
+  return h('section', { class: 'card stack set-card', id },
+    h('h2', { class: 'set-title' }, h('span', { class: 'set-ic' }, icon(ic, { size: 18 })), title), ...rows);
+}
+
+/** The big card at the top: who you are, your level and coins. */
+function hero() {
+  const p = session.myProfile();
+  const u = session.me();
+  const m = wallet();
+  const info = levelInfo(m.xp);
+  const special = BADGES[u.uid];
+  const big = blook(p.blook, 112);
+  return h('section', { class: 'set-hero' },
+    h('div', { class: 'set-hero-blook' }, big),
+    h('div', { class: 'grow stack', style: { gap: '6px', minWidth: '200px' } },
+      h('h1', { class: 'row', style: { gap: '8px', margin: 0 } }, p.displayName, special ? verifiedBadge(null, special) : null),
+      h('div', { class: 'set-hero-sub' }, `@${p.username}`),
+      h('div', { class: 'row', style: { gap: '8px' } },
+        h('span', { class: 'set-chip' }, icon('star', { size: 14 }), `Level ${info.level}`),
+        h('span', { class: 'set-chip set-chip-gold' }, icon('bolt', { size: 14 }), `${m.coins.toLocaleString()} coins`),
+        h('span', { class: 'set-chip' }, icon('trophy', { size: 14 }), `${usableBlooks().length} blooks`)),
+      h('div', { class: 'set-xp' }, h('i', { style: { width: `${Math.round(info.frac * 100)}%` } })),
+      h('small', { style: { opacity: 0.8 } }, info.need ? `${info.into} / ${info.need} XP to level ${info.level + 1}` : 'Top level!')));
+}
+
+function jumpTabs(list) {
+  return h('nav', { class: 'set-tabs', 'aria-label': 'Settings sections' }, ...list.map(([label, ic]) => h('a', {
+    href: `#set-${label.toLowerCase().replace(/[^a-z]+/g, '-')}`, class: 'set-tab',
+    onclick: (e) => { e.preventDefault(); document.getElementById(`set-${label.toLowerCase().replace(/[^a-z]+/g, '-')}`)?.scrollIntoView({ behavior: 'smooth', block: 'start' }); },
+  }, icon(ic, { size: 16 }), label)));
 }
 
 function row(title, text, control) {
@@ -141,8 +172,14 @@ function accountSection() {
   };
   drawVerify();
 
+  const resetBtn = h('button', { class: 'btn btn-sm' }, icon('mail', { size: 16 }), 'Email me a link');
+  resetBtn.addEventListener('click', busy(resetBtn, async () => {
+    try { await net.auth.sendReset(u.email); toast(`Reset link sent to ${u.email}. Check spam too.`, 'ok'); } catch (err) { toast(explain(err), 'bad'); }
+  }));
   const passRow = hasPassword
-    ? row('Password', 'Change the password you sign in with.', h('button', { class: 'btn btn-sm', onclick: changePassword }, icon('key', { size: 16 }), 'Change'))
+    ? h('div', {},
+      row('Password', 'Change the password you sign in with.', h('button', { class: 'btn btn-sm', onclick: changePassword }, icon('key', { size: 16 }), 'Change')),
+      row('Forgot your password?', 'We email you a link to choose a new one.', resetBtn))
     : row('Password', hasGoogle ? 'You sign in with Google, so there is no password to manage here.' : '', null);
 
   const out = h('button', { class: 'btn btn-sm' }, icon('logout', { size: 16 }), 'Sign out');
@@ -211,7 +248,9 @@ async function deleteAccount() {
 
 function deviceSection() {
   const p = session.prefs();
-  return section('On this device',
+  const intro = h('button', { class: 'btn btn-sm', onclick: () => import('../ui/cutscene.js').then((m) => m.playIntro()) }, icon('play', { size: 16 }), 'Play');
+  return section('Sound & screen',
+    row('Quickzy intro', 'Watch the intro cutscene again.', intro),
     row('Sound effects', 'Clicks, chimes and game sounds.', toggle(p.sound, (v) => { session.setPrefs({ sound: v }); if (v) sfx('pick'); })),
     row('Music', 'Background music in the lobby and in games.', toggle(p.music, (v) => session.setPrefs({ music: v }))),
     row('Animations', 'Turn off for calmer screens with less movement.', toggle(p.motion, (v) => session.setPrefs({ motion: v }))));
@@ -219,6 +258,17 @@ function deviceSection() {
 
 export default async function Settings({ query }) {
   pageTitle('Settings');
+  if (!session.signedIn()) {
+    return h('div', { class: 'page mid stack', style: { gap: '18px' } },
+      h('section', { class: 'set-hero' },
+        h('div', { class: 'set-hero-blook' }, blook('dog', 112)),
+        h('div', { class: 'grow stack', style: { gap: '8px', minWidth: '200px' } },
+          h('h1', { style: { margin: 0 } }, 'Settings'),
+          h('p', { style: { margin: 0, opacity: 0.85 } }, 'Sign in to keep your coins, blooks and quizzes.'),
+          h('div', { class: 'row' }, h('a', { class: 'btn btn-main', href: '/login' }, 'Sign in'), h('a', { class: 'btn', href: '/signup' }, 'Create account'),
+            h('a', { class: 'btn btn-ghost set-ghost', href: '/reset' }, 'Forgot password?')))),
+      deviceSection());
+  }
   await session.whenProfile();
   if (!session.myProfile()) {
     return h('div', { class: 'page narrow' }, h('div', { class: 'card center stack' },
@@ -231,7 +281,8 @@ export default async function Settings({ query }) {
     h('p', { style: { margin: '6px 0 14px', opacity: 0.9 } }, 'Pick a name and a blook, then make your first quiz.'),
     h('a', { class: 'btn btn-main', href: '/create' }, icon('plus'), 'Make a quiz')) : null;
   return h('div', { class: 'page mid stack', style: { gap: '18px' } },
-    h('h1', {}, 'Settings'),
+    hero(),
+    jumpTabs([['Profile', 'user'], ['Account', 'key'], ['Sound & screen', 'volume']]),
     welcome,
     profileSection(),
     verifiedSection(),
