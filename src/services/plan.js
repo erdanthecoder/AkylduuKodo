@@ -28,7 +28,7 @@ export const PLANS = {
     minutes: [3, 5, 7, 10], reviewDays: 3,
   },
   pro: {
-    quizzes: 300, players: 100, modes: ['classic', 'lasertag', 'robotrun', 'spacecraft', 'obby', 'defense', 'skyrace'],
+    quizzes: 300, players: 100, modes: ['classic', 'lasertag', 'robotrun', 'spacecraft', 'obby', 'defense', 'skyrace', 'treasure', 'fishing', 'candy'],
     minutes: [3, 5, 7, 10, 15, 20, 30], reviewDays: 0,
   },
 };
@@ -37,6 +37,7 @@ export const PRO_PERKS = [
   ['check', 'Gold PRO badge', 'Next to your name on every quiz, channel and game.'],
   ['globe', 'Publish instantly', 'Your quizzes go live right away. Free quizzes wait 3–5 days for a check.'],
   ['users', 'Up to 100 players', 'Free games hold 40.'],
+  ['star', '3 Pro-only games', 'Treasure Hunt, Fishing Frenzy and Candy Factory: only Pro members can host them.'],
   ['play', 'Every game mode', 'Laser Tag, Spacecraft and Tower Defense too, and games up to 30 minutes.'],
   ['list', '300 quizzes', 'Free accounts can make 10.'],
   ['star', 'Custom blooks and flags', 'All three custom blook slots and every part unlocked, plus the country flag blooks.'],

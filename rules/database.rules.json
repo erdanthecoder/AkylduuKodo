@@ -34,7 +34,7 @@
             ".validate": "newData.isString() && newData.val().length <= 80"
           },
           "mode": {
-            ".validate": "newData.isString() && newData.val().matches(/^(classic|lasertag|robotrun|spacecraft|obby|defense|skyrace)$/)"
+            ".validate": "newData.isString() && newData.val().matches(/^(classic|lasertag|robotrun|spacecraft|obby|defense|skyrace|treasure|fishing|candy)$/)"
           },
           "status": {
             ".validate": "newData.val() === 'lobby' || newData.val() === 'play' || newData.val() === 'end'"

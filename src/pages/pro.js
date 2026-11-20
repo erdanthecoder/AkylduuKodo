@@ -66,8 +66,9 @@ export default async function Pro() {
           h('button', { class: 'btn', onclick: () => proLetter() }, icon('mail', { size: 16 }), 'Read your letter'),
           m && m.paid ? h('a', { class: 'btn', href: manageUrl(), target: '_blank', rel: 'noopener' }, icon('gear', { size: 16 }), 'Manage subscription') : null)
         : h('div', { class: 'pro-price' },
-          h('b', {}, PRICE), h('span', {}, 'a year'),
-          h('button', { class: 'btn btn-main btn-lg', onclick: getPro }, 'Get Pro'),
+          h('div', { class: 'pro-trial' }, icon('star', { size: 18 }), 'Try it 7 days free'),
+          h('b', {}, PRICE), h('span', {}, 'a year, after 7 free days. Cancel any time.'),
+          h('button', { class: 'btn btn-main btn-lg', onclick: getPro }, 'Start my free week'),
           justPaid ? h('small', { class: 'pro-wait' }, 'Thank you! Your payment went through. Pro turns on within a minute: refresh this page.') : null,
           h('small', {}, 'Ask a parent or guardian before buying. Cancel any time. ',
             h('a', { href: manageUrl(), target: '_blank', rel: 'noopener' }, 'Manage a subscription')))),
@@ -77,7 +78,7 @@ export default async function Pro() {
         h('ul', { class: 'pro-list is-free' },
           perk(['list', `${free.quizzes} quizzes`, 'Plenty to start with.']),
           perk(['users', `${free.players} players a game`, 'Great for one class.']),
-          perk(['play', 'Classic, Robot Run and Sky Climb', 'Laser Tag, Spacecraft and Tower Defense are Pro.']),
+          perk(['play', 'Classic, Robot Run and Sky Climb', 'Laser Tag, Spacecraft, Tower Defense and 3 Pro-only games are Pro.']),
           perk(['clock', 'Quizzes are checked', 'Published quizzes are checked automatically and go live in 3–5 days.'])),
         h('div', { class: 'row', style: { justifyContent: 'center', gap: '10px' } }, ...['fox', 'unicorn', 'dragon', 'kyrgyzstan'].map((id) => blook(id, 56))))));
 }
