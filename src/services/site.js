@@ -18,7 +18,11 @@ export async function site(fresh = false) {
     siteCache = Promise.all([
       net.store.get('site', 'announce').catch(() => null),
       net.store.get('site', 'featured').catch(() => null),
-    ]).then(([a, f]) => ({ announce: (a && a.text) || '', announceAt: (a && a.at) || 0, featured: (f && Array.isArray(f.ids)) ? f.ids : [] }));
+    ]).then(([a, f]) => ({
+      announce: (a && a.text) || '', announceAt: (a && a.at) || 0,
+      featured: (f && Array.isArray(f.ids)) ? f.ids : [],
+      wear: cleanWear(f && f.wear),
+    }));
   }
   return siteCache;
 }
@@ -30,8 +34,25 @@ export async function setAnnouncement(text) {
 }
 
 export async function setFeatured(ids) {
-  await net.store.set('site', 'featured', { ids: [...new Set(ids)].slice(0, 12) });
+  const { wear } = await site(true);
+  await net.store.set('site', 'featured', { ids: [...new Set(ids)].slice(0, 12), wear });
   siteCache = null;
+}
+
+/* The badges the owner wears next to their name, in this order. They live on
+   the "featured" site document because only the owner may write it. */
+export const OWNER_BADGES = ['owner', 'kg', 'official', 'verified'];
+function cleanWear(w) {
+  const list = Array.isArray(w) ? OWNER_BADGES.filter((k) => w.includes(k)) : [];
+  return list.length ? list : ['owner'];
+}
+export async function ownerWear() { return (await site()).wear; }
+export async function setOwnerWear(wear) {
+  const { featured } = await site(true);
+  const list = cleanWear(wear);
+  await net.store.set('site', 'featured', { ids: featured, wear: list });
+  siteCache = null;
+  return list;
 }
 
 /* ---------------------------------------------------------------- people */

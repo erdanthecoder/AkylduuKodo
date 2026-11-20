@@ -13,6 +13,8 @@ import { strength } from './auth.js';
 import { pageTitle } from './parts.js';
 import { LIMITS, BADGES } from '../config.js';
 import { sfx } from '../game/sound.js';
+import { nameBadges } from '../ui/badges.js';
+import * as siteSvc from '../services/site.js';
 
 export function blookPicker(current, onPick) {
   const grid = h('div', { class: 'blook-grid', role: 'radiogroup', 'aria-label': 'Blook' });
@@ -28,7 +30,7 @@ export function blookPicker(current, onPick) {
 }
 
 function section(title, ...rows) {
-  const ic = { Profile: 'user', Account: 'key', 'Sound & screen': 'volume', 'Verified creator': 'check', 'Your badge': 'shield' }[title] || 'gear';
+  const ic = { Profile: 'user', Account: 'key', 'Sound & screen': 'volume', 'Trusted quiz maker': 'check', 'Your badge': 'shield', 'Your badges': 'shield' }[title] || 'gear';
   const id = `set-${title.toLowerCase().replace(/[^a-z]+/g, '-')}`;
   return h('section', { class: 'card stack set-card', id },
     h('h2', { class: 'set-title' }, h('span', { class: 'set-ic' }, icon(ic, { size: 18 })), title), ...rows);
@@ -45,7 +47,7 @@ function hero() {
   return h('section', { class: 'set-hero' },
     h('div', { class: 'set-hero-blook' }, big),
     h('div', { class: 'grow stack', style: { gap: '6px', minWidth: '200px' } },
-      h('h1', { class: 'row', style: { gap: '8px', margin: 0 } }, p.displayName, special ? verifiedBadge(null, special) : null),
+      h('h1', { class: 'row', style: { gap: '8px', margin: 0 } }, p.displayName, special ? nameBadges(special) : null),
       h('div', { class: 'set-hero-sub' }, `@${p.username}`),
       h('div', { class: 'row', style: { gap: '8px' } },
         h('span', { class: 'set-chip' }, icon('star', { size: 14 }), `Level ${info.level}`),
@@ -120,9 +122,44 @@ function profileSection() {
     h('div', { class: 'row end' }, save));
 }
 
+/** The owner picks which badges to wear next to their name. */
+function ownerBadgeSection() {
+  const info = {
+    owner: ['Owner', 'Green: the Quickzy owner. Only you have it.'],
+    kg: ['Kyrgyzstan', 'The Kyrgyz flag.'],
+    official: ['Official Quickzy', 'Black: made by Quickzy itself.'],
+    verified: ['Trusted quiz maker', 'Blue: for trusted quiz makers.'],
+  };
+  const preview = h('span', { class: 'badge-set', style: { transform: 'scale(1.5)', transformOrigin: 'left center', marginLeft: '6px' } });
+  const box = h('div', { class: 'stack', style: { gap: '0' } });
+  let wear = ['owner'];
+  const save = debounce(async () => {
+    try { wear = await siteSvc.setOwnerWear(wear); toast('Badges saved', 'ok'); draw(); } catch (err) { toast(explain(err), 'bad'); }
+  }, 500);
+  const draw = () => {
+    fill(preview, ...wear.map((k) => verifiedBadge(null, k)));
+    fill(box, ...siteSvc.OWNER_BADGES.map((k) => row(h('span', { class: 'row', style: { gap: '8px' } }, verifiedBadge(null, k), info[k][0]), info[k][1],
+      toggle(wear.includes(k), (on) => {
+        const next = on ? [...wear, k] : wear.filter((x) => x !== k);
+        if (!next.length) { toast('Wear at least one badge', 'bad'); draw(); return; }
+        wear = siteSvc.OWNER_BADGES.filter((x) => next.includes(x));
+        fill(preview, ...wear.map((x) => verifiedBadge(null, x)));
+        sfx('pick');
+        save();
+      }))));
+  };
+  siteSvc.ownerWear().then((w) => { wear = w; draw(); });
+  draw();
+  return section('Your badges',
+    h('div', { class: 'row', style: { gap: '10px' } }, h('b', {}, session.myProfile().displayName), preview),
+    h('p', { class: 'small muted', style: { margin: 0 } }, 'Choose which badges show next to your name everywhere. Wear all of them or just some.'),
+    box);
+}
+
 function verifiedSection() {
   const p = session.myProfile();
   const special = BADGES[session.me().uid];
+  if (special === 'owner') return ownerBadgeSection();
   if (special) {
     return section('Your badge', h('div', { class: 'row', style: { flexWrap: 'nowrap' } },
       h('span', { style: { transform: 'scale(1.6)', margin: '0 8px 0 4px' } }, verifiedBadge(null, special)),
@@ -137,13 +174,13 @@ function verifiedSection() {
     fill(body, h('div', { class: 'row', style: { alignItems: 'flex-start', flexWrap: 'nowrap' } },
       h('span', { style: { transform: 'scale(1.6)', margin: '6px 8px 0 4px' } }, verifiedBadge()),
       h('div', { class: 'grow' },
-        h('b', { style: { color: 'var(--ink)' } }, done ? `${p.displayName} is a verified creator` : 'Get the verified badge'),
+        h('b', { style: { color: 'var(--ink)' } }, done ? `${p.displayName} is a trusted quiz maker` : 'Get the blue badge: trusted quiz maker'),
         h('p', { class: 'small', style: { margin: '4px 0 8px' } }, done
           ? 'The blue check shows next to your name on every quiz and on your profile.'
           : `Publish ${need} quizzes with at least ${minQuestions} questions each. You have ${have} of ${need}.`),
         h('div', { class: 'strength', style: { height: '10px' } }, h('i', { style: { width: `${Math.min(100, (have / need) * 100)}%`, background: 'var(--a1)' } })))));
   });
-  return section('Verified creator', body);
+  return section('Trusted quiz maker', body);
 }
 
 function accountSection() {

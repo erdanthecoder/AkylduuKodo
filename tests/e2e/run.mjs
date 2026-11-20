@@ -308,7 +308,16 @@ if ((which === 'owner' || which === 'all') && !EMULATOR) {
   });
   if (made !== 'KWIRRSUM2VQVWnr1nUDbPP9bqMk2') fail(`owner account not created: ${made}`);
   await own.goto(`${BASE}/settings`);
-  await own.waitForSelector('text=Quickzy owner');
+  await own.waitForSelector('text=Your badges');
+
+  say('owner: choose which badges to wear');
+  for (const name of ['Kyrgyzstan', 'Trusted quiz maker']) {
+    await own.locator('.set-row', { hasText: name }).locator('.switch').click();
+  }
+  await own.waitForSelector('text=Badges saved');
+  await own.goto(`${BASE}/settings`);
+  await own.waitForFunction(() => document.querySelectorAll('.set-hero .badge-set .verified').length === 3);
+  await own.screenshot({ path: `${SHOTS}/owner-badges.png` });
 
   say('owner: the Owner link and panel');
   await own.click('.nav-owner');
@@ -463,9 +472,11 @@ if (which === 'account' || which === 'all') {
   let opened = 0;
   while (!(await boxBtn.isDisabled()) && opened < 15) {
     await boxBtn.click();
-    await host.waitForSelector('.reveal .bcard');
+    for (let t = 0; t < 3; t++) { await host.click('.ub-stage'); await host.waitForTimeout(120); }
+    await host.waitForSelector('.ub-card');
     if (opened === 0) await host.screenshot({ path: `${SHOTS}/box-reveal.png` });
-    await host.click('.modal button:has-text("Nice")');
+    await host.click('.ub-result button:has-text("Done")');
+    await host.waitForSelector('.ub-root', { state: 'detached' });
     opened++;
   }
   if (opened < 2) fail(`only ${opened} boxes opened`);

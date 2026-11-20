@@ -72,8 +72,11 @@ function boxes(redraw) {
     const btn = h('button', { class: 'btn btn-main', disabled: locked || m.coins < box.price }, coin(), String(box.price));
     btn.addEventListener('click', busy(btn, async () => {
       try {
-        const res = await progress.openBox(box.id);
-        await reveal(res);
+        let again = true;
+        while (again) {
+          const res = await progress.openBox(box.id);
+          again = (await reveal(res, box)) === 'again';
+        }
         redraw();
       } catch (err) { toast(err.message, 'bad'); }
     }));
@@ -115,22 +118,90 @@ function boxArt(winter = false) {
   return s;
 }
 
-function reveal({ id, duplicate, refund }) {
+/**
+ * Opening a box: tap it three times. Each tap shakes it harder and the glow
+ * climbs the rarity ladder towards what is inside, so a legendary teases you
+ * all the way up. Then it bursts, and the card flips out.
+ * Resolves 'again' to open another of the same box, or nothing when done.
+ */
+function reveal({ id, duplicate, refund }, box) {
   const r = rarityOf(id);
-  const big = ['epic', 'legendary'].includes(r.id);
-  sfx(big ? 'win' : 'reveal');
-  if (big) setTimeout(() => celebrate([r.colour, '#ffffff', '#ffcd1f']), 350);
-  return modal((close) => {
-    const card = blookCard(id, { big: true });
-    card.classList.add('is-flip');
-    return [h('div', { class: `reveal r-${r.id}` },
-      h('div', { class: 'reveal-burst', style: { '--rc': r.colour } }),
-      card,
-      h('h2', { style: { color: r.colour } }, `${r.name}!`),
-      duplicate
-        ? h('p', {}, 'You already had this one. ', h('b', {}, `+${refund} coins`), ' back.')
-        : h('p', {}, h('b', {}, 'New blook!'), ' It is yours to use in games.'),
-      h('button', { class: 'btn btn-main btn-block', onclick: () => close() }, 'Nice'))];
+  const rank = ORDER.indexOf(r.id);
+  const big = rank >= 3;
+  const calm = document.documentElement.dataset.motion === 'calm';
+  // the glows shown on taps 1, 2 and 3: they never go past the real rarity
+  const ladder = [0, Math.min(rank, 1 + Math.floor(rank / 2)), rank].map((i) => RARITIES[Math.max(0, i)]);
+  return new Promise((resolve) => {
+    let taps = 0;
+    let done = false;
+    const art = h('div', { class: 'ub-box' }, boxArt(Boolean(box.limited)));
+    const glow = h('div', { class: 'ub-glow' });
+    const hint = h('p', { class: 'ub-hint' }, 'Tap the box!');
+    const dots = h('div', { class: 'ub-dots' }, h('i'), h('i'), h('i'));
+    const stage = h('div', { class: 'ub-stage' }, glow, art);
+    const skip = h('button', { class: 'btn btn-sm ub-skip' }, 'Skip');
+    const root = h('div', { class: `ub-root${calm ? ' ub-calm' : ''}`, role: 'dialog', 'aria-label': `Opening the ${box.name}` },
+      h('div', { class: 'ub-rays' }), h('h2', { class: 'ub-name' }, box.name), stage, dots, hint, skip);
+    document.body.append(root);
+
+    const finish = (value) => {
+      if (done) return;
+      done = true;
+      document.removeEventListener('keydown', key);
+      root.classList.add('ub-out');
+      setTimeout(() => { root.remove(); resolve(value); }, 250);
+    };
+    const key = (e) => {
+      if (e.key === 'Escape') finish();
+      else if ((e.key === ' ' || e.key === 'Enter') && taps < 3) { e.preventDefault(); tap(); }
+    };
+    document.addEventListener('keydown', key);
+
+    function burst() {
+      sfx('boom');
+      root.style.setProperty('--rc', r.colour);
+      root.classList.add('ub-burst', `ub-${r.id}`);
+      fill(hint); dots.remove(); skip.remove();
+      for (let i = 0; i < 14; i++) {
+        const a = (i / 14) * Math.PI * 2;
+        stage.append(h('i', { class: 'ub-spark', style: { '--dx': `${Math.cos(a) * 160}px`, '--dy': `${Math.sin(a) * 160}px`, background: i % 2 ? r.colour : '#fff' } }));
+      }
+      setTimeout(() => {
+        const card = blookCard(id, { big: true });
+        card.classList.add('ub-card');
+        const again = progress.me().coins >= box.price && progress.boxOpen(box)
+          ? h('button', { class: 'btn btn-main', onclick: () => finish('again') }, 'Open another', coin(), String(box.price)) : null;
+        stage.replaceChildren(h('div', { class: 'ub-shine' }), card);
+        root.append(h('div', { class: 'ub-result' },
+          h('h2', { class: 'ub-rarity', style: { color: r.colour } }, `${r.name}!`),
+          duplicate
+            ? h('p', {}, `${blookName(id)} again. `, h('b', {}, `+${refund} coins`), ' back.')
+            : h('p', {}, h('span', { class: 'ub-new' }, 'NEW'), ` ${blookName(id)} is yours!`),
+          h('div', { class: 'row', style: { justifyContent: 'center' } },
+            again, h('button', { class: `btn${again ? '' : ' btn-main'}`, onclick: () => finish() }, 'Done'))));
+        sfx(big ? 'win' : rank >= 2 ? 'checkpoint' : 'reveal');
+        if (!calm && rank >= 2) setTimeout(() => celebrate([r.colour, '#ffffff', '#ffcd1f']), 250);
+        if (!calm && rank === 4) setTimeout(() => celebrate([r.colour, '#ffcd1f']), 1100);
+      }, calm ? 50 : 420);
+    }
+
+    function tap() {
+      if (done || taps >= 3) return;
+      taps += 1;
+      const tier = ladder[taps - 1];
+      dots.children[taps - 1].classList.add('is-on');
+      dots.children[taps - 1].style.background = tier.colour;
+      glow.style.background = `radial-gradient(circle, ${tier.colour} 0%, transparent 65%)`;
+      glow.style.opacity = String(0.35 + taps * 0.2);
+      art.classList.remove('ub-shake1', 'ub-shake2', 'ub-shake3');
+      void art.offsetWidth;
+      art.classList.add(`ub-shake${taps}`);
+      sfx(taps === 1 ? 'tap' : taps === 2 ? 'drum' : 'boost');
+      fill(hint, taps === 1 ? 'Again!' : taps === 2 ? (rank >= 3 ? 'Something big is in there…' : 'One more!') : '');
+      if (taps === 3) setTimeout(burst, calm ? 0 : 450);
+    }
+    stage.addEventListener('click', tap);
+    skip.onclick = () => { while (taps < 2) { taps += 1; dots.children[taps - 1].classList.add('is-on'); } taps = 2; tap(); };
   });
 }
 

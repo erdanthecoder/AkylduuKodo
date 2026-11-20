@@ -1,6 +1,7 @@
 // owner.js — the owner's control room. Only the owner's account sees it,
 // and the security rules refuse these actions from anyone else.
 
+import { nameBadges } from '../ui/badges.js';
 import { h, fill, ago, debounce } from '../ui/dom.js';
 import { icon, verifiedBadge } from '../ui/icons.js';
 import { blook, BLOOKS, blookName, rarityOf } from '../ui/blooks.js';
@@ -98,7 +99,7 @@ async function users() {
     const banBtn = h('button', { class: 'btn btn-sm' });
     const refresh = async () => {
       const [given, banned] = await Promise.all([siteSvc.hasGrantedBadge(u.id), siteSvc.isBanned(u.id)]);
-      fill(badgeSlot, special ? verifiedBadge(null, special) : given ? verifiedBadge() : null);
+      fill(badgeSlot, special ? nameBadges(special) : given ? verifiedBadge() : null);
       fill(verifyBtn, icon('check', { size: 14 }), given ? 'Remove blue check' : 'Give blue check');
       verifyBtn.hidden = Boolean(special);
       fill(banBtn, icon(banned ? 'check' : 'stop', { size: 14 }), banned ? 'Allow publishing' : 'Stop publishing');

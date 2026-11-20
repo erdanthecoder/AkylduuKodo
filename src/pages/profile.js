@@ -1,7 +1,8 @@
 // profile.js — a creator's public page: name, blook, badge and their quizzes.
 
+import { nameBadges } from '../ui/badges.js';
 import { h, plural } from '../ui/dom.js';
-import { icon, verifiedBadge } from '../ui/icons.js';
+import { icon } from '../ui/icons.js';
 import { blook } from '../ui/blooks.js';
 import { empty } from '../ui/kit.js';
 import { net } from '../net/index.js';
@@ -26,12 +27,12 @@ export default async function Profile({ params }) {
     h('section', { class: 'card profile-head' },
       big,
       h('div', { class: 'grow' },
-        h('h1', { class: 'row', style: { gap: '10px' } }, user.displayName, verified ? h('span', { style: { transform: 'scale(1.4)', display: 'inline-flex' } }, verifiedBadge(null, badge)) : null),
+        h('h1', { class: 'row', style: { gap: '10px' } }, user.displayName, verified ? h('span', { style: { transform: 'scale(1.4)', display: 'inline-flex' } }, nameBadges(badge)) : null),
         h('p', { class: 'muted', style: { margin: '2px 0 10px' } }, `@${user.username}`),
         h('div', { class: 'row' },
           h('span', { class: 'pill' }, icon('list', { size: 14 }), plural(quizzes.length, 'published quiz', 'published quizzes')),
           h('span', { class: 'pill' }, icon('play', { size: 14 }), plural(plays, 'play')),
-          verified ? h('span', { class: `pill badge-pill is-${badge}` }, { official: 'Official Quickzy', owner: 'Quickzy owner', verified: 'Verified creator' }[badge]) : null)),
+          verified ? h('span', { class: `pill badge-pill is-${badge}` }, { official: 'Official Quickzy', owner: 'Quickzy owner', verified: 'Trusted quiz maker' }[badge]) : null)),
       mine ? h('a', { class: 'btn', href: '/settings' }, icon('gear', { size: 18 }), 'Edit profile') : null),
     h('div', { class: 'section-head' }, h('h2', {}, 'Quizzes')),
     quizzes.length
