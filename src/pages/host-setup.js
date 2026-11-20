@@ -36,6 +36,7 @@ export default async function HostSetup({ params }) {
     lateJoin: saved.lateJoin !== false,
     randomNames: Boolean(saved.randomNames),
     showText: saved.showText !== false,
+    teams: [0, 2, 3, 4].includes(saved.teams) ? saved.teams : 0,
   };
 
   const modeBox = h('div', { class: 'mode-pick' });
@@ -53,6 +54,8 @@ export default async function HostSetup({ params }) {
     const m = modeOf(s.mode);
     fill(options,
       h('h2', {}, `${m.name} settings`),
+      opt('Team mode', s.teams ? `Players are split into ${s.teams} teams. A team's score is the average of its players, so small teams can still win.` : 'Everyone plays for themselves. Turn on teams to play together.',
+        segmented([[0, 'Off'], [2, '2 teams'], [3, '3 teams'], [4, '4 teams']], s.teams, (v) => { s.teams = v; drawOptions(); })),
       opt('Speed scoring', s.speed ? 'Faster right answers earn more points: up to 1000, never less than 500.' : 'Every right answer earns the same points, however long it took.',
         segmented([[true, 'Faster = more'], [false, 'Same for all']], s.speed, (v) => { s.speed = v; drawOptions(); })),
       m.kind === 'arcade'
@@ -79,6 +82,7 @@ export default async function HostSetup({ params }) {
         settings: {
           speed: s.speed, minutes: m.kind === 'arcade' ? s.minutes : 0, shuffle: m.kind === 'arcade' ? true : s.shuffle,
           lateJoin: s.lateJoin, randomNames: s.randomNames, showText: s.showText, locked: false,
+          ...(s.teams ? { teams: s.teams } : {}),
         },
       });
       navigate(`/lobby/${pin}`);

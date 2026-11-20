@@ -233,6 +233,33 @@ if (which === 'classic' || which === 'all') {
   await ben.context().close();
 }
 
+if (which === 'teams' || which === 'classic' || which === 'all') {
+  say('teams: two teams in the lobby');
+  const pin = await openLobby('Robot Run', async () => {
+    await host.click('.set-row:has-text("Team mode") button:has-text("2 teams")');
+    await host.click('.set-row:has-text("Game length") button:has-text("3 min")');
+  });
+  const cara = await join(pin, 'Cara', { width: 390, height: 780 });
+  const dan = await join(pin, 'Dan', { width: 390, height: 780 });
+  await host.waitForFunction(() => document.querySelectorAll('.team-col').length === 2
+    && [...document.querySelectorAll('.team-col')].every((c) => c.querySelectorAll('.team-chip').length === 1));
+  await cara.waitForSelector('.lobby-team .team-badge');
+  await host.screenshot({ path: `${SHOTS}/teams-lobby.png` });
+  await cara.screenshot({ path: `${SHOTS}/teams-player.png` });
+
+  say('teams: the race shows team scores, and a team wins');
+  await host.click('button:has-text("Start")');
+  await host.waitForFunction(() => document.querySelectorAll('.side-teams .team-bar').length === 2, null, { timeout: 15000 });
+  await host.click('button:has-text("End now")');
+  await host.click('.modal button:has-text("End game")');
+  await host.waitForSelector('.team-win');
+  await cara.waitForSelector('.play-screen.is-end .team-badge');
+  await host.waitForTimeout(1500);
+  await host.screenshot({ path: `${SHOTS}/teams-end.png` });
+  await cara.context().close();
+  await dan.context().close();
+}
+
 if (which === 'arcade' || which === 'all') {
   for (const [mode, name] of [['lasertag', 'Laser Tag'], ['robotrun', 'Robot Run'], ['spacecraft', 'Spacecraft'], ['obby', 'Sky Climb']]) {
     say(`${mode}: open the lobby`);

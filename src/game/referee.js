@@ -7,6 +7,7 @@
 
 import { net } from '../net/index.js';
 import { gamePath } from '../services/games.js';
+import { teamCount, smallestTeam, standings } from './teams.js';
 import { check, validChoice, points } from './questions.js';
 import { modeOf } from './modes/index.js';
 
@@ -37,6 +38,7 @@ export async function createReferee({ pin, meta: initialMeta, quiz, key, onChang
   let timer = 0;
   let closed = false;
   let modeHost = null;            // arcade: the mode's own rules
+  let teamsDirty = false;
   const dirty = new Set();        // players whose `me` needs writing
 
   // answers from before a reload were already marked and scored
@@ -55,6 +57,9 @@ export async function createReferee({ pin, meta: initialMeta, quiz, key, onChang
   const saved = (await live.get(P('me'))) || {};
   const savedCur = await live.get(P('cur'));
   const savedOrder = await live.get(P('order'));
+  // team mode: who is on which team survives a reload too
+  const nTeams = teamCount(meta.settings);
+  const teamOf = nTeams ? { ...(((await live.get(P('teams'))) || {}).of || {}) } : {};
   if (Array.isArray(savedOrder) && savedOrder.length === pub.length) order = savedOrder;
 
   /* ------------------------------------------------------ players */
@@ -67,13 +72,15 @@ export async function createReferee({ pin, meta: initialMeta, quiz, key, onChang
         const s = saved[uid];
         if (s) Object.assign(r, { score: s.s || 0, correct: s.c || 0, answered: s.n || 0, streak: s.st || 0, best: s.b || 0 });
         players.set(uid, r);
+        if (nTeams && teamOf[uid] === undefined) { teamOf[uid] = smallestTeam(teamOf, nTeams); teamsDirty = true; }
         if (modeHost && modeHost.join) modeHost.join(r);
       } else {
         const r = players.get(uid);
         r.name = p.name; r.blook = p.blook;
       }
     }
-    for (const uid of [...players.keys()]) if (!now[uid]) players.delete(uid);
+    for (const uid of [...players.keys()]) if (!now[uid]) { players.delete(uid); if (nTeams) { delete teamOf[uid]; teamsDirty = true; } }
+    if (teamsDirty) { teamsDirty = false; setTimeout(() => publishTeams(), 0); }
     emit();
   }));
 
@@ -82,6 +89,9 @@ export async function createReferee({ pin, meta: initialMeta, quiz, key, onChang
   /* ------------------------------------------------------ ranking */
 
   const ranked = () => [...players.values()].sort((a, b) => b.score - a.score || b.correct - a.correct || a.at - b.at);
+  const teams = () => (nTeams ? standings(teamOf, nTeams, [...players.values()]) : []);
+  const teamsNode = () => ({ of: { ...teamOf }, s: Array.from({ length: nTeams }, (_, i) => (teams().find((t) => t.i === i) || {}).score || 0) });
+  function publishTeams() { if (nTeams) live.set(P('teams'), teamsNode()).catch(() => {}); }
 
   function writeScores(extraUpdates = {}) {
     const list = ranked();
@@ -93,6 +103,7 @@ export async function createReferee({ pin, meta: initialMeta, quiz, key, onChang
     });
     dirty.clear();
     updates.top = list.slice(0, 5).map((p) => ({ u: p.uid, n: p.name, b: p.blook, s: p.score }));
+    if (nTeams) updates.teams = teamsNode();
     return live.update(P(''), updates);
   }
 
@@ -321,7 +332,7 @@ export async function createReferee({ pin, meta: initialMeta, quiz, key, onChang
       if (modeHost && modeHost.stop) modeHost.stop();
       for (const p of players.values()) dirty.add(p.uid);
       const list = ranked();
-      const final = list.map((p, i) => ({ u: p.uid, n: p.name, b: p.blook, s: p.score, c: p.correct, a: p.answered, r: i + 1, x: p.extra.summary || '' }));
+      const final = list.map((p, i) => ({ u: p.uid, n: p.name, b: p.blook, s: p.score, c: p.correct, a: p.answered, r: i + 1, x: p.extra.summary || '', ...(nTeams ? { t: teamOf[p.uid] ?? 0 } : {}) }));
       await writeScores({ final, 'meta/status': 'end', 'meta/endedAt': live.now() });
       meta = { ...meta, status: 'end' };
       emit();
@@ -350,7 +361,7 @@ export async function createReferee({ pin, meta: initialMeta, quiz, key, onChang
     get cur() { return cur; },
     get answeredCount() { return answers.size; },
     get modeHost() { return modeHost; },
-    arcade, mode, pub, key, ranked, start, next, finish, kick, setSetting,
+    arcade, mode, pub, key, ranked, start, next, finish, kick, setSetting, teams, nTeams, teamOf,
     destroy() { clearTimeout(timer); clearInterval(pump); unsubs.forEach((u) => u()); if (modeHost && modeHost.stop) modeHost.stop(); },
   };
   return api;

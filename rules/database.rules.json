@@ -82,6 +82,9 @@
             "locked": {
               ".validate": "newData.isBoolean()"
             },
+            "teams": {
+              ".validate": "newData.isNumber() && (newData.val() === 0 || (newData.val() >= 2 && newData.val() <= 4))"
+            },
             "$other": {
               ".validate": false
             }
@@ -190,8 +193,8 @@
           }
         },
         "$public": {
-          ".read": "auth != null && ($public === 'qs' || $public === 'cur' || $public === 'top' || $public === 'final' || $public === 'snap' || $public === 'race' || $public === 'tower' || $public === 'order')",
-          ".write": "auth != null && root.child('games/' + $pin + '/meta/host').val() === auth.uid && ($public === 'qs' || $public === 'cur' || $public === 'top' || $public === 'final' || $public === 'snap' || $public === 'race' || $public === 'tower' || $public === 'order')"
+          ".read": "auth != null && ($public === 'qs' || $public === 'cur' || $public === 'top' || $public === 'final' || $public === 'snap' || $public === 'race' || $public === 'tower' || $public === 'order' || $public === 'teams')",
+          ".write": "auth != null && root.child('games/' + $pin + '/meta/host').val() === auth.uid && ($public === 'qs' || $public === 'cur' || $public === 'top' || $public === 'final' || $public === 'snap' || $public === 'race' || $public === 'tower' || $public === 'order' || $public === 'teams')"
         },
         "abuse": {
           ".read": "auth != null",

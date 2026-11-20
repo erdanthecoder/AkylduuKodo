@@ -1,6 +1,7 @@
 // play.js — the player's own screen, from the lobby to the podium.
 
 import { listen } from '../ui/abuse.js';
+import { TEAMS } from '../game/teams.js';
 import { picture } from '../ui/picture.js';
 import { h, fill } from '../ui/dom.js';
 import { icon } from '../ui/icons.js';
@@ -37,7 +38,8 @@ export default async function Play({ params }) {
   const root = h('div', { class: 'play' });
   const banner = h('div', { class: 'host-gone', hidden: true }, icon('alert', { size: 18 }), 'The host’s screen disconnected. Hang on…');
   const body = h('div', { class: 'play-body' });
-  const foot = h('div', { class: 'play-foot' }, blook(mine.blook), h('b', {}, mine.name), h('span', { class: 'grow' }), h('b', { class: 'foot-score' }, '0'));
+  const teamTag = h('span', { class: 'foot-team', hidden: true });
+  const foot = h('div', { class: 'play-foot' }, blook(mine.blook), h('b', {}, mine.name), teamTag, h('span', { class: 'grow' }), h('b', { class: 'foot-score' }, '0'));
   root.append(banner, body, foot);
 
   let meta = null;
@@ -50,12 +52,33 @@ export default async function Play({ params }) {
   let final = null;
   const unsubs = [];
 
+  // team mode: which team am I on, and how is it doing?
+  let teams = null;
+  const myTeam = () => (teams && teams.of && teams.of[uid] !== undefined ? TEAMS[teams.of[uid]] : null);
+  const teamRank = () => {
+    if (!teams || !Array.isArray(teams.s) || teams.of[uid] === undefined) return 0;
+    const mineS = teams.s[teams.of[uid]] || 0;
+    return 1 + teams.s.filter((x) => x > mineS).length;
+  };
+  function drawTeam() {
+    const t = myTeam();
+    teamTag.hidden = !t;
+    if (!t) return;
+    fill(teamTag, blook(t.blook, 22), t.name);
+    teamTag.style.background = t.colour;
+    root.style.setProperty('--team', t.colour);
+    root.classList.add('has-team');
+    const slot = body.querySelector('.lobby-team');
+    if (slot) fill(slot, teamBadge(t));
+  }
+  const teamBadge = (t) => h('div', { class: 'team-badge', style: { background: t.colour } }, blook(t.blook, 44), h('div', {}, h('small', {}, 'Your team'), h('b', {}, t.name)));
+
   const screen = (cls, ...kids) => fill(body, h('div', { class: `play-screen ${cls}` }, ...kids));
 
   function lobby() {
     const b = blook(mine.blook);
     b.classList.add('bob');
-    screen('is-lobby', b, h('h1', {}, 'You’re in!'), h('p', {}, 'See your name on the big screen?'),
+    screen('is-lobby', b, h('h1', {}, 'You’re in!'), h('div', { class: 'lobby-team' }, myTeam() ? teamBadge(myTeam()) : null), h('p', {}, 'See your name on the big screen?'),
       h('p', { class: 'muted-light small' }, 'The game starts when the host is ready.'),
       h('div', { class: 'dots' }, h('i'), h('i'), h('i')));
   }
@@ -131,7 +154,8 @@ export default async function Play({ params }) {
       screen('is-board', h('p', { class: 'muted-light' }, 'Leaderboard'),
         h('div', { class: 'big-rank' }, typeof r.r === 'number' ? ordinal(r.r) : '–'),
         h('p', {}, `${Number(r.s || 0).toLocaleString()} points`),
-        r.r === 1 ? h('p', { class: 'pill pill-zing' }, 'You’re in the lead') : h('p', { class: 'muted-light' }, 'Keep going!'));
+        r.r === 1 ? h('p', { class: 'pill pill-zing' }, 'You’re in the lead') : h('p', { class: 'muted-light' }, 'Keep going!'),
+        myTeam() ? h('p', { class: 'team-line', style: { background: myTeam().colour } }, `${myTeam().name}: ${ordinal(teamRank())} of ${teams.s.length} teams`) : null);
     }
   }
 
@@ -183,7 +207,8 @@ export default async function Play({ params }) {
     const list = final || [];
     const mineRow = list.find((r) => r.u === uid);
     const top = list.slice(0, 3);
-    if (mineRow && mineRow.r <= 3) { sfx('win'); celebrate(); } else sfx('reveal');
+    const teamWon = myTeam() && teamRank() === 1;
+    if ((mineRow && mineRow.r <= 3) || teamWon) { sfx('win'); celebrate(teamWon ? [myTeam().colour, '#ffffff', '#ffcd1f'] : undefined); } else sfx('reveal');
     // accounts earn XP and coins; guests are invited to keep theirs next time
     const reward = h('div', { class: 'reward' });
     if (signedIn() && mineRow) {
@@ -203,6 +228,8 @@ export default async function Play({ params }) {
     }
     screen('is-end',
       h('p', { class: 'muted-light' }, 'Game over'),
+      myTeam() ? h('div', { class: 'team-badge', style: { background: myTeam().colour } }, blook(myTeam().blook, 44),
+        h('div', {}, h('small', {}, teamWon ? 'Your team won!' : `Your team came ${ordinal(teamRank())}`), h('b', {}, myTeam().name))) : null,
       mineRow ? h('div', { class: 'big-rank' }, ordinal(mineRow.r)) : null,
       mineRow ? h('p', {}, `${mineRow.s.toLocaleString()} points · ${mineRow.c} right of ${mineRow.a}`) : h('p', {}, 'Thanks for playing!'),
       mineRow && mineRow.x ? h('p', { class: 'muted-light' }, mineRow.x) : null,
@@ -229,6 +256,7 @@ export default async function Play({ params }) {
   }
 
   unsubs.push(listen(live, P('abuse')));
+  unsubs.push(live.on(P('teams'), (v) => { teams = v; drawTeam(); }));
   unsubs.push(live.on(P('meta'), (m) => {
     if (!m) { if (state !== 'end') kicked('The host closed this game.'); return; }
     meta = m;
