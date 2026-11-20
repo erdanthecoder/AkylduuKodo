@@ -404,6 +404,44 @@ if ((which === 'owner' || which === 'all') && !EMULATOR) {
   await own.goto(`${BASE}${hostChannel}`);
   await own.click('.follow-btn');
   await own.waitForSelector('.follow-btn:has-text("Follow"):not(:has-text("Following"))');
+
+  say('owner: a special event shows for everyone');
+  await own.goto(`${BASE}/owner`);
+  await own.click('.seg button:has-text("Events")');
+  await own.click('.event-pick:has-text("Double Coins")');
+  await own.click('button:has-text("Start event")');
+  await own.waitForSelector('.event-bar:has-text("Double Coins")');
+  await host.goto(`${BASE}/`);
+  await host.waitForSelector('.event-bar:has-text("left")');
+  await host.screenshot({ path: `${SHOTS}/event-bar.png` });
+
+  say('owner: admin abuse lands on another screen');
+  await own.goto(`${BASE}/owner`);
+  await own.click('.seg button:has-text("Admin abuse")');
+  await own.fill('input[placeholder^="Message"]', 'Hello from the owner');
+  await own.click('.abuse-btn.is-message');
+  await host.waitForSelector('.abuse-msg:has-text("Hello from the owner")');
+  await host.screenshot({ path: `${SHOTS}/abuse-message.png` });
+  const coinsBefore = await host.evaluate(async () => (await import('/src/services/progress.js')).me().coins);
+  await own.click('.abuse-btn.is-coins');
+  await host.waitForFunction(async (b) => (await import('/src/services/progress.js')).me().coins === b + 50, coinsBefore, { timeout: 8000 });
+
+  await own.click('.seg button:has-text("Events")');
+  await own.click('button:has-text("Stop event")');
+  await own.waitForSelector('.event-bar', { state: 'hidden' });
+  await own.click('.seg button:has-text("Events")');
+  await own.waitForSelector('text=No event running');
+
+  say('channels: a creator can turn their channel off');
+  await host.goto(`${BASE}/settings`);
+  await host.locator('.set-row', { hasText: 'Have a channel' }).locator('.switch').click();
+  await host.waitForSelector('text=Your channel is off');
+  await own.goto(`${BASE}${hostChannel}`);
+  await own.waitForSelector('.channel h1');
+  if (await own.locator('.follow-btn').count()) fail('follow button shown for a profile with no channel');
+  await host.goto(`${BASE}/settings`);
+  await host.locator('.set-row', { hasText: 'Have a channel' }).locator('.switch').click();
+  await host.waitForSelector('text=Your channel is on');
   await own.context().close();
 }
 
@@ -498,7 +536,7 @@ if (which === 'account' || which === 'all') {
   // starting coins plus the solo reward: open boxes until the coins run out
   const boxBtn = host.locator('.box-card:has-text("Quickzy Box") button');
   let opened = 0;
-  while (!(await boxBtn.isDisabled()) && opened < 15) {
+  while (!(await boxBtn.isDisabled()) && opened < 40) {
     await boxBtn.click();
     for (let t = 0; t < 3; t++) { await host.click('.ub-stage'); await host.waitForTimeout(120); }
     await host.waitForSelector('.ub-card', { timeout: 15000 });

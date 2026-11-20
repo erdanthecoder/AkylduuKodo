@@ -3,6 +3,7 @@
 // The host's browser runs the referee (game/referee.js); this page only draws
 // what the referee knows and gives the host the controls.
 
+import { listen } from '../ui/abuse.js';
 import { picture } from '../ui/picture.js';
 import { h, fill, plural } from '../ui/dom.js';
 import { icon, shape, logo, wordmark } from '../ui/icons.js';
@@ -439,6 +440,7 @@ export default async function HostLive({ params }) {
     return problemScreen('The game could not start', explain(err));
   }
   draw();
+  const stopAbuse = listen(live, gamePath(pin, 'abuse'));
 
   const keys = (e) => {
     if (e.target && /INPUT|TEXTAREA/.test(e.target.tagName)) return;
@@ -450,6 +452,7 @@ export default async function HostLive({ params }) {
     el: root,
     destroy() {
       document.removeEventListener('keydown', keys);
+      stopAbuse();
       if (view && view.destroy) view.destroy();
       stopMusic();
       if (closed) return;

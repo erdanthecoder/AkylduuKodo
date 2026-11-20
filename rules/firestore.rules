@@ -51,8 +51,10 @@ service cloud.firestore {
         && existsAfter(/databases/$(database)/documents/usernames/$(request.resource.data.username))
         && getAfter(/databases/$(database)/documents/usernames/$(request.resource.data.username)).data.uid == uid;
       allow update: if me(uid)
-        && onlyKeys(['username', 'displayName', 'blook', 'createdAt', 'xp', 'coins', 'owned', 'customs', 'lastGame'])
+        && onlyKeys(['username', 'displayName', 'blook', 'createdAt', 'xp', 'coins', 'owned', 'customs', 'lastGame', 'channel', 'lastGift'])
         && progressOk()
+        && request.resource.data.get('channel', true) is bool
+        && str(request.resource.data.get('lastGift', ''), 40)
         && request.resource.data.createdAt == resource.data.createdAt
         && str(request.resource.data.displayName, 30) && request.resource.data.displayName.size() > 0
         && str(request.resource.data.blook, 20)
@@ -153,10 +155,10 @@ service cloud.firestore {
     }
 
     // ---------------------------------------------------------- owner only
-    // site-wide settings: the announcement banner and the owner's picks
+    // site-wide settings: the announcement banner, the owner's picks, special events
     match /site/{doc} {
       allow read: if true;
-      allow write: if siteOwner() && doc in ['announce', 'featured'];
+      allow write: if siteOwner() && doc in ['announce', 'featured', 'event'];
     }
     // accounts the owner has stopped from publishing
     match /bans/{uid} {

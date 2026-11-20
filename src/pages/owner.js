@@ -13,6 +13,7 @@ import * as siteSvc from '../services/site.js';
 import { BADGES } from '../config.js';
 import { pageTitle } from './parts.js';
 import { reloadProfile } from '../services/session.js';
+import { EFFECTS, GAME_EFFECTS, send } from '../ui/abuse.js';
 import NotFound from './notfound.js';
 
 const fmt = (n) => Number(n || 0).toLocaleString();
@@ -168,6 +169,7 @@ function games() {
     const list = await siteSvc.liveGames().catch(() => []);
     fill(box, list.length ? list.map((g) => h('div', { class: 'owner-row' },
       h('div', { class: 'grow owner-row-main' }, h('b', {}, `Game ${g.pin}`), h('small', { class: 'muted' }, `started ${ago(g.at)}`)),
+      h('button', { class: 'btn btn-sm btn-violet', onclick: () => abuseModal(g.pin) }, icon('bolt', { size: 14 }), 'Admin abuse'),
       act(h('button', { class: 'btn btn-sm btn-bad' }, icon('stop', { size: 14 }), 'End game'), async () => {
         if (!(await confirm({ title: `End game ${g.pin}?`, text: 'Everyone in it is sent home.', yes: 'End it', danger: true }))) return;
         await siteSvc.endGame(g.pin); toast('Game ended', 'ok'); draw();
@@ -178,6 +180,72 @@ function games() {
     h('div', { class: 'row spread' }, h('h2', {}, 'Live games'), h('button', { class: 'btn btn-sm', onclick: draw }, 'Refresh')), box);
 }
 
+/* ------------------------------------------------------------ admin abuse */
+
+function abusePanel(list, { pin = null, onSent } = {}) {
+  const text = h('input', { class: 'input', maxlength: 120, placeholder: 'Message (for Big message, or a caption)' });
+  const coins = h('input', { class: 'input', type: 'number', min: 1, max: 150, value: 50, style: { maxWidth: '120px' }, 'aria-label': 'Coins each' });
+  const points = h('input', { class: 'input', type: 'number', min: 1, max: 5000, value: 1000, style: { maxWidth: '120px' }, 'aria-label': 'Points each' });
+  const grid = h('div', { class: 'abuse-grid' }, ...list.map(([kind, name, blurb]) => {
+    const b = h('button', { class: `abuse-btn is-${kind}` }, h('b', {}, name), h('small', {}, blurb));
+    b.addEventListener('click', async () => {
+      if (kind === 'message' && !text.value.trim()) { toast('Type a message first', 'bad'); text.focus(); return; }
+      b.disabled = true;
+      try {
+        await send(kind, { text: text.value.trim(), coins: kind === 'coins' ? Number(coins.value) : 0, points: kind === 'points' ? Number(points.value) : 0, pin });
+        toast(pin ? `Sent to game ${pin}` : 'Sent to everyone online', 'ok');
+        if (onSent) onSent();
+      } catch (e) { toast(explain(e), 'bad'); }
+      b.disabled = false;
+    });
+    return b;
+  }));
+  return h('div', { class: 'stack' }, text,
+    h('div', { class: 'row', style: { gap: '14px' } },
+      list.some(([k]) => k === 'coins') ? h('label', { class: 'row small', style: { gap: '6px' } }, 'Coin rain gives each account', coins, 'coins') : null,
+      list.some(([k]) => k === 'points') ? h('label', { class: 'row small', style: { gap: '6px' } }, 'Bonus points each', points) : null),
+    grid);
+}
+
+function abuseModal(pin) {
+  return modal((close) => [h('h2', {}, `Admin abuse: game ${pin}`),
+    h('p', { class: 'muted small', style: { margin: 0 } }, 'Lands on the big screen and every player\'s screen in this game.'),
+    abusePanel(GAME_EFFECTS, { pin }),
+    h('div', { class: 'row end' }, h('button', { class: 'btn', onclick: () => close() }, 'Done'))], { wide: true });
+}
+
+function abuse() {
+  return h('section', { class: 'card stack' }, h('h2', {}, 'Admin abuse'),
+    h('p', { class: 'muted small', style: { margin: 0 } }, 'Hits every screen that has Quickzy open right now. Coin rain gives every signed-in player real coins (up to 150 each). To abuse one game, use Live games.'),
+    abusePanel(EFFECTS));
+}
+
+/* --------------------------------------------------------- special events */
+
+async function events() {
+  const cur = await siteSvc.currentEvent().catch(() => null);
+  let kind = cur ? cur.kind : 'coins';
+  const title = h('input', { class: 'input', maxlength: 60, placeholder: 'Name (optional), e.g. Weekend Bonanza', value: cur ? cur.title : '' });
+  const hours = h('select', { class: 'select', 'aria-label': 'How long' }, ...[[1, '1 hour'], [3, '3 hours'], [12, '12 hours'], [24, '1 day'], [48, '2 days'], [72, '3 days'], [168, '1 week']].map(([v, l]) => h('option', { value: v, selected: v === 24 }, l)));
+  const picks = h('div', { class: 'abuse-grid' });
+  const drawPicks = () => fill(picks, ...Object.entries(siteSvc.EVENTS).map(([k, e]) => h('button', {
+    class: `abuse-btn event-pick${k === kind ? ' is-on' : ''}`, style: { background: e.colour }, onclick: () => { kind = k; drawPicks(); },
+  }, h('b', {}, e.name), h('small', {}, e.blurb))));
+  drawPicks();
+  const status = cur
+    ? h('div', { class: 'owner-row' }, h('div', { class: 'grow owner-row-main' }, h('b', {}, `Running: ${cur.title || siteSvc.EVENTS[cur.kind].name}`), h('small', { class: 'muted' }, `ends ${new Date(cur.ends).toLocaleString()}`)),
+      act(h('button', { class: 'btn btn-sm btn-bad' }, icon('stop', { size: 14 }), 'Stop event'), async () => { await siteSvc.stopEvent(); toast('Event stopped', 'ok'); location.reload(); }))
+    : h('p', { class: 'muted', style: { margin: 0 } }, 'No event running.');
+  const go = act(h('button', { class: 'btn btn-main' }, icon('star', { size: 16 }), cur ? 'Replace event' : 'Start event'), async () => {
+    await siteSvc.startEvent(kind, Number(hours.value), title.value.trim());
+    toast('Event started for everyone', 'ok');
+    location.reload();
+  });
+  return h('section', { class: 'card stack' }, h('h2', {}, 'Special events'),
+    h('p', { class: 'muted small', style: { margin: 0 } }, 'A bright bar with a countdown shows at the top of every page while it runs.'),
+    status, picks, h('div', { class: 'row' }, title, hours), h('div', { class: 'row end' }, go));
+}
+
 /* ------------------------------------------------------------------ page */
 
 export default async function Owner() {
@@ -185,13 +253,13 @@ export default async function Owner() {
   pageTitle('Owner');
   let tab = 'quizzes';
   const body = h('div', { class: 'stack', style: { gap: '18px' } });
-  const sections = { quizzes, users, games: async () => games(), announcement };
+  const sections = { quizzes, users, games: async () => games(), abuse: async () => abuse(), events, announcement };
   const draw = async () => { fill(body, h('div', { class: 'loading' }, h('div', { class: 'spinner' }))); fill(body, await sections[tab]()); };
   draw();
   return h('div', { class: 'page stack', style: { gap: '18px' } },
     h('div', { class: 'row', style: { gap: '10px' } }, h('h1', {}, 'Owner'), h('span', { style: { transform: 'scale(1.5)', display: 'inline-flex' } }, verifiedBadge(null, 'owner'))),
     h('p', { class: 'muted', style: { margin: 0 } }, 'Only your account can open this page, and the database refuses these actions from anyone else.'),
     stats(),
-    segmented([['quizzes', 'Quizzes'], ['users', 'Players'], ['games', 'Live games'], ['announcement', 'Announcement']], tab, (v) => { tab = v; draw(); }),
+    segmented([['quizzes', 'Quizzes'], ['users', 'Players'], ['games', 'Live games'], ['abuse', 'Admin abuse'], ['events', 'Events'], ['announcement', 'Announcement']], tab, (v) => { tab = v; draw(); }),
     body);
 }

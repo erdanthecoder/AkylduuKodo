@@ -2,6 +2,10 @@
   "rules": {
     ".read": false,
     ".write": false,
+    "abuse": {
+      ".read": true,
+      ".write": "auth != null && auth.uid === 'KWIRRSUM2VQVWnr1nUDbPP9bqMk2'"
+    },
     "gameIndex": {
       ".read": "auth != null && auth.token.firebase.sign_in_provider != 'anonymous'",
       ".indexOn": [
@@ -188,6 +192,10 @@
         "$public": {
           ".read": "auth != null && ($public === 'qs' || $public === 'cur' || $public === 'top' || $public === 'final' || $public === 'snap' || $public === 'race' || $public === 'tower' || $public === 'order')",
           ".write": "auth != null && root.child('games/' + $pin + '/meta/host').val() === auth.uid && ($public === 'qs' || $public === 'cur' || $public === 'top' || $public === 'final' || $public === 'snap' || $public === 'race' || $public === 'tower' || $public === 'order')"
+        },
+        "abuse": {
+          ".read": "auth != null",
+          ".write": "auth != null && auth.uid === 'KWIRRSUM2VQVWnr1nUDbPP9bqMk2'"
         }
       }
     }

@@ -262,6 +262,22 @@ export async function createReferee({ pin, meta: initialMeta, quiz, key, onChang
     if (arcade) onArcadeAnswer(id, a); else onClassicAnswer(a);
   }));
 
+  /* ================================================== admin abuse */
+
+  // the owner can hand every player bonus points; only the owner's account
+  // can write here, and each gift counts once, and only while it is fresh
+  const abuseSeen = new Set();
+  unsubs.push(live.on(P('abuse'), (e) => {
+    if (!e || e.kind !== 'points' || !e.id || abuseSeen.has(e.id)) return;
+    abuseSeen.add(e.id);
+    if (typeof e.at !== 'number' || live.now() - e.at > 30000 || meta.status === 'end') return;
+    const n = Math.max(0, Math.min(5000, Math.floor(Number(e.points) || 0)));
+    if (!n) return;
+    for (const p of players.values()) { p.score += n; dirty.add(p.uid); }
+    writeScores();
+    emit();
+  }));
+
   /* ======================================================= control */
 
   async function start() {

@@ -6,6 +6,7 @@
 
 import { myProfile, signedIn, patchProfile, reloadProfile, me as who } from './session.js';
 import { OWNER_UID } from '../config.js';
+import { currentEvent, eventBoosts } from './site.js';
 import { STARTERS, CUSTOM_PARTS, drawFromBox, rarityOf, isCustom, isBlook, BLOOKS, REGULAR, LIMITED, EXCLUSIVE } from '../ui/blooks.js';
 
 export const MAX_LEVEL = 30;
@@ -110,9 +111,10 @@ export async function openBox(boxId, rand = Math.random) {
   if (levelOf(m.xp) < box.level) throw new Error(`The ${box.name} opens at level ${box.level}.`);
   if (m.coins < box.price) throw new Error(`You need ${box.price} coins.`);
   // a luckier box draws several times and keeps the rarest
+  const luck = box.luck + (eventBoosts(await currentEvent().catch(() => null)).lucky ? 1 : 0);
   let id = drawFromBox(rand, box.pool);
   const rank = (x) => ['common', 'uncommon', 'rare', 'epic', 'legendary'].indexOf(rarityOf(x).id);
-  for (let i = 1; i < box.luck; i++) { const next = drawFromBox(rand, box.pool); if (rank(next) > rank(id)) id = next; }
+  for (let i = 1; i < luck; i++) { const next = drawFromBox(rand, box.pool); if (rank(next) > rank(id)) id = next; }
   const duplicate = owns(id);
   const refund = duplicate ? rarityOf(id).refund : 0;
   const owned = { ...m.owned, [id]: (m.owned[id] || (STARTERS.includes(id) ? 1 : 0)) + 1 };
@@ -154,8 +156,11 @@ export async function claimGame(gameKey, row, players) {
   const p = myProfile() || {};
   if (p.lastGame === gameKey) return null;
   const m = me();
-  const { xp, coins } = rewardFor(row, players);
+  const boost = eventBoosts(await currentEvent().catch(() => null));
+  let { xp, coins } = rewardFor(row, players);
+  if (boost.xp) xp = Math.min(400, xp * 2);
+  if (boost.coins) coins = Math.min(150, coins * 2);
   const before = levelOf(m.xp);
   await patchProfile({ xp: m.xp + xp, coins: m.coins + coins, lastGame: gameKey });
-  return { xp, coins, levelUp: levelOf(m.xp + xp) > before ? levelOf(m.xp + xp) : 0 };
+  return { xp, coins, boosted: boost.xp || boost.coins, levelUp: levelOf(m.xp + xp) > before ? levelOf(m.xp + xp) : 0 };
 }
