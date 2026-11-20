@@ -6,14 +6,14 @@
 
 import { net } from '../net/index.js';
 import { me, signedIn, setProFlag } from './session.js';
-import { OWNER_UID, BADGES } from '../config.js';
+import { OWNER_UID, BADGES, PRO_FREE } from '../config.js';
 
 export const PRICE = '$13.49';
 
-/** The free test: every account is Pro until this moment (UTC, 20 Feb 2027).
- *  The security rules hold the same date. After it, only the owner (and any
- *  paying members) stay Pro. */
-export const TRIAL_ENDS = Date.UTC(2027, 1, 20);
+/** The free test ended early, on 20 Nov 2026: now only the owner, the
+ *  accounts in PRO_FREE (and later, paying members) are Pro. The security
+ *  rules hold the same list. */
+export const TRIAL_ENDS = Date.UTC(2026, 10, 20, 18, 0, 0);
 export const trialOn = (now = Date.now()) => now < TRIAL_ENDS && !testsWithoutTrial();
 // the browser tests check the free plan too: on localhost only, they can switch the test off
 function testsWithoutTrial() {
@@ -55,7 +55,7 @@ export const proNow = () => Boolean(signedIn() && known.get(me().uid));
 /** Is this account Pro right now? */
 export function isPro(uid) {
   if (!uid) return Promise.resolve(false);
-  if (uid === OWNER_UID || BADGES[uid] === 'official') { known.set(uid, true); return Promise.resolve(true); }
+  if (uid === OWNER_UID || BADGES[uid] === 'official' || PRO_FREE.includes(uid)) { known.set(uid, true); return Promise.resolve(true); }
   if (trialOn()) { known.set(uid, true); if (me() && me().uid === uid) setProFlag(true); return Promise.resolve(true); }
   if (!cache.has(uid)) {
     cache.set(uid, net.store.get('members', uid)

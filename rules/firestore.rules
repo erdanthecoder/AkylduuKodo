@@ -21,9 +21,9 @@ service cloud.firestore {
     function banned() { return exists(/databases/$(database)/documents/bans/$(request.auth.uid)); }
     // Pro members (the owner and the official account always are)
     function pro() {
-      // the free test: everyone is Pro until 20 Feb 2027 (00:00 UTC)
-      return request.time.toMillis() < 1803081600000
-        || siteOwner() || request.auth.uid == 'XH9Z5D7tLmRHStlxumgaJyTo1BP2'
+      // the free test is over: the owner, the official account and ugemnomads
+      return siteOwner() || request.auth.uid == 'XH9Z5D7tLmRHStlxumgaJyTo1BP2'
+        || request.auth.uid == 'f4BZrMpjQnV2B7n3iKq68J8poJ63'
         || (exists(/databases/$(database)/documents/members/$(request.auth.uid))
             && get(/databases/$(database)/documents/members/$(request.auth.uid)).data.until > request.time.toMillis());
     }

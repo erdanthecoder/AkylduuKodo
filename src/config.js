@@ -59,3 +59,6 @@ export const released12 = (now = Date.now()) => now >= RELEASE_1_2;
 
 /** Shown in the sidebar and the What's new popup. */
 export const VERSION = released12() ? '1.2' : '1.1';
+
+/** Pro for free, given by the owner: ugemnomads. (The rules hold the same list.) */
+export const PRO_FREE = ['f4BZrMpjQnV2B7n3iKq68J8poJ63'];
