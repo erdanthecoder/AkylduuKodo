@@ -51,6 +51,24 @@ export const MODES = [
     bg: 'linear-gradient(160deg, #2a6fdb, #7cc2ff 55%, #ffb45c)',
     durations: [3], fixedMinutes: 3, releaseAt: RELEASE_1_2, isNew: true,
   },
+  {
+    id: 'treasure', name: 'Treasure Hunt', kind: 'arcade', proOnly: true,
+    tagline: 'Answer to open chests. Gold, double, triple… or steal from a rival!',
+    bg: 'linear-gradient(140deg, #8a5a2b, #ffb21f)',
+    durations: [3, 5, 7, 10],
+  },
+  {
+    id: 'fishing', name: 'Fishing Frenzy', kind: 'arcade', proOnly: true,
+    tagline: 'Answer for bait, cast, and reel in at the right moment. Catch the Kraken!',
+    bg: 'linear-gradient(160deg, #ffb86b, #2fb8ff 45%, #0b3a7a)',
+    durations: [3, 5, 7, 10],
+  },
+  {
+    id: 'candy', name: 'Candy Factory', kind: 'arcade', proOnly: true,
+    tagline: 'Answer for cash, buy machines, and make the most candy.',
+    bg: 'linear-gradient(140deg, #ff4772, #a560ff)',
+    durations: [3, 5, 7, 10],
+  },
 ];
 
 /** A mode that is announced but not out yet (the owner can try it early). */
@@ -130,6 +148,29 @@ export function modeArt(id) {
     add('path', { d: 'M36 44 L22 46 L36 48 Z', fill: '#ffcd1f' });
     add('path', { d: 'M4 78 L26 76 L30 78 L26 80 Z', fill: '#4a5068' });
     add('path', { d: 'M30 78 h14', stroke: '#ff4772', 'stroke-width': 3, 'stroke-linecap': 'round' });
+  }
+  if (id === 'treasure') {
+    add('rect', { x: 20, y: 46, width: 60, height: 36, rx: 5, fill: '#8a5a2b' });
+    add('path', { d: 'M20 50 Q50 18 80 50 Z', fill: '#a8703c' });
+    add('rect', { x: 20, y: 46, width: 60, height: 7, fill: '#ffcd1f' });
+    add('rect', { x: 45, y: 50, width: 10, height: 14, rx: 2, fill: '#ffcd1f' });
+    for (const [x, y] of [[30, 30], [62, 24], [76, 36]]) add('circle', { cx: x, cy: y, r: 5, fill: '#ffe45c' });
+  }
+  if (id === 'fishing') {
+    add('path', { d: 'M10 50 Q30 44 50 50 T90 50 V90 H10 Z', fill: '#2fb8ff' });
+    add('path', { d: 'M22 10 L60 40', stroke: '#5a3a1a', 'stroke-width': 4, 'stroke-linecap': 'round' });
+    add('path', { d: 'M60 40 V62', stroke: '#fff', 'stroke-width': 2 });
+    add('ellipse', { cx: 56, cy: 74, rx: 16, ry: 8, fill: '#ffcd1f' });
+    add('path', { d: 'M42 74 L32 66 V82 Z', fill: '#ffcd1f' });
+    add('circle', { cx: 64, cy: 72, r: 2, fill: '#17133f' });
+  }
+  if (id === 'candy') {
+    add('rect', { x: 10, y: 66, width: 80, height: 10, rx: 5, fill: '#17133f' });
+    add('circle', { cx: 30, cy: 52, r: 12, fill: '#ffcd1f' });
+    add('path', { d: 'M30 64 V90', stroke: '#fff', 'stroke-width': 4 });
+    add('rect', { x: 50, y: 42, width: 30, height: 22, rx: 6, fill: '#12c9a6' });
+    add('path', { d: 'M50 53 L42 46 V60 Z M80 53 L88 46 V60 Z', fill: '#12c9a6' });
+    add('circle', { cx: 30, cy: 52, r: 6, fill: 'none', stroke: '#ff4772', 'stroke-width': 3 });
   }
   return s;
 }

@@ -121,25 +121,25 @@ async function users() {
       fill(badgeSlot, special ? nameBadges(special) : given ? verifiedBadge() : null);
       fill(verifyBtn, icon('check', { size: 14 }), given ? 'Remove blue check' : 'Give blue check');
       verifyBtn.hidden = Boolean(special);
+      // relabel only after the spinner has given the button back
+      verifyBtn.onclick = async () => {
+        await busy(verifyBtn, async () => { try { await siteSvc.setGrantedBadge(u.id, !given); } catch (e) { toast(explain(e), 'bad'); } })();
+        refresh();
+      };
+      fill(banBtn, icon(banned ? 'check' : 'stop', { size: 14 }), banned ? 'Allow publishing' : 'Stop publishing');
+      banBtn.className = `btn btn-sm${banned ? ' btn-ok' : ''}`;
+      banBtn.hidden = Boolean(special);
+      banBtn.onclick = async () => {
+        if (!banned && !(await confirm({ title: `Stop ${u.displayName} publishing?`, text: 'They can still play and host, but cannot save or publish quizzes until you allow it again.', yes: 'Stop publishing', danger: true }))) return;
+        await busy(banBtn, async () => { try { await siteSvc.setBanned(u.id, !banned); } catch (e) { toast(explain(e), 'bad'); } })();
+        refresh();
+      };
       const pro = await isPro(u.id);
       fill(proBtn, icon('star', { size: 14 }), pro ? 'Remove Pro' : 'Give Pro (1 year)');
       proBtn.className = `btn btn-sm${pro ? '' : ' btn-gold'}`;
       proBtn.hidden = Boolean(special);
       proBtn.onclick = async () => {
         await busy(proBtn, async () => { try { await setPro(u.id, !pro); forget(u.id); toast(pro ? 'Pro removed' : `${u.displayName} is Pro for a year`, 'ok'); } catch (e) { toast(explain(e), 'bad'); } })();
-        refresh();
-      };
-      fill(banBtn, icon(banned ? 'check' : 'stop', { size: 14 }), banned ? 'Allow publishing' : 'Stop publishing');
-      banBtn.className = `btn btn-sm${banned ? ' btn-ok' : ''}`;
-      banBtn.hidden = Boolean(special);
-      // relabel only after the spinner has given the button back
-      verifyBtn.onclick = async () => {
-        await busy(verifyBtn, async () => { try { await siteSvc.setGrantedBadge(u.id, !given); } catch (e) { toast(explain(e), 'bad'); } })();
-        refresh();
-      };
-      banBtn.onclick = async () => {
-        if (!banned && !(await confirm({ title: `Stop ${u.displayName} publishing?`, text: 'They can still play and host, but cannot save or publish quizzes until you allow it again.', yes: 'Stop publishing', danger: true }))) return;
-        await busy(banBtn, async () => { try { await siteSvc.setBanned(u.id, !banned); } catch (e) { toast(explain(e), 'bad'); } })();
         refresh();
       };
     };

@@ -94,7 +94,7 @@ export default async function Home() {
 
     daily,
 
-    h('div', { class: 'section-head' }, h('h2', {}, 'Seven ways to play')),
+    h('div', { class: 'section-head' }, h('h2', {}, 'Ten ways to play')),
     h('div', { class: 'features' },
       ...MODES.map((m) => h('div', { class: 'mode-card', style: { background: m.bg } },
         modeArt(m.id),

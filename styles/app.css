@@ -1108,3 +1108,54 @@ button.bcard.is-slot { color: var(--violet); border-color: var(--violet); backgr
 @keyframes f12-alarm { from { opacity: .4; } to { opacity: 1; } }
 @keyframes f12-boost { to { transform: translate(-50%, -50%) scale(1.1); } }
 @keyframes f12-flash { 0% { opacity: .9; } 100% { opacity: 0; } }
+
+/* Pro games: Treasure Hunt, Fishing Frenzy, Candy Factory */
+.th-root, .cf-root { position: absolute; inset: 0; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 16px; padding: 16px; text-align: center; overflow-y: auto;
+  background: radial-gradient(circle at 50% 30%, #ffe9a8, #c98a3c 70%, #6b4120); color: #3a2209; }
+.th-title { margin: 0; font: 400 clamp(28px, 6vw, 44px) 'Lilita One', system-ui; color: #fff; text-shadow: 0 3px 0 #6b4120; }
+.th-status { margin: 0; font-weight: 900; font-size: 18px; }
+.th-chests { display: flex; gap: clamp(10px, 3vw, 28px); }
+.th-chest { position: relative; width: clamp(84px, 24vw, 140px); height: clamp(76px, 21vw, 120px); border: none; background: none; cursor: pointer; padding: 0; transition: transform .15s; }
+.th-chest:not(:disabled):hover { transform: translateY(-6px) scale(1.04); }
+.th-chest:disabled { cursor: default; filter: saturate(.75); }
+.th-box { position: absolute; left: 0; right: 0; bottom: 0; height: 58%; border-radius: 10px; background: linear-gradient(#a8703c, #6b4120); border: 4px solid #3a2209; box-shadow: inset 0 0 0 4px #ffcd1f; }
+.th-lid { position: absolute; left: 0; right: 0; top: 6%; height: 40%; border-radius: 40px 40px 8px 8px; background: linear-gradient(#c98a5a, #8a5a2b); border: 4px solid #3a2209; box-shadow: inset 0 -6px 0 #ffcd1f; transform-origin: 50% 100%; transition: transform .35s cubic-bezier(.3, 1.6, .5, 1); z-index: 1; }
+.th-chest.is-open .th-lid { transform: rotate(-28deg) translate(-8px, -18px); }
+.th-chest.is-shaking { animation: th-shake .12s linear infinite; }
+.th-prize { position: absolute; left: 50%; top: -34%; transform: translateX(-50%); z-index: 2; font: 400 clamp(22px, 5vw, 34px) 'Lilita One', system-ui; color: #ffe45c; text-shadow: 0 3px 0 #3a2209, 0 0 18px rgba(255, 220, 80, .9); animation: th-pop .5s cubic-bezier(.3, 1.8, .5, 1) both; white-space: nowrap; }
+.th-chest.is-lose .th-prize, .th-chest.is-none .th-prize { color: #ffd0d8; }
+.th-pick { background: rgba(255, 255, 255, .9); border-radius: 18px; padding: 14px; display: grid; gap: 10px; max-width: 520px; }
+.th-pick-list { display: flex; flex-wrap: wrap; gap: 8px; justify-content: center; }
+.th-target { display: grid; justify-items: center; gap: 2px; padding: 8px 12px; border-radius: 14px; border: 3px solid #ffcd1f; background: #fff; cursor: pointer; font-weight: 800; }
+.th-target:hover { background: #fff6d6; }
+.th-screen { position: absolute; inset: 0; display: flex; flex-direction: column; gap: 12px; padding: 20px; background: radial-gradient(circle at 50% 0, #ffe9a8, #8a5a2b); color: #3a2209; }
+.th-screen h2 { margin: 0; text-align: center; font: 400 40px 'Lilita One', system-ui; color: #fff; text-shadow: 0 3px 0 #3a2209; }
+.fi-screen { background: linear-gradient(#ffb86b, #2fb8ff 40%, #0b3a7a); }
+.cf-screen { background: linear-gradient(140deg, #ff8fb1, #a560ff); }
+.th-board { display: grid; gap: 8px; }
+.th-bar { display: flex; align-items: center; gap: 10px; background: rgba(255, 255, 255, .88); border-radius: 14px; padding: 6px 14px; font-weight: 900; }
+.th-bar-track { flex: 0 1 40%; height: 14px; border-radius: 99px; background: rgba(0, 0, 0, .1); overflow: hidden; }
+.th-bar-track i { display: block; height: 100%; background: linear-gradient(90deg, #ffcd1f, #ff8a2a); border-radius: 99px; transition: width .5s; }
+.th-gold { min-width: 80px; text-align: right; }
+.th-feed { margin-top: auto; display: grid; gap: 4px; }
+.th-feed p { margin: 0; padding: 6px 12px; border-radius: 10px; background: rgba(23, 19, 63, .75); color: #fff; font-weight: 800; animation: f12-in .4s both; }
+@keyframes th-shake { 0% { transform: rotate(-4deg); } 50% { transform: rotate(4deg); } 100% { transform: rotate(-4deg); } }
+@keyframes th-pop { from { transform: translate(-50%, 30px) scale(.4); opacity: 0; } }
+.fi-ui { position: absolute; left: 0; right: 0; bottom: 0; display: flex; gap: 12px; align-items: center; justify-content: center; padding: 12px; z-index: 2; }
+.fi-info { color: #fff; font-weight: 900; text-shadow: 0 1px 3px rgba(0,0,0,.5); }
+.fi-btn.is-reel { background: linear-gradient(140deg, #ff8a2a, #ff4772); animation: sr-pulse .4s ease-in-out infinite alternate; }
+.cf-root { justify-content: flex-start; background: linear-gradient(160deg, #ffe0ec, #e6d6ff); color: #17133f; }
+.cf-top { display: flex; align-items: baseline; gap: 14px; flex-wrap: wrap; justify-content: center; }
+.cf-top h2 { margin: 0; font: 400 32px 'Lilita One', system-ui; color: #ff4772; }
+.cf-cash { font: 400 30px 'Lilita One', system-ui; color: #12a37f; }
+.cf-belt { position: relative; width: min(560px, 100%); height: 46px; border-radius: 12px; background: repeating-linear-gradient(90deg, #4e4a75 0 14px, #3a365c 14px 28px); overflow: hidden; }
+.cf-belt.is-on { animation: cf-belt 1s linear infinite; }
+.cf-belt i { position: absolute; top: 10px; left: -30px; width: 26px; height: 26px; border-radius: 50%; border: 3px solid #fff; animation: cf-move 4.2s linear infinite; }
+.cf-shop { display: grid; grid-template-columns: repeat(auto-fill, minmax(150px, 1fr)); gap: 10px; width: min(760px, 100%); }
+.cf-machine { position: relative; display: grid; gap: 2px; justify-items: start; text-align: left; padding: 12px; border-radius: 16px; border: 3px solid var(--c); background: #fff; cursor: pointer; font-family: inherit; color: inherit; }
+.cf-machine:disabled { opacity: .55; cursor: default; }
+.cf-machine.is-bought { animation: th-pop .4s both; }
+.cf-icon { width: 30px; height: 30px; border-radius: 50%; background: var(--c); }
+.cf-cost { position: absolute; top: 10px; right: 10px; font-weight: 900; color: #12a37f; }
+@keyframes cf-belt { to { background-position: 28px 0; } }
+@keyframes cf-move { to { left: calc(100% + 30px); } }

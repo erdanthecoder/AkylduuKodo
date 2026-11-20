@@ -6,7 +6,8 @@ import { icon, logo, verifiedBadge } from '../ui/icons.js';
 import { blook } from '../ui/blooks.js';
 import { modal } from '../ui/kit.js';
 import { signedIn, myProfile, me } from '../services/session.js';
-import { myPlan, membership, PRICE, PRO_PERKS, PRO_SOON, PLANS, trialOn, TRIAL_ENDS } from '../services/plan.js';
+import { myPlan, membership, PRICE, PRO_PERKS, PRO_SOON, PLANS, trialOn, TRIAL_ENDS, payUrl, manageUrl, forget } from '../services/plan.js';
+import { navigate } from '../router.js';
 import { celebrate } from '../ui/confetti.js';
 import { sfx } from '../game/sound.js';
 import { pageTitle } from './parts.js';
@@ -39,7 +40,14 @@ export async function maybeShowLetter() {
 
 export default async function Pro() {
   pageTitle('Quickzy Pro');
+  const justPaid = new URLSearchParams(location.search).get('paid') === '1';
+  if (justPaid && signedIn()) { forget(me().uid); try { localStorage.removeItem(`quickzy.proLetter.${me().uid}`); } catch { /* ignore */ } }
   const plan = await myPlan();
+  if (justPaid && plan.pro) setTimeout(() => proLetter(), 400);
+  const getPro = () => {
+    if (!signedIn()) { navigate('/login?next=/pro'); return; }
+    location.href = payUrl(me().uid);
+  };
   const m = plan.pro && signedIn() ? await membership(me().uid) : null;
   const perk = ([ic, title, text], soon = false) => h('li', { class: soon ? 'is-soon' : '' },
     h('span', { class: 'pro-ic' }, icon(ic, { size: 18 })),
@@ -55,18 +63,22 @@ export default async function Pro() {
       plan.pro
         ? h('div', { class: 'row', style: { justifyContent: 'center' } },
           h('span', { class: 'pro-member' }, icon('check', { size: 18 }), m && m.until ? `You are a Pro member until ${new Date(m.until).toLocaleDateString()}` : trialOn() ? 'You have Pro in the free test' : 'You are a Pro member'),
-          h('button', { class: 'btn', onclick: () => proLetter() }, icon('mail', { size: 16 }), 'Read your letter'))
+          h('button', { class: 'btn', onclick: () => proLetter() }, icon('mail', { size: 16 }), 'Read your letter'),
+          m && m.paid ? h('a', { class: 'btn', href: manageUrl(), target: '_blank', rel: 'noopener' }, icon('gear', { size: 16 }), 'Manage subscription') : null)
         : h('div', { class: 'pro-price' },
-          h('b', {}, PRICE), h('span', {}, 'a year'),
-          h('button', { class: 'btn btn-main btn-lg', disabled: true, title: 'Payments are coming soon' }, 'Get Pro'),
-          h('small', {}, 'Payments are coming very soon. Ask a parent or guardian before buying.'))),
+          h('div', { class: 'pro-trial' }, icon('star', { size: 18 }), 'Try it 7 days free'),
+          h('b', {}, PRICE), h('span', {}, 'a year, after 7 free days. Cancel any time.'),
+          h('button', { class: 'btn btn-main btn-lg', onclick: getPro }, 'Start my free week'),
+          justPaid ? h('small', { class: 'pro-wait' }, 'Thank you! Your payment went through. Pro turns on within a minute: refresh this page.') : null,
+          h('small', {}, 'Ask a parent or guardian before buying. Cancel any time. ',
+            h('a', { href: manageUrl(), target: '_blank', rel: 'noopener' }, 'Manage a subscription')))),
     h('div', { class: 'pro-cols' },
       h('section', { class: 'card stack' }, h('h2', {}, 'What Pro members get'), h('ul', { class: 'pro-list' }, ...PRO_PERKS.map((p) => perk(p)), ...PRO_SOON.map((p) => perk(p, true)))),
       h('section', { class: 'card stack' }, h('h2', {}, 'Free accounts'),
         h('ul', { class: 'pro-list is-free' },
           perk(['list', `${free.quizzes} quizzes`, 'Plenty to start with.']),
           perk(['users', `${free.players} players a game`, 'Great for one class.']),
-          perk(['play', 'Classic, Robot Run and Sky Climb', 'Laser Tag, Spacecraft and Tower Defense are Pro.']),
+          perk(['play', 'Classic, Robot Run and Sky Climb', 'Laser Tag, Spacecraft, Tower Defense and 3 Pro-only games are Pro.']),
           perk(['clock', 'Quizzes are checked', 'Published quizzes are checked automatically and go live in 3–5 days.'])),
         h('div', { class: 'row', style: { justifyContent: 'center', gap: '10px' } }, ...['fox', 'unicorn', 'dragon', 'kyrgyzstan'].map((id) => blook(id, 56))))));
 }

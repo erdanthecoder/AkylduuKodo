@@ -287,7 +287,7 @@ if (which === 'teams' || which === 'classic' || which === 'all') {
 }
 
 if (which === 'arcade' || which === 'all') {
-  for (const [mode, name] of (process.env.ONLY ? [[process.env.ONLY, process.env.ONLY_NAME]] : null) || [['lasertag', 'Laser Tag'], ['robotrun', 'Robot Run'], ['spacecraft', 'Spacecraft'], ['obby', 'Sky Climb'], ['defense', 'Tower Defense'], ['skyrace', 'Sky Race']]) {
+  for (const [mode, name] of (process.env.ONLY ? process.env.ONLY.split(',').map((m, i) => [m, process.env.ONLY_NAME.split(',')[i]]) : null) || [['lasertag', 'Laser Tag'], ['robotrun', 'Robot Run'], ['spacecraft', 'Spacecraft'], ['obby', 'Sky Climb'], ['defense', 'Tower Defense'], ['skyrace', 'Sky Race'], ['treasure', 'Treasure Hunt'], ['fishing', 'Fishing Frenzy'], ['candy', 'Candy Factory']]) {
     say(`${mode}: open the lobby`);
     if (mode === 'skyrace') await host.evaluate(() => localStorage.setItem('quickzy.test.early', '1'));
     const pin = await openLobby(name, () => (mode === 'skyrace' ? host.waitForSelector('.set-row:has-text("Game length") .pill:has-text("3 min")') : host.click('.set-row:has-text("Game length") button:has-text("3 min")')));
@@ -346,6 +346,32 @@ if (which === 'arcade' || which === 'all') {
       await dev.screenshot({ path: `${SHOTS}/skyrace-boost.png` });
       await cara.waitForTimeout(6000);
       await cara.screenshot({ path: `${SHOTS}/skyrace-jets.png` });
+    }
+    if (mode === 'treasure') {
+      say('treasure: open a chest');
+      await cara.evaluate(() => window.__quickzyTreasure.give());
+      await cara.click('.th-chest >> nth=1');
+      await cara.waitForSelector('.th-prize, .th-pick:not([hidden])', { timeout: 10000 });
+      await cara.screenshot({ path: `${SHOTS}/treasure-chest.png` });
+    }
+    if (mode === 'fishing') {
+      say('fishing: cast and reel in');
+      await cara.evaluate(() => window.__quickzyFishing.give());
+      await cara.click('.fi-btn');
+      await cara.waitForFunction(() => window.__quickzyFishing.state() === 'bite', null, { timeout: 8000 });
+      await cara.screenshot({ path: `${SHOTS}/fishing-bite.png` });
+      await cara.click('.fi-btn');
+      await cara.waitForFunction(() => window.__quickzyFishing.state() === 'idle', null, { timeout: 8000 });
+      await cara.waitForTimeout(400);
+      await cara.screenshot({ path: `${SHOTS}/fishing-catch.png` });
+    }
+    if (mode === 'candy') {
+      say('candy: buy a machine and make candy');
+      await cara.waitForSelector('.cf-machine:not([disabled])', { timeout: 10000 });
+      await cara.click('.cf-machine:not([disabled]) >> nth=0');
+      await cara.waitForFunction(() => /[1-9]\d* candy a second/.test(document.querySelector('.cf-top').innerText), null, { timeout: 8000 })
+        .catch(() => fail('candy: buying a machine did not raise the rate'));
+      await cara.screenshot({ path: `${SHOTS}/candy.png` });
     }
     await host.screenshot({ path: `${SHOTS}/${mode}-host.png` });
     say(`${mode}: end`);

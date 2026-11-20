@@ -360,7 +360,7 @@ export default async function HostLive({ params }) {
     let screenStop = null;
     import(`../game/modes/${mode.id}.js`).then((m) => {
       if (!el.isConnected && !document.body.contains(root)) return;
-      screenStop = m.mountScreen(stageEl, { ref, live });
+      screenStop = m.mountScreen(stageEl, { ref, live, P: (s) => gamePath(pin, s) });
     });
     let lastCount = -1;
     const clock = setInterval(() => {
