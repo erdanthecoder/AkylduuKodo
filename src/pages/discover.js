@@ -3,7 +3,8 @@
 import { h, fill, debounce } from '../ui/dom.js';
 import { icon, verifiedBadge } from '../ui/icons.js';
 import { empty, segmented } from '../ui/kit.js';
-import { popularQuizzes, newestQuizzes, searchQuizzes, quizzesBy, words } from '../services/quizzes.js';
+import { popularQuizzes, newestQuizzes, searchQuizzes, quizzesBy, words, getQuiz } from '../services/quizzes.js';
+import { site } from '../services/site.js';
 import { OFFICIAL_UID } from '../config.js';
 import { quizCard, pageTitle } from './parts.js';
 
@@ -34,14 +35,21 @@ export default async function Discover({ query }) {
   pageTitle('Discover');
   let sort = 'popular';
   let subject = SUBJECTS.find((s) => s.id === query.subject) || SUBJECTS[0];
-  const featured = h('div');
+  const featured = h('div', { class: 'stack', style: { gap: '18px' } });
   const results = h('div');
   const search = h('input', { class: 'input input-xl', type: 'search', placeholder: 'Search quizzes: planets, fractions, capitals…', value: query.q || '', 'aria-label': 'Search quizzes',
     style: { paddingLeft: '52px', textAlign: 'left' } });
 
-  quizzesBy(OFFICIAL_UID).then((list) => {
-    if (list.length) fill(featured, row('Made by Quickzy', verifiedBadge(null, 'official'), list));
-  }).catch(() => {});
+  // the owner's picks first, then Quickzy's own quizzes
+  Promise.all([
+    site().then((s) => Promise.all(s.featured.map((id) => getQuiz(id).catch(() => null)))).catch(() => []),
+    quizzesBy(OFFICIAL_UID).catch(() => []),
+  ]).then(([picked, official]) => {
+    picked = picked.filter((q) => q && q.public);
+    fill(featured,
+      picked.length ? row('Picked by the owner', verifiedBadge(null, 'owner'), picked) : null,
+      official.length ? row('Made by Quickzy', verifiedBadge(null, 'official'), official) : null);
+  });
 
   const chips = h('div', { class: 'chips', role: 'tablist', 'aria-label': 'Subjects' });
   const drawChips = () => fill(chips, ...SUBJECTS.map((s) => h('button', {

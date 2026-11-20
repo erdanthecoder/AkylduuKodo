@@ -286,7 +286,7 @@ if (which === 'arcade' || which === 'all') {
   }
 }
 
-if (which !== 'account') {
+if (['all', 'classic', 'arcade'].includes(which)) {
   say('the quiz counts its plays');
   await host.goto(`${BASE}/quiz/${quizId}`);
   await host.waitForSelector('text=/[1-9]\\d* plays?/');
@@ -294,6 +294,78 @@ if (which !== 'account') {
   say('library has the reports');
   await host.goto(`${BASE}/library?tab=reports`);
   await host.waitForSelector('.lib-row');
+}
+
+if ((which === 'owner' || which === 'all') && !EMULATOR) {
+  say('owner: sign up with the owner account');
+  const own = await newPage('owner');
+  await own.goto(`${BASE}/`);
+  const made = await own.evaluate(async () => {
+    const r = await fetch('/__dev/auth/signup', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ email: 'owner@example.com', password: 'Owner-pass-42', uid: 'KWIRRSUM2VQVWnr1nUDbPP9bqMk2' }) });
+    const d = await r.json();
+    localStorage.setItem('quickzy.dev.token', d.token);
+    return d.user && d.user.uid;
+  });
+  if (made !== 'KWIRRSUM2VQVWnr1nUDbPP9bqMk2') fail(`owner account not created: ${made}`);
+  await own.goto(`${BASE}/settings`);
+  await own.waitForSelector('text=Quickzy owner');
+
+  say('owner: the Owner link and panel');
+  await own.click('.nav-owner');
+  await own.waitForSelector('.owner-stat b:not(:text("…"))');
+  await own.waitForSelector('.owner-row:has-text("Space and Science")').catch(() => {});
+
+  say('owner: feature a quiz, it shows on Discover');
+  const quizRow = own.locator('.owner-row').first();
+  const title = await quizRow.locator('b').first().innerText();
+  await quizRow.locator('button:has-text("Feature")').click();
+  await own.waitForSelector('.owner-row button:has-text("Featured")');
+  await own.goto(`${BASE}/discover`);
+  await own.waitForSelector(`text=Picked by the owner`);
+  await own.waitForSelector(`.shelf .quiz-title:has-text("${title}")`);
+
+  say('owner: announcement shows for everyone');
+  await own.goto(`${BASE}/owner`);
+  await own.click('.seg button:has-text("Announcement")');
+  await own.fill('textarea', 'Quiz night on Friday!');
+  await own.click('button:has-text("Show to everyone")');
+  await own.waitForSelector('text=Announcement saved');
+  const visitor = await newPage('visitor');
+  await visitor.goto(`${BASE}/`);
+  await visitor.waitForSelector('.announce:has-text("Quiz night on Friday!")');
+  await visitor.click('.announce-x');
+  await visitor.reload();
+  await visitor.waitForTimeout(800);
+  if (await visitor.locator('.announce:not([hidden])').count()) fail('dismissed announcement came back');
+  await visitor.context().close();
+
+  say('owner: players tab, give coins and a blue check');
+  await own.click('.seg button:has-text("Players")');
+  await own.waitForSelector('.owner-row');
+  await own.screenshot({ path: `${SHOTS}/owner-players.png` });
+  // the owner's own row has no blue-check or ban buttons
+  await own.waitForSelector('.owner-row:has-text("@owner")');
+  if (await own.locator('.owner-row:has-text("@owner") button:has-text("blue check"):visible').count()) fail('owner row offers a blue check');
+  const other = own.locator('.owner-row').filter({ hasText: '@quizmaster' }).first();
+  {
+    await other.locator('button:has-text("+100 coins")').click();
+    await own.waitForSelector('text=100 coins');
+    await other.locator('button:has-text("Give blue check")').click();
+    await other.locator('button:has-text("Remove blue check")').waitFor();
+    // and take it back, so the earned-badge test later starts clean
+    await other.locator('button:has-text("Remove blue check")').click();
+    await other.locator('button:has-text("Give blue check")').waitFor();
+  }
+  await own.click('.seg button:has-text("Quizzes")');
+  await own.waitForSelector('.owner-row');
+  await own.screenshot({ path: `${SHOTS}/owner-panel.png`, fullPage: true });
+
+  say('owner: nobody else can open the panel');
+  const stranger = await newPage('stranger');
+  await stranger.goto(`${BASE}/owner`);
+  await stranger.waitForURL(/\/login/);
+  await stranger.context().close();
+  await own.context().close();
 }
 
 if (which === 'account' || which === 'all') {
@@ -358,7 +430,7 @@ if (which === 'account' || which === 'all') {
   // starting coins plus the solo reward: open boxes until the coins run out
   const boxBtn = host.locator('.box-card:has-text("Quickzy Box") button');
   let opened = 0;
-  while (!(await boxBtn.isDisabled()) && opened < 6) {
+  while (!(await boxBtn.isDisabled()) && opened < 15) {
     await boxBtn.click();
     await host.waitForSelector('.reveal .bcard');
     if (opened === 0) await host.screenshot({ path: `${SHOTS}/box-reveal.png` });

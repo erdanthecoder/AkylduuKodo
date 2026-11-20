@@ -343,7 +343,9 @@ function authOp(path, body, token) {
     if (!/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(email)) return { error: 'auth/invalid-email' };
     if ([...users.values()].some((u) => u.email === email)) return { error: 'auth/email-already-in-use' };
     if (String(body.password || '').length < 8) return { error: 'auth/weak-password' };
-    const u = { uid: randomBytes(10).toString('hex'), email, passHash: hash(body.password), provider: 'password' };
+    // tests may ask for a fixed uid (the owner's, say); this server is never public
+    const uid = typeof body.uid === 'string' && /^[A-Za-z0-9]{6,40}$/.test(body.uid) && !users.has(body.uid) ? body.uid : randomBytes(10).toString('hex');
+    const u = { uid, email, passHash: hash(body.password), provider: 'password' };
     users.set(u.uid, u);
     return newSession(u);
   }

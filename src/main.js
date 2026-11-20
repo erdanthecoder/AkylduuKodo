@@ -1,7 +1,9 @@
 // main.js — boot: connect to the servers, learn who is here, draw the page.
 
 import { h, fill } from './ui/dom.js';
-import { icon, logo, wordmark } from './ui/icons.js';
+import { icon, logo, wordmark, verifiedBadge } from './ui/icons.js';
+import { OWNER_UID } from './config.js';
+import { site } from './services/site.js';
 import { blook } from './ui/blooks.js';
 import { loading } from './ui/kit.js';
 import { connect, net } from './net/index.js';
@@ -27,6 +29,7 @@ route('/host/:quizId', () => import('./pages/host-setup.js'), { auth: true });
 route('/lobby/:pin', () => import('./pages/host-live.js'), { chrome: false, auth: true });
 route('/u/:username', () => import('./pages/profile.js'));
 route('/blooks', () => import('./pages/blooks.js'));
+route('/owner', () => import('./pages/owner.js'), { auth: true });
 route('/settings', () => import('./pages/settings.js'), { auth: true });
 route('/login', () => import('./pages/auth.js'));
 route('/signup', () => import('./pages/auth.js'));
@@ -53,7 +56,8 @@ function topbar(path) {
     h('a', { class: 'logo', href: '/', 'aria-label': 'Quickzy home' }, logo(), wordmark()),
     h('nav', { class: 'nav', 'aria-label': 'Main' },
       ...NAV.filter(([href]) => signed || href === '/' || href === '/discover' || href === '/blooks')
-        .map(([href, label]) => h('a', { href, class: on(href) }, label))),
+        .map(([href, label]) => h('a', { href, class: on(href) }, label)),
+      user && user.uid === OWNER_UID ? h('a', { href: '/owner', class: `nav-owner ${on('/owner')}` }, verifiedBadge(null, 'owner'), 'Owner') : null),
     h('div', { class: 'topbar-end' },
       h('a', { class: 'btn btn-main btn-sm', href: '/join' }, 'Join a game'),
       signed && profile
@@ -87,6 +91,21 @@ function tabbar(path) {
 
 let pageRoot = null;
 
+// the owner's announcement, under the top bar on every page until dismissed
+const banner = h('div', { class: 'announce', hidden: true });
+async function loadBanner() {
+  const { announce, announceAt } = await site(true).catch(() => ({ announce: '' }));
+  let dismissed = '';
+  try { dismissed = localStorage.getItem('quickzy.announce.closed') || ''; } catch { /* ignore */ }
+  const id = `${announceAt}`;
+  banner.hidden = !announce || dismissed === id;
+  fill(banner, icon('info', { size: 18 }), h('span', { class: 'grow' }, announce),
+    h('button', { class: 'announce-x', 'aria-label': 'Dismiss', onclick: () => {
+      banner.hidden = true;
+      try { localStorage.setItem('quickzy.announce.closed', id); } catch { /* ignore */ }
+    } }, icon('close', { size: 16 })));
+}
+
 onRoute(async (match, mod, query, keep) => {
   if (match.opts.auth && !session.signedIn()) {
     navigate(`/login?next=${encodeURIComponent(location.pathname + location.search)}`, { replace: true });
@@ -95,7 +114,7 @@ onRoute(async (match, mod, query, keep) => {
   const chrome = match.opts.chrome !== false;
   document.body.classList.toggle('in-game', !chrome);
   pageRoot = h('main', { id: 'page' }, loading());
-  fill(app, chrome ? topbar(location.pathname) : null, pageRoot, chrome ? tabbar(location.pathname) : null);
+  fill(app, chrome ? topbar(location.pathname) : null, chrome ? banner : null, pageRoot, chrome ? tabbar(location.pathname) : null);
   window.scrollTo(0, 0);
 
   let page;
@@ -145,6 +164,7 @@ async function boot() {
     if (wasSignedIn && !now) render();
     wasSignedIn = now;
   });
+  loadBanner();
   render();
 }
 
