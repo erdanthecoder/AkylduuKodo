@@ -169,6 +169,9 @@ export async function createReferee({ pin, meta: initialMeta, quiz, key, onChang
     const counts = (q.options || (q.type === 'tf' ? [0, 0] : [])).map(() => 0);
     let right = 0;
     const results = {};
+    // remember where everyone stood, so the leaderboard can show who moved
+    const before = ranked();
+    before.forEach((p, i) => { p.prevRank = i + 1; p.prevScore = p.score; });
     for (const p of players.values()) {
       const a = answers.get(p.uid);
       if (!a) {
@@ -177,7 +180,7 @@ export async function createReferee({ pin, meta: initialMeta, quiz, key, onChang
         continue;
       }
       const res = mark(p, cur.i, a.c, Math.max(0, a.t - cur.startAt), q.time);
-      results[p.uid] = { ok: res.correct, poll: Boolean(res.poll), pts: res.pts };
+      results[p.uid] = { ok: res.correct, poll: Boolean(res.poll), pts: res.pts, ms: Math.max(0, a.t - cur.startAt) };
       if (res.correct) right += 1;
       if (q.type === 'mc' || q.type === 'poll') counts[a.c] += 1;
       if (q.type === 'tf') counts[a.c ? 0 : 1] += 1;
@@ -190,7 +193,8 @@ export async function createReferee({ pin, meta: initialMeta, quiz, key, onChang
     cur = { ...cur, phase: 'reveal', reveal };
     const extra = { cur };
     for (const p of players.values()) {
-      p.meExtra = { q: cur.n, ok: results[p.uid].ok, pts: results[p.uid].pts, none: Boolean(results[p.uid].none), poll: Boolean(results[p.uid].poll) };
+      const r = results[p.uid];
+      p.meExtra = { q: cur.n, ok: r.ok, pts: r.pts, none: Boolean(r.none), poll: Boolean(r.poll), ms: r.ms || 0, pr: p.prevRank || 0 };
       dirty.add(p.uid);
     }
     await writeScores(extra);

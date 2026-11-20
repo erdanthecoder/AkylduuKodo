@@ -8,6 +8,7 @@ import { modal, busy, toast } from '../ui/kit.js';
 import { signedIn, whenProfile, updateProfile } from '../services/session.js';
 import * as progress from '../services/progress.js';
 import { sfx } from '../game/sound.js';
+import { celebrate } from '../ui/confetti.js';
 import { pageTitle } from './parts.js';
 
 /** One blook as a trading card. */
@@ -95,7 +96,9 @@ function boxArt() {
 
 function reveal({ id, duplicate, refund }) {
   const r = rarityOf(id);
-  sfx(['epic', 'legendary'].includes(r.id) ? 'win' : 'reveal');
+  const big = ['epic', 'legendary'].includes(r.id);
+  sfx(big ? 'win' : 'reveal');
+  if (big) setTimeout(() => celebrate([r.colour, '#ffffff', '#ffcd1f']), 350);
   return modal((close) => {
     const card = blookCard(id, { big: true });
     card.classList.add('is-flip');

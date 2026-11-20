@@ -122,6 +122,13 @@ body.in-game { background: var(--night); color: #fff; overscroll-behavior: none;
   font-size: 1.35rem; font-weight: 900; box-shadow: 0 5px 0 rgba(0, 0, 0, 0.25); animation: slide-in 0.5s var(--ease) both;
 }
 .board li:first-child { background: var(--zing); }
+.board.is-flip { position: relative; display: block; }
+.board.is-flip li { position: absolute; left: 20px; right: 20px; height: 68px; animation: none; transition: transform 0.9s var(--spring), opacity 0.5s; }
+.board.is-flip li:nth-child(1) { top: 0; } .board.is-flip li:nth-child(2) { top: 78px; } .board.is-flip li:nth-child(3) { top: 156px; }
+.board.is-flip li:nth-child(4) { top: 234px; } .board.is-flip li:nth-child(5) { top: 312px; }
+.board.is-flip li:first-child { background: #fff; }
+.board.is-flip li.is-first { background: var(--zing); }
+.board .moved { display: inline-flex; align-items: center; gap: 2px; color: var(--okd); font-weight: 900; font-size: 1rem; animation: pop-in 0.4s 1.4s var(--spring) both; }
 .board .rank { font-family: var(--display); font-weight: 400; width: 34px; }
 .board .blook { width: 48px; height: 48px; }
 .board .pts { font-family: var(--display); font-weight: 400; }
@@ -307,3 +314,8 @@ body.in-game { background: var(--night); color: #fff; overscroll-behavior: none;
 .reward { display: grid; gap: 10px; justify-items: center; width: min(320px, 100%); }
 .reward .xp-bar { width: 100%; background: rgba(255, 255, 255, 0.15); }
 .level-up { color: var(--zing); font-size: 2rem; animation: pop-in 0.5s var(--spring); }
+
+/* player feedback after each question */
+.answer-time { margin: 0; font-weight: 800; opacity: 0.85; }
+.rank-move { animation: pop-in 0.45s 0.4s var(--spring) both; }
+.rank-move.is-down { background: rgba(0, 0, 0, 0.2); color: #fff; }

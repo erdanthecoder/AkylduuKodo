@@ -12,7 +12,7 @@
 import { makeCanvas, loop, controls, particles, shaker, drawBlook, rr, hashString } from '../arcade/engine.js';
 import { sfx } from '../sound.js';
 
-const MAX_RATE = 70;              // points per second the host will believe
+const MAX_RATE = 110;             // points per second the host will believe (rapid fire included)
 const BURN = 5.5;                 // fuel per second
 const SIZES = [{ r: 16, hp: 1, pts: 10 }, { r: 28, hp: 3, pts: 25 }, { r: 44, hp: 6, pts: 50 }];
 
@@ -104,6 +104,8 @@ export function mountPlayer(game) {
   const field = stars(120, hashString(uid) || 7);
   const ship = { x: 0.5, y: 0.82, lvl: 1, shields: 3, fuel: 100, down: 0, inv: 0 };
   const bullets = [];
+  const capsules = [];             // power-ups dropped by bigger rocks
+  let rapid = 0;
   const rocks = [];
   let pts = 0;
   let count = 0;
@@ -154,7 +156,7 @@ export function mountPlayer(game) {
         ship.fuel = Math.max(0, ship.fuel - BURN * dt);
         cool -= dt;
         if (cool <= 0) {
-          cool = 0.2;
+          cool = rapid > 0 ? 0.1 : 0.2;
           const sx = ship.x * w;
           const sy = ship.y * h - 40;
           const shots = ship.lvl === 1 ? [0] : ship.lvl === 2 ? [-12, 12] : [-18, 0, 18];
@@ -181,6 +183,7 @@ export function mountPlayer(game) {
           r.hp -= 1; bullets.splice(i, 1);
           fx.burst(b.x, b.y, { n: 4, color: '#ffcd1f', speed: 120, life: 0.25 });
           if (r.hp <= 0) {
+            if (r.s > 0 && Math.random() < 0.35) capsules.push({ x: r.x, y: r.y, kind: Math.random() < 0.5 ? 'shield' : 'rapid' });
             pts += SIZES[r.s].pts; count += 1;
             fx.burst(r.x, r.y, { n: 10 + r.s * 10, color: '#c9b7ff', speed: 200 + r.s * 60, size: 4 + r.s * 2 });
             shake.kick(2 + r.s * 3);
@@ -192,6 +195,18 @@ export function mountPlayer(game) {
     }
     const sx = ship.x * w;
     const sy = ship.y * h;
+    rapid = Math.max(0, rapid - dt);
+    for (let i = capsules.length - 1; i >= 0; i--) {
+      const c = capsules[i];
+      c.y += 140 * dt;
+      if (c.y > h + 30) { capsules.splice(i, 1); continue; }
+      if (ship.down <= 0 && Math.hypot(c.x - sx, c.y - sy) < 34) {
+        capsules.splice(i, 1);
+        if (c.kind === 'shield') { ship.shields = Math.min(3, ship.shields + 1); game.flash('Shield repaired', 'is-ok'); } else { rapid = 6; game.flash('Rapid fire', 'is-ok'); }
+        sfx('boost');
+        fx.burst(c.x, c.y, { n: 18, color: c.kind === 'shield' ? '#59f0ff' : '#ff8a2a', speed: 220 });
+      }
+    }
     for (let i = rocks.length - 1; i >= 0; i--) {
       const r = rocks[i];
       r.x += r.vx * dt; r.y += r.vy * dt; r.rot += r.vr * dt;
@@ -238,6 +253,15 @@ export function mountPlayer(game) {
     }
     ctx.fillStyle = '#ffcd1f';
     for (const b of bullets) { rr(ctx, b.x - 3, b.y - 10, 6, 18, 3); ctx.fill(); }
+    for (const c of capsules) {
+      const col = c.kind === 'shield' ? '#59f0ff' : '#ff8a2a';
+      ctx.save();
+      ctx.shadowColor = col; ctx.shadowBlur = 16; ctx.fillStyle = col;
+      rr(ctx, c.x - 12, c.y - 16, 24, 32, 12); ctx.fill();
+      ctx.restore();
+      ctx.fillStyle = '#fff'; ctx.font = '900 14px Nunito, system-ui'; ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
+      ctx.fillText(c.kind === 'shield' ? '+' : '»', c.x, c.y + 1);
+    }
     if (ship.down <= 0) {
       const blink = ship.inv > 0 && Math.floor(tSec * 14) % 2;
       drawShip(ctx, ship.x * w, ship.y * h, game.blook, { lvl: ship.lvl, flame: ship.fuel > 0, alpha: blink ? 0.4 : 1 });

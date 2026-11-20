@@ -1,7 +1,7 @@
 // join.js — type or scan a PIN, pick a nickname and a blook, get in.
 
 import { h, fill } from '../ui/dom.js';
-import { icon, logo } from '../ui/icons.js';
+import { icon, logo, wordmark } from '../ui/icons.js';
 import { blook, randomBlook, blookName, STARTERS } from '../ui/blooks.js';
 import { usableBlooks } from '../services/progress.js';
 import { busy } from '../ui/kit.js';
@@ -17,7 +17,7 @@ import { sfx } from '../game/sound.js';
 import { pageTitle } from './parts.js';
 
 const shell = (...body) => h('div', { class: 'join-page pattern' },
-  h('a', { class: 'logo join-logo', href: '/' }, logo(), h('span', { class: 'logo-word' }, 'Quickzy')),
+  h('a', { class: 'logo join-logo', href: '/' }, logo(), wordmark()),
   h('div', { class: 'join-card' }, ...body));
 
 function pinStep() {

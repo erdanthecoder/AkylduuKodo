@@ -12,6 +12,7 @@ import { modeOf } from '../game/modes/index.js';
 import { answerPad, verdict } from '../game/answer-ui.js';
 import { createHarness } from '../game/arcade/harness.js';
 import { sfx } from '../game/sound.js';
+import { confetti, celebrate } from '../ui/confetti.js';
 import { pageTitle } from './parts.js';
 
 const ordinal = (n) => {
@@ -112,8 +113,13 @@ export default async function Play({ params }) {
       const v = r.none
         ? h('div', { class: 'verdict is-bad' }, h('div', { class: 'verdict-icon' }, icon('clock', { size: 56 })), h('h2', {}, 'Too slow'), h('p', {}, 'No answer this time.'))
         : verdict({ ok: r.ok, poll: r.poll, pts: r.pts, display: cur.reveal && cur.reveal.display, streak: r.st });
+      const moved = r.pr ? r.pr - r.r : 0;
       screen(`is-verdict ${r.poll ? 'is-poll' : r.ok ? 'is-ok' : 'is-bad'}`, v,
-        h('p', { class: 'rank-line' }, `You’re in ${ordinal(r.r)} place`));
+        r.ok && r.ms ? h('p', { class: 'answer-time' }, `Answered in ${(r.ms / 1000).toFixed(1)} s`) : null,
+        h('p', { class: 'rank-line' }, `You’re in ${ordinal(r.r)} place`),
+        moved > 0 ? h('span', { class: 'pill pill-zing rank-move' }, `Up ${moved} place${moved === 1 ? '' : 's'}`) : null,
+        moved < 0 ? h('span', { class: 'pill rank-move is-down' }, `Down ${-moved}`) : null);
+      if (r.ok) confetti({ y: 0.45, count: r.st >= 3 ? 160 : 80, power: 800 });
       return;
     }
     if (cur.phase === 'board') {
@@ -175,7 +181,7 @@ export default async function Play({ params }) {
     const list = final || [];
     const mineRow = list.find((r) => r.u === uid);
     const top = list.slice(0, 3);
-    if (mineRow && mineRow.r <= 3) sfx('win'); else sfx('reveal');
+    if (mineRow && mineRow.r <= 3) { sfx('win'); celebrate(); } else sfx('reveal');
     // accounts earn XP and coins; guests are invited to keep theirs next time
     const reward = h('div', { class: 'reward' });
     if (signedIn() && mineRow) {
@@ -188,7 +194,7 @@ export default async function Play({ params }) {
           r.levelUp ? h('h2', { class: 'level-up' }, `Level ${r.levelUp}!`) : null,
           h('div', { class: 'xp-bar' }, h('i', { style: { width: `${Math.round(info.frac * 100)}%` } })),
           h('a', { class: 'btn btn-sm', href: '/blooks' }, 'Open boxes'));
-        if (r.levelUp) sfx('checkpoint');
+        if (r.levelUp) { sfx('checkpoint'); celebrate(['#6b4cff', '#a560ff', '#ffcd1f', '#ffffff']); }
       }).catch(() => {});
     } else if (mineRow) {
       fill(reward, h('p', { class: 'muted-light small' }, 'Sign up to earn XP and coins, open boxes and collect blooks.'));
