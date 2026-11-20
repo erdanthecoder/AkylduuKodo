@@ -52,5 +52,10 @@ export const BADGES = {
 export const OFFICIAL_UID = 'XH9Z5D7tLmRHStlxumgaJyTo1BP2';
 export const OWNER_UID = 'KWIRRSUM2VQVWnr1nUDbPP9bqMk2';
 
+/** Quickzy 1.2 arrives by itself on this moment (11 December 2026, 16:00 UTC).
+ *  Until then the site counts down to it; the owner can try 1.2 early. */
+export const RELEASE_1_2 = Date.UTC(2026, 11, 11, 16, 0, 0);
+export const released12 = (now = Date.now()) => now >= RELEASE_1_2;
+
 /** Shown in the sidebar and the What's new popup. */
-export const VERSION = '1.1';
+export const VERSION = released12() ? '1.2' : '1.1';

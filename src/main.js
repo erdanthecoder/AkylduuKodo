@@ -9,7 +9,7 @@ import { loader } from './ui/loader.js';
 import { connect, net } from './net/index.js';
 import * as session from './services/session.js';
 import { route, onRoute, render, navigate } from './router.js';
-import { VERSION } from './config.js';
+import { VERSION, RELEASE_1_2 } from './config.js';
 
 const app = document.getElementById('app');
 
@@ -172,7 +172,8 @@ function drawCountdown(c) {
 async function loadBanner() {
   const { announce, announceAt, event, countdown } = await site(true).catch(() => ({ announce: '' }));
   drawEvent(event);
-  drawCountdown(countdown);
+  // the owner's own countdown wins; otherwise count down to Quickzy 1.2
+  drawCountdown(countdown || (Date.now() < RELEASE_1_2 + 3600000 ? { title: 'Quickzy 1.2 lands in', to: RELEASE_1_2 } : null));
   let dismissed = '';
   try { dismissed = localStorage.getItem('quickzy.announce.closed') || ''; } catch { /* ignore */ }
   const id = `${announceAt}`;

@@ -1055,3 +1055,56 @@ button.bcard.is-slot { color: var(--violet); border-color: var(--violet); backgr
 .count-cell b { font-family: 'Lilita One', sans-serif; font-weight: 400; font-size: 1.3rem; line-height: 1.1; font-variant-numeric: tabular-nums; }
 .count-cell small { font-size: 10px; font-weight: 900; text-transform: uppercase; opacity: .8; }
 .count-bar.is-done { background: linear-gradient(90deg, #ffcd1f, #ff8a2a, #ffcd1f); color: #17133f; }
+
+/* Sky Race */
+.pro-tag.is-soon { background: #17133f; color: #fff; }
+.pro-tag.is-new { background: #12c9a6; color: #fff; }
+.sr-bar { position: absolute; left: 0; right: 0; bottom: 0; display: flex; gap: 10px; align-items: center; justify-content: center; flex-wrap: wrap;
+  padding: 10px 12px calc(10px + env(safe-area-inset-bottom)); background: linear-gradient(transparent, rgba(23, 19, 63, .55)); z-index: 3; }
+.sr-charge { display: flex; flex-direction: column; align-items: center; gap: 4px; color: #fff; font-weight: 800; font-size: 13px; text-shadow: 0 1px 3px rgba(0,0,0,.5); }
+.sr-pips { display: flex; gap: 6px; }
+.sr-pips i { width: 18px; height: 18px; border-radius: 50%; background: rgba(255,255,255,.3); border: 2px solid #fff; transition: transform .2s, background .2s; }
+.sr-pips i.is-on { background: #ffcd1f; transform: scale(1.15); }
+.sr-boost { font-family: 'Lilita One', system-ui; font-size: 26px; letter-spacing: 1px; padding: 14px 34px; border-radius: 18px; background: #4a5068; color: #fff; border: none; }
+.sr-boost.is-ready { background: linear-gradient(140deg, #ff8a2a, #ff4772); box-shadow: 0 6px 0 #b5121b, 0 0 24px rgba(255, 138, 42, .8); animation: sr-pulse .7s ease-in-out infinite alternate; }
+.sr-boost:disabled { opacity: .6; }
+@keyframes sr-pulse { to { transform: scale(1.08); } }
+@media (prefers-reduced-motion: reduce) { .sr-boost.is-ready { animation: none; } }
+
+/* Quickzy 1.2 film */
+.f12-root { position: fixed; inset: 0; z-index: 1000; background: #f4c79a; overflow: hidden; color: #fff; transition: opacity .4s; }
+.f12-root.f12-out { opacity: 0; }
+.f12-canvas { position: absolute; inset: 0; width: 100%; height: 100%; display: block; }
+.f12-bars::before, .f12-bars::after { content: ''; position: absolute; left: 0; right: 0; height: 9vh; background: #000; z-index: 2; pointer-events: none; }
+.f12-bars::before { top: 0; } .f12-bars::after { bottom: 0; }
+.f12-load { position: absolute; inset: 0; display: none; place-content: center; justify-items: center; gap: 14px; background: #17133f; font-weight: 800; z-index: 5; }
+.f12-load .logo-mark { width: 80px; height: 80px; animation: sr-pulse .8s ease-in-out infinite alternate; }
+.f12-root.is-loading .f12-load { display: grid; }
+.f12-skip { position: absolute; top: calc(9vh + 12px); right: 16px; z-index: 7; }
+.f12-caption { position: absolute; left: 0; right: 0; bottom: calc(9vh + 22px); text-align: center; z-index: 4; pointer-events: none; padding: 0 16px; }
+.f12-caption span { display: inline-block; padding: 8px 18px; border-radius: 12px; background: rgba(0,0,0,.45); font: 400 clamp(18px, 3.4vw, 30px) 'Lilita One', system-ui; letter-spacing: .5px; animation: f12-in .4s both; }
+.f12-caption.is-alert span { background: rgba(200, 20, 40, .85); }
+.f12-caption.is-good span { background: rgba(18, 160, 120, .85); }
+.f12-caption.is-boost span { background: linear-gradient(140deg, #ff8a2a, #ff4772); font-size: clamp(30px, 7vw, 64px); }
+.f12-root.is-alert::after { content: ''; position: absolute; inset: 0; z-index: 3; pointer-events: none; box-shadow: inset 0 0 120px 20px rgba(255, 30, 50, .55); animation: f12-alarm .5s ease-in-out infinite alternate; }
+.f12-hud { position: absolute; top: calc(9vh + 18px); left: 0; right: 0; display: grid; justify-items: center; gap: 6px; z-index: 4; pointer-events: none; }
+.f12-pips { display: flex; gap: 10px; }
+.f12-pips i { width: 26px; height: 26px; border-radius: 50%; border: 3px solid #fff; background: rgba(0,0,0,.3); transition: transform .25s, background .25s; }
+.f12-pips i.is-on { background: #ffcd1f; transform: scale(1.2); }
+.f12-right { font: 400 22px 'Lilita One', system-ui; color: #9bffcf; text-shadow: 0 2px 6px rgba(0,0,0,.5); animation: f12-in .3s both; }
+.f12-boost { position: absolute; left: 50%; top: 58%; transform: translate(-50%, -50%); z-index: 6; border: none; cursor: pointer; color: #fff;
+  font: 400 clamp(34px, 8vw, 72px) 'Lilita One', system-ui; padding: 18px 54px; border-radius: 26px;
+  background: linear-gradient(140deg, #ff8a2a, #ff4772); box-shadow: 0 10px 0 #b5121b, 0 0 60px rgba(255, 138, 42, .9); animation: f12-boost .6s ease-in-out infinite alternate; }
+.f12-flash { position: absolute; inset: 0; background: #fff; opacity: 0; z-index: 3; pointer-events: none; }
+.f12-flash.is-on { animation: f12-flash .7s ease-out; }
+.f12-title { position: absolute; inset: 0; display: grid; place-content: center; justify-items: center; text-align: center; z-index: 4; pointer-events: none; opacity: 0; transition: opacity 1s, transform 1.4s; transform: scale(1.15); }
+.f12-title.is-on { opacity: 1; transform: none; }
+.f12-title small { font: 800 clamp(14px, 2.4vw, 22px) Nunito, system-ui; letter-spacing: 6px; text-transform: uppercase; text-shadow: 0 2px 10px rgba(0,0,0,.4); }
+.f12-title h1 { margin: 0; font: 400 clamp(56px, 14vw, 150px) 'Lilita One', system-ui; letter-spacing: 4px; line-height: 1;
+  background: linear-gradient(180deg, #fff 30%, #ffd27a); -webkit-background-clip: text; background-clip: text; color: transparent; filter: drop-shadow(0 6px 18px rgba(80, 30, 0, .55)); }
+.f12-title p { margin: 6px 0 0; font-weight: 800; font-size: clamp(14px, 2.4vw, 22px); text-shadow: 0 2px 8px rgba(0,0,0,.5); }
+.f12-card { z-index: 8; }
+@keyframes f12-in { from { opacity: 0; transform: translateY(10px); } }
+@keyframes f12-alarm { from { opacity: .4; } to { opacity: 1; } }
+@keyframes f12-boost { to { transform: translate(-50%, -50%) scale(1.1); } }
+@keyframes f12-flash { 0% { opacity: .9; } 100% { opacity: 0; } }

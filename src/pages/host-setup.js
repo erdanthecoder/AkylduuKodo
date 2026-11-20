@@ -9,7 +9,8 @@ import { explain } from '../net/index.js';
 import { getQuiz, getKey, hostProblems } from '../services/quizzes.js';
 import { join } from '../game/questions.js';
 import { createGame } from '../services/games.js';
-import { MODES, modeOf, modeArt } from '../game/modes/index.js';
+import { MODES, modeOf, modeArt, comingSoon } from '../game/modes/index.js';
+import { isOwner } from '../services/site.js';
 import { pageTitle, cover } from './parts.js';
 
 const PREF_KEY = 'quickzy.hostPrefs';
@@ -44,15 +45,17 @@ export default async function HostSetup({ params }) {
   const modeBox = h('div', { class: 'mode-pick' });
   const options = h('div', { class: 'card stack' });
   const drawModes = () => fill(modeBox, ...MODES.map((m) => {
+    const soon = comingSoon(m) && !isOwner();
     const locked = !plan.modes.includes(m.id);
     return h('button', {
       type: 'button', class: `mode-opt${m.id === s.mode ? ' is-on' : ''}${locked ? ' is-pro-only' : ''}`, style: { background: m.bg },
       'aria-pressed': String(m.id === s.mode),
       onclick: () => {
+        if (soon) { toast(`${m.name} arrives with Quickzy 1.2 on ${new Date(m.releaseAt).toLocaleDateString(undefined, { day: 'numeric', month: 'long' })}!`); return; }
         if (locked) { toast(`${m.name} is for Pro members. Go Pro to host every game.`, 'bad'); navigate('/pro'); return; }
         s.mode = m.id; drawModes(); drawOptions();
       },
-    }, modeArt(m.id), h('b', {}, m.name), h('small', {}, m.tagline), locked ? h('span', { class: 'pro-tag' }, icon('lock', { size: 12 }), 'PRO') : null);
+    }, modeArt(m.id), h('b', {}, m.name), h('small', {}, m.tagline), soon ? h('span', { class: 'pro-tag is-soon' }, icon('clock', { size: 12 }), '11 DEC') : locked ? h('span', { class: 'pro-tag' }, icon('lock', { size: 12 }), 'PRO') : m.isNew ? h('span', { class: 'pro-tag is-new' }, 'NEW') : null);
   }));
 
   const opt = (title, text, control) => h('div', { class: 'set-row' },
@@ -66,7 +69,9 @@ export default async function HostSetup({ params }) {
         segmented([[0, 'Off'], [2, '2 teams'], [3, '3 teams'], [4, '4 teams']], s.teams, (v) => { s.teams = v; drawOptions(); })),
       opt('Speed scoring', s.speed ? 'Faster right answers earn more points: up to 1000, never less than 500.' : 'Every right answer earns the same points, however long it took.',
         segmented([[true, 'Faster = more'], [false, 'Same for all']], s.speed, (v) => { s.speed = v; drawOptions(); })),
-      m.kind === 'arcade'
+      m.fixedMinutes
+        ? opt('Game length', `Up to ${m.fixedMinutes} minutes. The race ends early when everyone has used all 10 boosts.`, h('span', { class: 'pill' }, `${m.fixedMinutes} min`))
+        : m.kind === 'arcade'
         ? opt('Game length', 'The game ends for everyone when the time runs out.',
           segmented(plan.minutes.map((d) => [d, `${d} min`]), s.minutes, (v) => { s.minutes = v; }))
         : null,
@@ -90,7 +95,7 @@ export default async function HostSetup({ params }) {
       const pin = await createGame({
         quizId: quiz.id, title: quiz.title, mode: s.mode, count: (quiz.questions || []).length,
         settings: {
-          speed: s.speed, minutes: m.kind === 'arcade' ? s.minutes : 0, shuffle: m.kind === 'arcade' ? true : s.shuffle,
+          speed: s.speed, minutes: m.fixedMinutes || (m.kind === 'arcade' ? s.minutes : 0), shuffle: m.kind === 'arcade' ? true : s.shuffle,
           lateJoin: s.lateJoin, randomNames: s.randomNames, showText: s.showText, locked: false,
           ...(s.teams ? { teams: s.teams } : {}),
         },

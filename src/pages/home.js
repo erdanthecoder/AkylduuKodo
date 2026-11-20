@@ -87,7 +87,6 @@ export default async function Home() {
         h('div', { class: 'row' },
           h('a', { class: 'btn btn-main btn-lg', href: signedIn() ? '/create' : '/signup' }, icon('plus'), 'Create a quiz'),
           h('a', { class: 'btn btn-dark btn-lg', href: '/discover' }, icon('compass'), 'Discover'),
-          h('button', { class: 'btn btn-lg', onclick: () => import('../ui/cutscene.js').then((m) => m.playIntro()) }, icon('play'), 'Watch the intro'),
         ),
       ),
       h('div', { style: { position: 'relative' } }, joinBox()),
@@ -95,7 +94,7 @@ export default async function Home() {
 
     daily,
 
-    h('div', { class: 'section-head' }, h('h2', {}, 'Six ways to play')),
+    h('div', { class: 'section-head' }, h('h2', {}, 'Seven ways to play')),
     h('div', { class: 'features' },
       ...MODES.map((m) => h('div', { class: 'mode-card', style: { background: m.bg } },
         modeArt(m.id),

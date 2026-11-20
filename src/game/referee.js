@@ -267,6 +267,7 @@ export async function createReferee({ pin, meta: initialMeta, quiz, key, onChang
     pump = setInterval(() => {
       if (meta.status !== 'play') return;
       if (modeHost && modeHost.tick) modeHost.tick(live.now());
+      if (modeHost && modeHost.done && modeHost.done()) { finish(); return; }
       if (live.now() >= meta.endsAt) { finish(); return; }
       writeScores().catch(() => {});
       emit();

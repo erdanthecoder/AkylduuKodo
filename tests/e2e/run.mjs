@@ -287,9 +287,10 @@ if (which === 'teams' || which === 'classic' || which === 'all') {
 }
 
 if (which === 'arcade' || which === 'all') {
-  for (const [mode, name] of [['lasertag', 'Laser Tag'], ['robotrun', 'Robot Run'], ['spacecraft', 'Spacecraft'], ['obby', 'Sky Climb'], ['defense', 'Tower Defense']]) {
+  for (const [mode, name] of (process.env.ONLY ? [[process.env.ONLY, process.env.ONLY_NAME]] : null) || [['lasertag', 'Laser Tag'], ['robotrun', 'Robot Run'], ['spacecraft', 'Spacecraft'], ['obby', 'Sky Climb'], ['defense', 'Tower Defense'], ['skyrace', 'Sky Race']]) {
     say(`${mode}: open the lobby`);
-    const pin = await openLobby(name, () => host.click('.set-row:has-text("Game length") button:has-text("3 min")'));
+    if (mode === 'skyrace') await host.evaluate(() => localStorage.setItem('quickzy.test.early', '1'));
+    const pin = await openLobby(name, () => (mode === 'skyrace' ? host.waitForSelector('.set-row:has-text("Game length") .pill:has-text("3 min")') : host.click('.set-row:has-text("Game length") button:has-text("3 min")')));
     const cara = await join(pin, 'Cara', { width: 390, height: 780 });
     const dev = await join(pin, 'Dev', { width: 900, height: 600 });
     await host.click('button:has-text("Start")');
@@ -334,6 +335,17 @@ if (which === 'arcade' || which === 'all') {
         await dev.waitForTimeout(400);
         await dev.screenshot({ path: `${SHOTS}/obby-level-${n}.png` });
       }
+    }
+    if (mode === 'skyrace') {
+      say('skyrace: charge and press BOOST');
+      await dev.evaluate(() => window.__quickzySky.give());
+      await dev.click('.sr-boost.is-ready', { force: true });
+      await dev.waitForTimeout(1500);
+      const st = await dev.evaluate(() => window.__quickzySky.state());
+      if (st.used !== 1) fail(`boost not used: ${JSON.stringify(st)}`);
+      await dev.screenshot({ path: `${SHOTS}/skyrace-boost.png` });
+      await cara.waitForTimeout(6000);
+      await cara.screenshot({ path: `${SHOTS}/skyrace-jets.png` });
     }
     await host.screenshot({ path: `${SHOTS}/${mode}-host.png` });
     say(`${mode}: end`);

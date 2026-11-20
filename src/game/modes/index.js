@@ -6,6 +6,7 @@
 // shows the race.
 
 import { svg } from '../../ui/dom.js';
+import { RELEASE_1_2 } from '../../config.js';
 
 export const MODES = [
   {
@@ -44,7 +45,21 @@ export const MODES = [
     bg: 'linear-gradient(140deg, #2e7d32, #66bb6a 60%, #a8703c)',
     durations: [3, 5, 7, 10],
   },
+  {
+    id: 'skyrace', name: 'Sky Race', kind: 'arcade',
+    tagline: 'Fly, answer, BOOST! Outrun the fighter jets before they shoot you down.',
+    bg: 'linear-gradient(160deg, #2a6fdb, #7cc2ff 55%, #ffb45c)',
+    durations: [3], fixedMinutes: 3, releaseAt: RELEASE_1_2, isNew: true,
+  },
 ];
+
+/** A mode that is announced but not out yet (the owner can try it early). */
+export const comingSoon = (m, now = Date.now()) => {
+  if (!m.releaseAt || now >= m.releaseAt) return false;
+  // the browser tests try new modes before release day
+  try { if (typeof navigator !== 'undefined' && navigator.webdriver && localStorage.getItem('quickzy.test.early') === '1') return false; } catch { /* ignore */ }
+  return true;
+};
 
 export const MODE_BY_ID = new Map(MODES.map((m) => [m.id, m]));
 export const modeOf = (id) => MODE_BY_ID.get(id) || MODES[0];
@@ -106,6 +121,15 @@ export function modeArt(id) {
     add('rect', { x: 86, y: 13, width: 5, height: 6, fill: '#6b4cff' });
     add('rect', { x: 94, y: 13, width: 4, height: 6, fill: '#6b4cff' });
     add('circle', { cx: 36, cy: 72, r: 6, fill: '#ff4772' });
+  }
+  if (id === 'skyrace') {
+    add('path', { d: 'M8 30 h26 M4 44 h20 M10 58 h18', stroke: '#fff', 'stroke-width': 4, 'stroke-linecap': 'round', opacity: 0.7 });
+    add('path', { d: 'M36 46 C36 40 52 38 72 38 C84 38 92 42 94 46 C92 50 84 54 72 54 C52 54 36 52 36 46 Z', fill: '#fff' });
+    add('path', { d: 'M42 46 L34 28 L42 28 L52 44 Z', fill: '#e8112d' });
+    add('path', { d: 'M60 48 L74 48 L64 66 L56 66 Z', fill: '#6b4cff' });
+    add('path', { d: 'M36 44 L22 46 L36 48 Z', fill: '#ffcd1f' });
+    add('path', { d: 'M4 78 L26 76 L30 78 L26 80 Z', fill: '#4a5068' });
+    add('path', { d: 'M30 78 h14', stroke: '#ff4772', 'stroke-width': 3, 'stroke-linecap': 'round' });
   }
   return s;
 }
