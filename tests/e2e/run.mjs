@@ -536,7 +536,7 @@ if (which === 'account' || which === 'all') {
   // starting coins plus the solo reward: open boxes until the coins run out
   const boxBtn = host.locator('.box-card:has-text("Quickzy Box") button');
   let opened = 0;
-  while (!(await boxBtn.isDisabled()) && opened < 15) {
+  while (!(await boxBtn.isDisabled()) && opened < 40) {
     await boxBtn.click();
     for (let t = 0; t < 3; t++) { await host.click('.ub-stage'); await host.waitForTimeout(120); }
     await host.waitForSelector('.ub-card', { timeout: 15000 });
