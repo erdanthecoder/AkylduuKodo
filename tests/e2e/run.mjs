@@ -250,25 +250,31 @@ if (which === 'arcade' || which === 'all') {
     await dev.keyboard.up('ArrowRight');
     await dev.mouse.click(700, 300);
     await dev.waitForTimeout(600);
-    // force a question: drain the meter by asking directly
-    for (const p of [cara, dev]) {
+    // open questions directly rather than playing until a meter runs out.
+    // Each player gets their own random order, and a poll scores nothing by
+    // design, so keep going until one scoring question has been answered.
+    const ask = async (p) => {
+      await p.waitForSelector('.q-overlay[hidden]', { state: 'attached', timeout: 10000 });
       await p.evaluate(() => { if (window.__quickzyAsk) window.__quickzyAsk(); });
+      await p.waitForSelector('.q-overlay:not([hidden]) .pad', { timeout: 5000 });
+      await answer(p, true);
+      await p.waitForSelector('.verdict', { timeout: 10000 });
+      return p.locator('.verdict h2').innerText();
+    };
+    await ask(dev);
+    let verdictText = '';
+    for (let tries = 0; tries < 4 && verdictText !== 'Correct'; tries++) {
+      verdictText = await ask(cara);
+      if (tries === 0) await cara.screenshot({ path: `${SHOTS}/${mode}-player-answer.png` });
     }
-    await cara.waitForTimeout(300);
-    let answered = 0;
-    for (const p of [cara, dev]) {
-      if (await p.locator('.q-overlay:not([hidden]) .pad').count()) { await answer(p, true); answered++; }
-    }
-    if (!answered) fail('no question overlay appeared');
-    await cara.waitForSelector('.verdict', { timeout: 10000 });
-    await cara.screenshot({ path: `${SHOTS}/${mode}-player-answer.png` });
+    if (verdictText !== 'Correct') fail(`Cara answered right but saw "${verdictText}"`);
     await cara.waitForSelector('.q-overlay[hidden]', { state: 'attached', timeout: 10000 });
-    await cara.waitForTimeout(1500);
+    // the score arrives with the host's next update, once a second
+    await cara.waitForFunction(() => Number(document.querySelectorAll('.hud-cell')[2].innerText.replace(/\D/g, '')) > 0, null, { timeout: 8000 })
+      .catch(() => fail('Cara should have points after a right answer'));
     await cara.screenshot({ path: `${SHOTS}/${mode}-player.png` });
     await dev.screenshot({ path: `${SHOTS}/${mode}-player-wide.png` });
     await host.screenshot({ path: `${SHOTS}/${mode}-host.png` });
-    const score = Number((await cara.locator('.hud-cell').nth(2).innerText()).replace(/\D/g, ''));
-    if (!(score > 0)) fail(`Cara should have points after a right answer, has ${score}`);
     say(`${mode}: end`);
     await host.click('button:has-text("End now")');
     await host.click('.modal button:has-text("End game")');
