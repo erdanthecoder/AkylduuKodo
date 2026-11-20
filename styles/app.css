@@ -83,7 +83,9 @@ p { margin: 0 0 10px; }
   box-shadow: 0 2px 0 rgba(0, 0, 0, 0.15);
 }
 .logo { display: flex; align-items: center; gap: 9px; color: #fff; text-decoration: none !important; }
-.logo-mark { width: 34px; height: 34px; }
+.logo-mark { width: 38px; height: 38px; overflow: visible; filter: drop-shadow(0 3px 0 rgba(0, 0, 0, 0.15)); transition: transform 0.2s var(--spring); }
+.logo:hover .logo-mark { transform: rotate(-8deg) scale(1.06); }
+.logo-word em { font-style: normal; color: var(--zing); }
 .logo-word { font-family: var(--display); font-size: 1.55rem; letter-spacing: 0.02em; }
 .nav { display: flex; gap: 4px; margin-left: 10px; }
 .nav a {

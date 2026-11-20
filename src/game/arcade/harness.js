@@ -9,6 +9,7 @@ import { h, fill } from '../../ui/dom.js';
 import { icon } from '../../ui/icons.js';
 import { answerPad, verdict } from '../answer-ui.js';
 import { sfx } from '../sound.js';
+import { confetti } from '../../ui/confetti.js';
 
 function shuffled(n) {
   const a = [...Array(n).keys()];
@@ -112,6 +113,10 @@ export function createHarness(root, { live, P, uid, meta, qs, name, blook }) {
             });
             if (result.skip || result.timeout) { finish(result); return; }
             sfx(result.ok || result.poll ? 'right' : 'wrong');
+            if (result.ok && result.st >= 3) {
+              setTimeout(() => game.flash(`On fire! ${result.st} in a row`, 'is-ok'), 1050);
+              confetti({ y: 0.5, count: 60 + Math.min(result.st, 10) * 10, power: 750 });
+            }
             fill(overlay, h('div', { class: 'q-card' }, verdict({ ok: result.ok, poll: result.poll, pts: result.pts, display: result.d, streak: result.st }),
               result.g && (result.ok || result.poll) ? h('p', { class: 'grant' }, game.grantText ? game.grantText(result.g) : '') : null));
             setTimeout(() => finish(result), result.ok || result.poll ? 1000 : 2300);

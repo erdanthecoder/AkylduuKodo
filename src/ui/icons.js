@@ -100,12 +100,22 @@ export function shape(i, size = 34) {
 
 export const SHAPE_NAMES = ['bolt', 'drop', 'star', 'hex', 'ring', 'square'];
 
-/** The logo: the spark mark and the word. */
+/**
+ * The logo mark: a chunky Q whose tail is a lightning bolt (quiz + quick),
+ * the bolt breaking out past the tile's edge.
+ */
 export function logo() {
   const mark = svg('svg', { viewBox: '0 0 64 64', class: 'logo-mark', 'aria-hidden': 'true' });
-  mark.append(svg('rect', { width: 64, height: 64, rx: 16, fill: '#ffcd1f' }));
-  mark.append(svg('path', { d: 'M36 8 L17 36 h13 l-4 20 L47 27 H34 Z', fill: '#17133f' }));
+  mark.innerHTML = `<rect x="3" y="8" width="58" height="53" rx="17" fill="#4a2fd6"/><rect x="3" y="3" width="58" height="52" rx="17" fill="#6b4cff"/><path d="M13 11 h8" stroke="#fff" stroke-width="4" stroke-linecap="round" opacity=".4"/><path d="M29 11 a16 16 0 1 0 0.01 0 Z M29 20.5 a6.5 6.5 0 1 1 -0.01 0 Z" fill="#fff" fill-rule="evenodd"/><path d="M37 31 L54 31 L45 41 L56 41 L35 62 L41 46 L32 46 Z" fill="#ffcd1f" stroke="#4a2fd6" stroke-width="3" stroke-linejoin="round"/>`;
   return mark;
+}
+
+/** Mark and wordmark together: "Quick" plus a "zy" in the accent colour. */
+export function wordmark() {
+  const word = document.createElement('span');
+  word.className = 'logo-word';
+  word.innerHTML = 'Quick<em>zy</em>';
+  return word;
 }
 
 export function verifiedBadge(title = 'Verified creator') {

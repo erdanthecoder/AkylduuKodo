@@ -24,6 +24,27 @@ const BEAM = 720;
 const COOLDOWN = 0.32;
 const DEAD_MS = 2600;
 const SHIELD_MS = 1600;
+
+// power-ups wait at fixed spots; each player sees and collects their own copy
+const PICKUPS = [[640, 300, 'speed'], [960, 700, 'speed'], [200, 250, 'rapid'], [1400, 760, 'rapid'], [800, 920, 'rapid'], [800, 70, 'speed']];
+const PICKUP_LABEL = { speed: 'Speed boots', rapid: 'Rapid fire' };
+
+function drawPickup(ctx, x, y, kind, t) {
+  const c = kind === 'speed' ? '#12c9a6' : '#ff8a2a';
+  const bob = Math.sin(t * 3 + x) * 4;
+  ctx.save();
+  ctx.translate(x, y + bob);
+  ctx.shadowColor = c; ctx.shadowBlur = 20;
+  ctx.fillStyle = c;
+  ctx.rotate(Math.PI / 4 + t * 0.8);
+  ctx.fillRect(-13, -13, 26, 26);
+  ctx.restore();
+  ctx.fillStyle = '#fff';
+  ctx.beginPath();
+  if (kind === 'speed') { ctx.moveTo(x - 6, y + bob - 7); ctx.lineTo(x + 5, y + bob); ctx.lineTo(x - 6, y + bob + 7); ctx.closePath(); }
+  else { ctx.moveTo(x + 2, y + bob - 9); ctx.lineTo(x - 5, y + bob + 1); ctx.lineTo(x, y + bob + 1); ctx.lineTo(x - 2, y + bob + 9); ctx.lineTo(x + 5, y + bob - 1); ctx.lineTo(x, y + bob - 1); ctx.closePath(); }
+  ctx.fill();
+}
 const MAX_CHARGE = 15;
 const START_CHARGE = 6;
 const TAG_POINTS = 100;
@@ -337,7 +358,7 @@ export function mountPlayer(game) {
   function fire() {
     if (cool > 0 || me.dead || game.asking) return;
     if (charges <= 0) { recharge(); return; }
-    cool = COOLDOWN;
+    cool = clock() < rapidUntil ? 0.27 : COOLDOWN;
     charges -= 1;
     meter();
     const len = rayLength(me.x, me.y, me.a);
@@ -359,6 +380,10 @@ export function mountPlayer(game) {
   }
 
   let tSec = 0;
+  let speedUntil = 0;
+  let rapidUntil = 0;
+  const clock = () => live.now();
+  const taken = PICKUPS.map(() => 0);       // when each pickup comes back
   const stop = loop((dt) => {
     tSec += dt;
     ctl.update();
@@ -370,8 +395,17 @@ export function mountPlayer(game) {
     }
     me.shield = game.asking || now < shieldUntil;
     if (!me.dead && !game.asking) {
-      me.x += ctl.x * SPEED * dt;
-      me.y += ctl.y * SPEED * dt;
+      const fast = clock() < speedUntil ? 1.55 : 1;
+      me.x += ctl.x * SPEED * fast * dt;
+      me.y += ctl.y * SPEED * fast * dt;
+      PICKUPS.forEach(([px, py, kind], i) => {
+        if (taken[i] > clock() || Math.hypot(px - me.x, py - me.y) > R + 18) return;
+        taken[i] = clock() + 14000;
+        if (kind === 'speed') speedUntil = clock() + 6000; else rapidUntil = clock() + 6000;
+        game.flash(PICKUP_LABEL[kind], 'is-ok');
+        sfx('boost');
+        fx.burst(px, py, { n: 18, color: kind === 'speed' ? '#12c9a6' : '#ff8a2a', speed: 220 });
+      });
       collide(me);
       if (ctl.aim) {
         const cam = camera();
@@ -403,6 +437,12 @@ export function mountPlayer(game) {
     ctx.translate(cam.ox, cam.oy);
     ctx.scale(cam.s, cam.s);
     drawArena(ctx, tSec);
+    PICKUPS.forEach(([px, py, kind], i) => { if (taken[i] <= live.now()) drawPickup(ctx, px, py, kind, tSec); });
+    if (live.now() < speedUntil || live.now() < rapidUntil) {
+      ctx.strokeStyle = live.now() < rapidUntil ? '#ff8a2a' : '#12c9a6';
+      ctx.lineWidth = 3;
+      ctx.beginPath(); ctx.arc(me.x, me.y, R + 16 + Math.sin(tSec * 12) * 2, 0, Math.PI * 2); ctx.stroke();
+    }
     drawBeams(ctx, beams.map((b) => ({ ...b, at: b.local })), live.now());
     for (const o of others.values()) if (o.name) drawPlayer(ctx, o, { t: tSec });
     drawPlayer(ctx, me, { me: true, t: tSec });

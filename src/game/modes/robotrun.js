@@ -34,6 +34,11 @@ function chunk(seed, i) {
     if (r() < 0.5) out.push({ kind: 'bolt', x: at + (r() < 0.5 ? 0 : 3), y: tall + 1.6 + r() * 1.6, got: false });
     at += 7 + r() * 9 - Math.min(3, i * 0.08);
   }
+  // now and then a power-up floats over the track
+  if (i > 1 && r() < 0.32) {
+    const free = i * CHUNK + 2 + r() * (CHUNK - 4);
+    out.push({ kind: r() < 0.5 ? 'shield' : 'magnet', x: free, y: 2.2, got: false });
+  }
   return out;
 }
 
@@ -107,7 +112,7 @@ export function mountPlayer(game) {
   unsubs.push(live.on(P('players'), (v) => { for (const [u, p] of Object.entries(v || {})) names.set(u, p); preloadBlooks([...names.values()].map((p) => p.blook)); }));
   unsubs.push(live.on(P('race'), (v) => { race = v || {}; }));
 
-  const bot = { d: 0, y: 0, vy: 0, jumps: 0, stumble: 0, boost: 0, battery: 100, squash: 1, onGround: true };
+  const bot = { d: 0, y: 0, vy: 0, jumps: 0, stumble: 0, boost: 0, battery: 100, squash: 1, onGround: true, shield: false, magnet: 0 };
   let lastProg = 0;
   let asked = false;
   game.grantText = (g) => `+${g}% battery${g >= 60 ? ' and a boost' : ''}`;
@@ -165,10 +170,22 @@ export function mountPlayer(game) {
       bot.y = 0; bot.vy = 0; bot.onGround = true; bot.jumps = 0;
     }
     bot.squash = lerp(bot.squash, 1, 0.2);
+    bot.magnet = Math.max(0, bot.magnet - dt);
 
     // the robot is about 0.8 m wide and 1 m tall
     for (const o of obstaclesNear(bot.d - 2, bot.d + 2)) {
+      if (o.kind === 'shield' || o.kind === 'magnet') {
+        if (!o.got && Math.abs(o.x - bot.d) < 0.8 && Math.abs(o.y - (bot.y + 0.6)) < 1.2) {
+          o.got = true;
+          if (o.kind === 'shield') { bot.shield = true; game.flash('Shield: one free crash', 'is-ok'); } else { bot.magnet = 8; game.flash('Magnet: bolts come to you', 'is-ok'); }
+          sfx('boost');
+          fx.burst(view.w * 0.28, groundY() - (bot.y + 0.6) * PX, { n: 20, color: o.kind === 'shield' ? '#59f0ff' : '#ff4772', speed: 220 });
+        }
+        continue;
+      }
       if (o.kind === 'bolt') {
+        // a magnet pulls nearby bolts in
+        if (!o.got && bot.magnet > 0 && o.x - bot.d < 4.5 && o.x - bot.d > -0.5) { o.x += (bot.d - o.x) * 0.25; o.y += (bot.y + 0.6 - o.y) * 0.25; }
         if (!o.got && Math.abs(o.x - bot.d) < 0.7 && Math.abs(o.y - (bot.y + 0.6)) < 0.9) {
           o.got = true; bot.battery = Math.min(100, bot.battery + 8); sfx('coin');
           fx.burst(view.w * 0.28, groundY() - (bot.y + 0.6) * PX, { n: 10, color: '#ffcd1f', speed: 180 });
@@ -180,6 +197,13 @@ export function mountPlayer(game) {
       const tall = o.kind === 'spike' ? 0.7 : o.h;
       if (overlapX && bot.y < tall - 0.05) {
         o.hit = true;
+        if (bot.shield) {
+          bot.shield = false;
+          sfx('land');
+          fx.burst(view.w * 0.28, groundY() - 30, { n: 22, color: '#59f0ff', speed: 260 });
+          game.flash('Shield used', 'is-ok');
+          continue;
+        }
         bot.stumble = 1.1;
         bot.boost = 0;
         shake.kick(10);
@@ -236,6 +260,18 @@ export function mountPlayer(game) {
         for (let k = 0; k < n; k++) {
           ctx.beginPath(); ctx.moveTo(x + k * sw, gy); ctx.lineTo(x + k * sw + sw / 2, gy - PX * 0.72); ctx.lineTo(x + (k + 1) * sw, gy); ctx.fill();
         }
+      } else if ((o.kind === 'shield' || o.kind === 'magnet') && !o.got) {
+        const y = gy - o.y * PX + Math.sin(tSec * 3 + o.x) * 5;
+        ctx.save();
+        ctx.shadowColor = o.kind === 'shield' ? '#59f0ff' : '#ff4772'; ctx.shadowBlur = 18;
+        ctx.fillStyle = o.kind === 'shield' ? '#59f0ff' : '#ff4772';
+        ctx.beginPath(); ctx.arc(x, y, 15, 0, Math.PI * 2); ctx.fill();
+        ctx.restore();
+        ctx.strokeStyle = '#fff'; ctx.lineWidth = 3.5; ctx.lineCap = 'round';
+        ctx.beginPath();
+        if (o.kind === 'shield') { ctx.moveTo(x, y - 8); ctx.lineTo(x + 7, y - 4); ctx.lineTo(x + 6, y + 3); ctx.lineTo(x, y + 8); ctx.lineTo(x - 6, y + 3); ctx.lineTo(x - 7, y - 4); ctx.closePath(); }
+        else { ctx.arc(x, y + 2, 6.5, Math.PI, 0); ctx.moveTo(x - 6.5, y + 2); ctx.lineTo(x - 6.5, y + 7); ctx.moveTo(x + 6.5, y + 2); ctx.lineTo(x + 6.5, y + 7); }
+        ctx.stroke();
       } else if (o.kind === 'bolt' && !o.got) {
         const y = gy - o.y * PX + Math.sin(tSec * 4 + o.x) * 4;
         ctx.fillStyle = '#ffcd1f';
@@ -267,6 +303,14 @@ export function mountPlayer(game) {
     }
     const alpha = bot.stumble > 0 && Math.floor(tSec * 12) % 2 ? 0.45 : 1;
     drawBlook(ctx, game.blook, botX, by - 46 + wobble, 52, { squash: bot.squash, alpha });
+    if (bot.shield) {
+      ctx.strokeStyle = `rgba(89,240,255,${0.6 + Math.sin(tSec * 8) * 0.25})`; ctx.lineWidth = 4;
+      ctx.beginPath(); ctx.arc(botX, by - 34, 46, 0, Math.PI * 2); ctx.stroke();
+    }
+    if (bot.magnet > 0) {
+      ctx.strokeStyle = 'rgba(255,71,114,.45)'; ctx.lineWidth = 2; ctx.setLineDash([5, 7]);
+      ctx.beginPath(); ctx.arc(botX, by - 34, 60 + (tSec * 40) % 30, 0, Math.PI * 2); ctx.stroke(); ctx.setLineDash([]);
+    }
     fx.draw(ctx);
     ctx.restore();
     // distance in big type

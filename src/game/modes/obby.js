@@ -38,7 +38,11 @@ function floorOf(seed, n, prev) {
   else if (n > 8 && r() < Math.min(0.35, n * 0.01)) kind = 'move';
   else if (n > 16 && r() < 0.22) kind = 'crumble';
   else if (n > 5 && r() < 0.12) kind = 'bounce';
-  return { n, x, w: kind === 'check' ? Math.max(w, 170) : w, y: n * GAP, kind, phase: r() * Math.PI * 2, speed: 0.6 + r() * 0.8 };
+  const phase = r() * Math.PI * 2;
+  const speed = 0.6 + r() * 0.8;
+  // some platforms carry a crystal (+2 jumps) or spring boots (higher jumps)
+  const gem = kind !== 'check' && r() < 0.24 ? (r() < 0.7 ? 'jumps' : 'spring') : null;
+  return { n, x, w: kind === 'check' ? Math.max(w, 170) : w, y: n * GAP, kind, phase, speed, gem };
 }
 
 /* ================================================================== host */
@@ -150,6 +154,8 @@ export function mountPlayer(game) {
   // world y grows upwards; screen y = base - (y - cam)
   const me = { x: TW / 2, y: 18, vx: 0, vy: 0, on: 0, face: 1, squash: 1 };
   let jumps = START_JUMPS;
+  let springs = 0;                 // jumps left with spring boots
+  const gemsTaken = new Set();
   let best = 0;
   let checkpoint = 0;
   let cam = 0;
@@ -182,7 +188,8 @@ export function mountPlayer(game) {
       if (me.on !== null) {
         if (jumps > 0) {
           jumps -= 1;
-          me.vy = JUMP; me.on = null; me.squash = 0.7;
+          me.vy = springs > 0 ? JUMP * 1.3 : JUMP; me.on = null; me.squash = 0.7;
+          if (springs > 0) springs -= 1;
           sfx('jump');
           if (jumps === 0) setTimeout(() => { if (jumps === 0 && !game.asking) moreJumps(); }, 900);
         } else if (!asked) { game.flash('No jumps left: answer for more', 'is-bad'); moreJumps(); }
@@ -212,6 +219,12 @@ export function mountPlayer(game) {
         me.vy = 0;
         if (landed.kind === 'bounce') { me.vy = JUMP * 1.45; me.on = null; sfx('boost'); }
         if (landed.kind === 'crumble' && !crumble.has(landed.n)) crumble.set(landed.n, 0.001);
+        if (landed.gem && !gemsTaken.has(landed.n)) {
+          gemsTaken.add(landed.n);
+          if (landed.gem === 'jumps') { jumps += 2; game.flash('+2 jumps', 'is-ok'); } else { springs = 3; game.flash('Spring boots: 3 big jumps', 'is-ok'); }
+          sfx('coin');
+          pop(me.x, me.y + 20, { n: 16, color: landed.gem === 'jumps' ? '#59f0ff' : '#ff4772', speed: 200 });
+        }
         if (landed.n > best) {
           best = landed.n;
           if (landed.n % 10 === 0) { checkpoint = landed.n; sfx('checkpoint'); game.flash(`Checkpoint: floor ${landed.n}`, 'is-ok'); pop(me.x, me.y + 20, { n: 30, color: '#ffcd1f', speed: 260 }); } else sfx('coin');
@@ -241,7 +254,7 @@ export function mountPlayer(game) {
     }
     me.squash = lerp(me.squash, 1, 0.2);
     cam = lerp(cam, Math.max(0, me.y - 160), 0.08);
-    game.setMeter('Jumps', Math.min(1, jumps / 12), `${jumps}`);
+    game.setMeter('Jumps', Math.min(1, jumps / 12), springs > 0 ? `${jumps} · spring x${springs}` : `${jumps}`);
     const now = live.now();
     if (now - lastProg > 600) { lastProg = now; game.sendProg({ f: best, h: Math.round(me.y) }); }
   }, () => {
@@ -269,6 +282,15 @@ export function mountPlayer(game) {
       if (c > 0.8) continue;
       const shakeX = c > 0 ? (Math.random() - 0.5) * 4 : 0;
       drawPlatform(ctx, f, platformX(f, tSec) + shakeX, sy(f.y + 18) / s, tSec, false);
+      if (f.gem && !gemsTaken.has(n)) {
+        const gx = platformX(f, tSec) + f.w / 2;
+        const gy = sy(f.y + 18) / s - 20 + Math.sin(tSec * 3 + n) * 3;
+        ctx.save();
+        ctx.shadowColor = f.gem === 'jumps' ? '#59f0ff' : '#ff4772'; ctx.shadowBlur = 14;
+        ctx.fillStyle = f.gem === 'jumps' ? '#59f0ff' : '#ff4772';
+        ctx.beginPath(); ctx.moveTo(gx, gy - 11); ctx.lineTo(gx + 8, gy); ctx.lineTo(gx, gy + 11); ctx.lineTo(gx - 8, gy); ctx.closePath(); ctx.fill();
+        ctx.restore();
+      }
     }
     ctx.restore();
     // others, as ghosts at their highest floor

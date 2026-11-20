@@ -1,7 +1,7 @@
 // main.js — boot: connect to the servers, learn who is here, draw the page.
 
 import { h, fill } from './ui/dom.js';
-import { icon, logo } from './ui/icons.js';
+import { icon, logo, wordmark } from './ui/icons.js';
 import { blook } from './ui/blooks.js';
 import { loading } from './ui/kit.js';
 import { connect, net } from './net/index.js';
@@ -49,7 +49,7 @@ function topbar(path) {
   const signed = user && !user.isAnonymous;
   const on = (href) => (href === '/' ? path === '/' : path.startsWith(href)) ? 'is-on' : '';
   return h('header', { class: 'topbar' },
-    h('a', { class: 'logo', href: '/', 'aria-label': 'Quickzy home' }, logo(), h('span', { class: 'logo-word' }, 'Quickzy')),
+    h('a', { class: 'logo', href: '/', 'aria-label': 'Quickzy home' }, logo(), wordmark()),
     h('nav', { class: 'nav', 'aria-label': 'Main' },
       ...NAV.filter(([href]) => signed || href === '/' || href === '/discover' || href === '/blooks')
         .map(([href, label]) => h('a', { href, class: on(href) }, label))),

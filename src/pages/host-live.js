@@ -4,7 +4,7 @@
 // what the referee knows and gives the host the controls.
 
 import { h, fill, plural } from '../ui/dom.js';
-import { icon, shape, logo } from '../ui/icons.js';
+import { icon, shape, logo, wordmark } from '../ui/icons.js';
 import { blook, preloadBlooks } from '../ui/blooks.js';
 import { toast, confirm, busy, copy } from '../ui/kit.js';
 import { qrSVG } from '../ui/qr.js';
@@ -18,6 +18,7 @@ import { modeOf } from '../game/modes/index.js';
 import { TYPE_BY_ID } from '../game/questions.js';
 import { sfx, playMusic, stopMusic } from '../game/sound.js';
 import { downloadCSV } from '../game/report.js';
+import { celebrate } from '../ui/confetti.js';
 import { LIMITS } from '../config.js';
 import { pageTitle } from './parts.js';
 
@@ -86,7 +87,7 @@ export default async function HostLive({ params }) {
   }
 
   const bar = (...right) => h('header', { class: 'host-bar' },
-    h('a', { class: 'logo', href: '/library', title: 'Leave (the game keeps going)' }, logo(), h('span', { class: 'logo-word' }, 'Quickzy')),
+    h('a', { class: 'logo', href: '/library', title: 'Leave (the game keeps going)' }, logo(), wordmark()),
     h('div', { class: 'host-bar-mid' }, h('span', { class: 'pill pill-dark' }, mode.name), h('span', { class: 'muted-light' }, quiz.title)),
     h('div', { class: 'row' }, ...right, musicBtn(), fullBtn()));
 
@@ -259,16 +260,45 @@ export default async function HostLive({ params }) {
     // leaderboard between questions
     const last = cur.n + 1 >= cur.total;
     fill(nextBtn, last ? 'See the podium' : 'Next question', icon('arrowRight', { size: 18 }));
-    const list = ref.ranked().slice(0, 5);
+    // rows start where they stood before this question and slide to where
+    // they stand now, while the scores count up: who overtook whom is the show
+    const ranked = ref.ranked();
+    const list = ranked.slice(0, 5);
+    const ROW = 78;
+    const startIdx = (p) => Math.min(5, (p.prevRank || ranked.indexOf(p) + 1) - 1);
+    const rows = list.map((p, i) => {
+      const pts = h('b', { class: 'pts' }, fmt(p.prevScore ?? p.score));
+      const moved = (p.prevRank || i + 1) - (i + 1);
+      const li = h('li', { class: i === 0 ? 'is-first' : '' },
+        h('span', { class: 'rank' }, String(i + 1)), blook(p.blook), h('span', { class: 'grow name' }, p.name),
+        moved > 0 ? h('span', { class: 'moved' }, icon('up', { size: 16 }), String(moved)) : null,
+        p.streak > 1 ? h('span', { class: 'pill pill-zing' }, icon('bolt', { size: 14 }), String(p.streak)) : null,
+        pts);
+      li.style.transform = `translateY(${(startIdx(p) - i) * ROW}px)`;
+      if (startIdx(p) >= 5) li.style.opacity = '0';
+      return { li, pts, p };
+    });
+    const board = h('ol', { class: 'board is-flip', style: { height: `${Math.max(1, list.length) * ROW}px` } }, ...rows.map((r) => r.li));
     const el = h('div', { class: 'host-screen board-screen pattern' },
       bar(h('span', { class: 'pill pill-dark' }, progress)),
       h('h1', { class: 'center' }, 'Leaderboard'),
-      h('ol', { class: 'board' }, ...list.map((p, i) => h('li', { style: { animationDelay: `${i * 90}ms` } },
-        h('span', { class: 'rank' }, String(i + 1)), blook(p.blook), h('span', { class: 'grow name' }, p.name),
-        p.streak > 1 ? h('span', { class: 'pill pill-zing' }, icon('bolt', { size: 14 }), String(p.streak)) : null,
-        h('b', { class: 'pts' }, fmt(p.score))))),
+      board,
       list.length ? null : h('p', { class: 'center muted-light' }, 'No players yet.'),
       h('div', { class: 'host-foot' }, pinText(false), nextBtn));
+    // let the old order show for a beat, then move
+    setTimeout(() => {
+      rows.forEach(({ li }) => { li.style.transform = 'translateY(0)'; li.style.opacity = '1'; });
+      if (rows.some(({ p }, i) => (p.prevRank || i + 1) !== i + 1)) sfx('boost');
+      const from = rows.map(({ p }) => p.prevScore ?? p.score);
+      const t0 = performance.now();
+      const step = (now) => {
+        const k = Math.min(1, (now - t0) / 1100);
+        const e = 1 - (1 - k) ** 3;
+        rows.forEach(({ pts, p }, i) => { pts.textContent = fmt(Math.round(from[i] + (p.score - from[i]) * e)); });
+        if (k < 1 && el.isConnected) requestAnimationFrame(step);
+      };
+      requestAnimationFrame(step);
+    }, 900);
     return { key: `board${cur.n}`, el, update() {} };
   }
 
@@ -324,8 +354,14 @@ export default async function HostLive({ params }) {
 
   function endView() {
     stopMusic();
-    sfx('win');
     const list = ref.ranked();
+    // third, then second, then a drumroll for the winner
+    const timers = [
+      setTimeout(() => sfx('reveal'), 400),
+      setTimeout(() => sfx('reveal'), 1700),
+      ...[2400, 2600, 2800, 3000, 3200].map((t) => setTimeout(() => sfx('drum'), t)),
+      setTimeout(() => { sfx('win'); celebrate(); }, 3400),
+    ];
     const podium = [list[1], list[0], list[2]];
     const report = {
       quizId: quiz.id, quizTitle: quiz.title, mode: mode.id, pin,
@@ -345,7 +381,7 @@ export default async function HostLive({ params }) {
       h('div', { class: 'podium' }, ...podium.map((p, k) => {
         const place = [2, 1, 3][k];
         if (!p) return h('div', { class: `step s${place} is-empty` });
-        return h('div', { class: `step s${place}`, style: { animationDelay: `${[600, 1200, 0][k]}ms` } },
+        return h('div', { class: `step s${place}`, style: { animationDelay: `${[1700, 3400, 400][k]}ms` } },
           blook(p.blook), h('b', { class: 'name' }, p.name), h('span', { class: 'pts' }, fmt(p.score)),
           h('div', { class: 'block' }, h('span', {}, String(place))));
       })),
@@ -363,7 +399,7 @@ export default async function HostLive({ params }) {
             h('td', {}, h('b', {}, fmt(p.score))),
             h('td', {}, `${p.correct}/${p.answered}`),
             h('td', {}, mode.kind === 'arcade' ? (p.extra.summary || '') : p.answered ? `${Math.round((p.correct / p.answered) * 100)}%` : '–')))))));
-    return { key: 'end', el, update() {} };
+    return { key: 'end', el, update() {}, destroy() { timers.forEach(clearTimeout); } };
   }
 
   /* ------------------------------------------------------------- draw */
