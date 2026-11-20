@@ -9,6 +9,7 @@ import { loader } from './ui/loader.js';
 import { connect, net } from './net/index.js';
 import * as session from './services/session.js';
 import { route, onRoute, render, navigate } from './router.js';
+import { VERSION } from './config.js';
 
 const app = document.getElementById('app');
 
@@ -41,34 +42,53 @@ route('*', () => import('./pages/notfound.js'));
 
 /* ------------------------------------------------------------- chrome */
 
-const NAV = [
-  ['/', 'Home', 'home'],
-  ['/discover', 'Discover', 'compass'],
-  ['/channels', 'Channels', 'users'],
-  ['/blooks', 'Blooks', 'star'],
-  ['/library', 'My quizzes', 'list'],
-  ['/create', 'Create', 'plus'],
-];
 
+const isOn = (path, href) => (href === '/' ? path === '/' : path.startsWith(href)) ? 'is-on' : '';
+
+/** The left sidebar on bigger screens: everything in one tidy place. */
+function sidebar(path) {
+  const { user, profile } = { user: session.me(), profile: session.myProfile() };
+  const signed = user && !user.isAnonymous;
+  const link = (href, label, ic, extra = '') => h('a', { href, class: `side-link ${isOn(path, href)} ${extra}` }, icon(ic, { size: 20 }), h('span', {}, label));
+  const group = (title, ...links) => h('div', { class: 'side-group' }, h('small', {}, title), ...links.filter(Boolean));
+  const music = h('button', { class: 'side-link side-music', type: 'button' });
+  const drawMusic = () => {
+    const on = session.prefs().music;
+    fill(music, icon(on ? 'volume' : 'mute', { size: 20 }), h('span', {}, on ? 'Music on' : 'Music off'));
+  };
+  music.addEventListener('click', () => { session.setPrefs({ music: !session.prefs().music }); drawMusic(); });
+  drawMusic();
+  return h('aside', { class: 'sidebar', 'aria-label': 'Main' },
+    h('a', { class: 'logo side-logo', href: '/', 'aria-label': 'Quickzy home' }, logo(), wordmark(), h('span', { class: 'ver' }, VERSION)),
+    h('a', { class: 'btn btn-main side-join', href: '/join' }, icon('play', { size: 18 }), 'Join a game'),
+    h('nav', { class: 'side-nav' },
+      group('Play', link('/', 'Home', 'home'), link('/discover', 'Discover', 'compass'), link('/channels', 'Channels', 'users')),
+      signed ? group('Make', link('/create', 'Create a quiz', 'plus'), link('/library', 'My quizzes', 'list')) : null,
+      group('Collect', link('/blooks', 'Blooks', 'star')),
+      user && user.uid === OWNER_UID ? group('Owner', h('a', { href: '/owner', class: `side-link nav-owner ${isOn(path, '/owner')}` }, verifiedBadge(null, 'owner'), h('span', {}, 'Owner panel'))) : null),
+    h('div', { class: 'side-end' },
+      h('button', { class: 'side-link', type: 'button', onclick: () => import('./ui/whatsnew.js').then((m) => m.showWhatsNew()) }, icon('bolt', { size: 20 }), h('span', {}, `What's new in ${VERSION}`)),
+      music,
+      link('/settings', 'Settings', 'gear', 'gear-btn'),
+      signed && profile
+        ? h('a', { class: 'me-chip side-me', href: `/u/${profile.username}`, 'aria-label': 'Your profile' },
+          blook(profile.blook), h('span', {}, profile.displayName))
+        : signed ? null
+          : h('div', { class: 'side-auth' }, h('a', { class: 'btn btn-dark btn-sm', href: '/login' }, 'Sign in'), h('a', { class: 'btn btn-sm', href: '/signup' }, 'Sign up'))));
+}
+
+/** The slim bar on phones (the sidebar is hidden there; the tab bar is at the bottom). */
 function topbar(path) {
   const { user, profile } = { user: session.me(), profile: session.myProfile() };
   const signed = user && !user.isAnonymous;
-  const on = (href) => (href === '/' ? path === '/' : path.startsWith(href)) ? 'is-on' : '';
   return h('header', { class: 'topbar' },
     h('a', { class: 'logo', href: '/', 'aria-label': 'Quickzy home' }, logo(), wordmark()),
-    h('nav', { class: 'nav', 'aria-label': 'Main' },
-      ...NAV.filter(([href]) => signed || href === '/' || href === '/discover' || href === '/channels' || href === '/blooks')
-        .map(([href, label]) => h('a', { href, class: on(href) }, label)),
-      user && user.uid === OWNER_UID ? h('a', { href: '/owner', class: `nav-owner ${on('/owner')}` }, verifiedBadge(null, 'owner'), 'Owner') : null),
     h('div', { class: 'topbar-end' },
-      h('a', { class: 'btn btn-main btn-sm', href: '/join' }, 'Join a game'),
-      h('a', { class: `btn btn-sm btn-dark gear-btn ${on('/settings')}`, href: '/settings', 'aria-label': 'Settings', title: 'Settings' }, icon('gear', { size: 18 })),
+      h('a', { class: 'btn btn-main btn-sm', href: '/join' }, 'Join'),
+      h('a', { class: `btn btn-sm btn-dark top-gear ${isOn(path, '/settings')}`, href: '/settings', 'aria-label': 'Settings', title: 'Settings' }, icon('gear', { size: 18 })),
       signed && profile
-        ? h('a', { class: 'me-chip', href: `/u/${profile.username}`, 'aria-label': 'Your profile' },
-            blook(profile.blook), h('span', {}, profile.displayName))
-        : signed
-          ? h('a', { class: 'btn btn-dark btn-sm', href: '/settings' }, 'Settings')
-          : h('a', { class: 'btn btn-dark btn-sm', href: '/login' }, 'Sign in'),
+        ? h('a', { class: 'top-chip', href: `/u/${profile.username}`, 'aria-label': 'Your profile' }, blook(profile.blook))
+        : signed ? null : h('a', { class: 'btn btn-dark btn-sm', href: '/login' }, 'Sign in'),
     ),
   );
 }
@@ -78,10 +98,10 @@ function tabbar(path) {
   const profile = session.myProfile();
   const items = [
     ['/', 'Home', 'home'],
-    signed ? null : ['/discover', 'Discover', 'compass'],
+    ['/discover', 'Discover', 'compass'],
     ['/join', 'Join', 'play'],
     ['/blooks', 'Blooks', 'star'],
-    signed ? ['/create', 'Create', 'plus'] : null,
+    ['/channels', 'Channels', 'users'],
     signed && profile ? [`/u/${profile.username}`, 'Me', 'user'] : ['/login', 'Sign in', 'user'],
   ].filter(Boolean);
   return h('nav', { class: 'tabbar', 'aria-label': 'Main' },
@@ -141,7 +161,8 @@ onRoute(async (match, mod, query, keep) => {
   const chrome = match.opts.chrome !== false;
   document.body.classList.toggle('in-game', !chrome);
   pageRoot = h('main', { id: 'page' }, loader());
-  fill(app, chrome ? topbar(location.pathname) : null, chrome ? eventBar : null, chrome ? banner : null, pageRoot, chrome ? tabbar(location.pathname) : null);
+  app.classList.toggle('with-side', chrome);
+  fill(app, chrome ? sidebar(location.pathname) : null, chrome ? topbar(location.pathname) : null, chrome ? eventBar : null, chrome ? banner : null, pageRoot, chrome ? tabbar(location.pathname) : null);
   window.scrollTo(0, 0);
 
   let page;
@@ -184,7 +205,10 @@ async function boot() {
 
   // a first visit to the home page opens with the intro
   if (location.pathname === '/' && !navigator.webdriver) {
-    import('./ui/cutscene.js').then((m) => { if (!m.introSeen()) m.playIntro(); }).catch(() => {});
+    import('./ui/cutscene.js').then((m) => {
+      if (!m.introSeen()) m.playIntro();
+      else import('./ui/whatsnew.js').then((w) => w.maybeShowWhatsNew());
+    }).catch(() => {});
   }
   // when someone signs in or out, or renames themselves, redraw the bars only:
   // redrawing the page would throw away whatever they were typing
@@ -195,6 +219,8 @@ async function boot() {
     if (document.body.classList.contains('in-game')) return;
     const bar = app.querySelector(':scope > .topbar');
     const tabs = app.querySelector(':scope > .tabbar');
+    const side = app.querySelector(':scope > .sidebar');
+    if (side) side.replaceWith(sidebar(location.pathname));
     if (bar) bar.replaceWith(topbar(location.pathname));
     if (tabs) tabs.replaceWith(tabbar(location.pathname));
     // signing out of a page that needs an account leaves it

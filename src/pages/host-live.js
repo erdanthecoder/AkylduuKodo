@@ -309,7 +309,7 @@ export default async function HostLive({ params }) {
   /* ----------------------------------------------------------- arcade */
 
   function arcadeView() {
-    playMusic('game');
+    playMusic('arcade');
     const time = h('b', { class: 'arcade-time' }, '');
     const side = h('ol', { class: 'side-board' });
     const stageEl = h('div', { class: 'host-stage' });
@@ -365,6 +365,7 @@ export default async function HostLive({ params }) {
       setTimeout(() => sfx('reveal'), 1700),
       ...[2400, 2600, 2800, 3000, 3200].map((t) => setTimeout(() => sfx('drum'), t)),
       setTimeout(() => { sfx('win'); celebrate(); }, 3400),
+      setTimeout(() => playMusic('victory'), 4800),
     ];
     const podium = [list[1], list[0], list[2]];
     const report = {

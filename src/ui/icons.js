@@ -104,9 +104,24 @@ export const SHAPE_NAMES = ['bolt', 'drop', 'star', 'hex', 'ring', 'square'];
  * The logo mark: a chunky Q whose tail is a lightning bolt (quiz + quick),
  * the bolt breaking out past the tile's edge.
  */
+let logoSeq = 0;
 export function logo() {
+  const n = ++logoSeq;
   const mark = svg('svg', { viewBox: '0 0 64 64', class: 'logo-mark', 'aria-hidden': 'true' });
-  mark.innerHTML = `<rect x="3" y="8" width="58" height="53" rx="17" fill="#4a2fd6"/><rect x="3" y="3" width="58" height="52" rx="17" fill="#6b4cff"/><path d="M13 11 h8" stroke="#fff" stroke-width="4" stroke-linecap="round" opacity=".4"/><path d="M29 11 a16 16 0 1 0 0.01 0 Z M29 20.5 a6.5 6.5 0 1 1 -0.01 0 Z" fill="#fff" fill-rule="evenodd"/><path d="M37 31 L54 31 L45 41 L56 41 L35 62 L41 46 L32 46 Z" fill="#ffcd1f" stroke="#4a2fd6" stroke-width="3" stroke-linejoin="round"/>`;
+  mark.innerHTML = `<defs>`
+    + `<linearGradient id="lg${n}" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#7c5cff"/><stop offset=".55" stop-color="#a14dff"/><stop offset="1" stop-color="#ff4772"/></linearGradient>`
+    + `<linearGradient id="lb${n}" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#ffe45c"/><stop offset="1" stop-color="#ffb21f"/></linearGradient>`
+    + `</defs>`
+    // the tile, with a darker base for depth and a soft shine
+    + `<rect x="3" y="7" width="58" height="54" rx="18" fill="#3d22b8"/>`
+    + `<rect x="3" y="3" width="58" height="53" rx="18" fill="url(#lg${n})"/>`
+    + `<path d="M9 22 C11 11 20 7 32 7" stroke="#fff" stroke-width="3.5" stroke-linecap="round" opacity=".35" fill="none"/>`
+    // the Q: a thick ring
+    + `<path d="M30 12 a17.5 17.5 0 1 0 0.01 0 Z M30 21 a8.5 8.5 0 1 1 -0.01 0 Z" fill="#fff" fill-rule="evenodd"/>`
+    // its tail is a lightning bolt, breaking out of the tile
+    + `<path d="M38 33 L55 31 L46 42 L58 41.5 L33 63 L41 47 L31.5 47.5 Z" fill="url(#lb${n})" stroke="#2a1580" stroke-width="2.6" stroke-linejoin="round"/>`
+    // a little sparkle
+    + `<path d="M52 8 l1.6 4 4 1.6 -4 1.6 -1.6 4 -1.6 -4 -4 -1.6 4 -1.6 Z" fill="#fff"/>`;
   return mark;
 }
 

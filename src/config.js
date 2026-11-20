@@ -51,3 +51,6 @@ export const BADGES = {
 };
 export const OFFICIAL_UID = 'XH9Z5D7tLmRHStlxumgaJyTo1BP2';
 export const OWNER_UID = 'KWIRRSUM2VQVWnr1nUDbPP9bqMk2';
+
+/** Shown in the sidebar and the What's new popup. */
+export const VERSION = '1.1';
