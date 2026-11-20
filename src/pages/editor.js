@@ -14,6 +14,8 @@ import { TYPES, TYPE_BY_ID, TIMES, POINTS, blankQuestion, retype, problem } from
 import { saveQuiz, loadForEditing, publishProblems, COVERS } from '../services/quizzes.js';
 import { whenProfile } from '../services/session.js';
 import { COVER_BG, pageTitle } from './parts.js';
+import { aiPrompt, readAIQuiz, LEVELS } from '../game/import.js';
+import { copy } from '../ui/kit.js';
 
 const DRAFT_KEY = 'quickzy.draft';
 const readDraft = () => { try { return JSON.parse(localStorage.getItem(DRAFT_KEY) || 'null'); } catch { return null; } };
@@ -25,7 +27,7 @@ const SAMPLE = () => ({
   questions: [blankQuestion('mc')],
 });
 
-export default async function Editor({ params }) {
+export default async function Editor({ params, query = {} }) {
   await whenProfile();
   let quiz;
   if (params.id) {
@@ -118,6 +120,7 @@ export default async function Editor({ params }) {
   }));
 
   const details = h('button', { class: 'btn btn-icon', 'aria-label': 'Quiz details', title: 'Description and cover', onclick: () => editDetails() }, icon('gear'));
+  const aiBtn = h('button', { class: 'btn btn-violet ai-btn', onclick: () => makeWithAI() }, icon('bolt', { size: 18 }), 'Make with AI');
 
   /* ------------------------------------------------------------ list */
 
@@ -282,6 +285,72 @@ export default async function Editor({ params }) {
         pointsSel ? h('div', { class: 'field' }, h('span', {}, 'Points'), pointsSel) : null));
   }
 
+  /* ----------------------------------------------------- make with AI */
+
+  // Quickzy writes the prompt; the person pastes it into any AI chatbot
+  // and pastes the reply back. No account or key with any AI company needed.
+  function makeWithAI() {
+    return modal((close) => {
+      const topic = input({ placeholder: 'e.g. Volcanoes, Fractions, The Romans', maxlength: 80, value: quiz.title || '' });
+      let count = 10;
+      let level = 'kids';
+      const promptBox = h('textarea', { class: 'textarea ai-prompt', readonly: true, rows: 6, 'aria-label': 'Prompt for the AI' });
+      const drawPrompt = () => { promptBox.value = aiPrompt({ topic: topic.value.trim() || 'a topic of your choice', count, level }); };
+      topic.addEventListener('input', drawPrompt);
+      drawPrompt();
+      const reply = h('textarea', { class: 'textarea', rows: 7, placeholder: 'Paste the AI’s whole reply here' });
+      const status = h('div', { class: 'ai-status' });
+      const add = h('button', { class: 'btn btn-main', disabled: true }, icon('plus', { size: 18 }), 'Add to my quiz');
+      let result = null;
+      const read = () => {
+        result = null;
+        add.disabled = true;
+        if (!reply.value.trim()) { fill(status); return; }
+        try {
+          result = readAIQuiz(reply.value);
+          fill(status,
+            h('p', { class: 'ai-ok' }, icon('check', { size: 18 }), `${result.questions.length} question${result.questions.length === 1 ? '' : 's'} ready`, result.title ? ` for "${result.title}"` : ''),
+            result.skipped.length ? h('details', { class: 'ai-skipped' }, h('summary', {}, `${result.skipped.length} left out because they were not right`), h('ul', {}, ...result.skipped.map((t) => h('li', {}, t)))) : null);
+          add.disabled = !result.questions.length;
+        } catch (err) {
+          fill(status, h('p', { class: 'error-text' }, err.message));
+        }
+      };
+      reply.addEventListener('input', read);
+      add.addEventListener('click', () => {
+        if (!result) return;
+        const onlyBlank = quiz.questions.length === 1 && !quiz.questions[0].text.trim();
+        const room = LIMITS.questionsMax - (onlyBlank ? 0 : quiz.questions.length);
+        const incoming = result.questions.slice(0, room);
+        quiz.questions = onlyBlank ? incoming : [...quiz.questions, ...incoming];
+        if (!quiz.title.trim() && result.title) { quiz.title = result.title; title.value = result.title; }
+        if (!quiz.description && result.description) quiz.description = result.description;
+        at = onlyBlank ? 0 : quiz.questions.length - incoming.length;
+        touch(); drawEdit();
+        toast(`Added ${incoming.length} questions. Check them, then save.`, 'ok');
+        close(true);
+      });
+      return [
+        h('h2', {}, 'Make a quiz with AI'),
+        h('p', { class: 'muted', style: { margin: 0 } }, 'Use any AI chatbot. Quickzy writes the request for you; you paste back what it answers.'),
+        h('ol', { class: 'ai-steps' },
+          h('li', {}, h('b', {}, 'What is it about?'), topic,
+            h('div', { class: 'row' },
+              segmented([[5, '5'], [10, '10'], [15, '15'], [20, '20']], count, (v) => { count = v; drawPrompt(); }),
+              segmented(LEVELS, level, (v) => { level = v; drawPrompt(); }))),
+          h('li', {}, h('b', {}, 'Copy this and paste it into an AI chatbot'), promptBox,
+            h('div', { class: 'row' },
+              h('button', { class: 'btn btn-main btn-sm', onclick: () => copy(promptBox.value, 'Prompt copied') }, icon('copy', { size: 16 }), 'Copy prompt'),
+              h('a', { class: 'btn btn-sm', href: 'https://chatgpt.com/', target: '_blank', rel: 'noopener' }, 'ChatGPT'),
+              h('a', { class: 'btn btn-sm', href: 'https://claude.ai/new', target: '_blank', rel: 'noopener' }, 'Claude'),
+              h('a', { class: 'btn btn-sm', href: 'https://gemini.google.com/', target: '_blank', rel: 'noopener' }, 'Gemini'))),
+          h('li', {}, h('b', {}, 'Paste its reply here'), reply, status)),
+        h('p', { class: 'small muted', style: { margin: 0 } }, 'AI can make mistakes. Read the questions before you publish.'),
+        h('div', { class: 'row end' }, h('button', { class: 'btn', onclick: () => close() }, 'Cancel'), add),
+      ];
+    }, { wide: true });
+  }
+
   function editDetails() {
     return modal((close) => {
       const desc = h('textarea', { class: 'textarea', maxlength: LIMITS.quizDescMax, placeholder: 'What is it about? Who is it for?' });
@@ -303,6 +372,7 @@ export default async function Editor({ params }) {
   /* ------------------------------------------------------------ page */
 
   drawList(); drawEdit(); drawStatus();
+  if (query.ai) setTimeout(() => makeWithAI(), 60);
 
   const warn = (e) => { if (dirty) { e.preventDefault(); e.returnValue = ''; } };
   window.addEventListener('beforeunload', warn);
@@ -313,7 +383,7 @@ export default async function Editor({ params }) {
 
   const el = h('div', { class: 'page wide' },
     h('div', { class: 'card row', style: { marginBottom: '18px', position: 'sticky', top: '70px', zIndex: 5, padding: '12px 14px' } },
-      title, details,
+      title, details, aiBtn,
       h('div', { class: 'row', style: { marginLeft: 'auto' } }, status, save, publishBox, host)),
     h('div', { class: 'editor' }, list, h('div', { class: 'card' }, edit)));
 

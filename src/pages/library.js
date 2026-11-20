@@ -79,7 +79,9 @@ export default async function Library({ query }) {
   draw();
   return h('div', { class: 'page stack', style: { gap: '18px' } },
     h('div', { class: 'row spread' }, h('h1', {}, 'My quizzes'),
-      h('a', { class: 'btn btn-main', href: '/create' }, icon('plus'), 'New quiz')),
+      h('div', { class: 'row' },
+        h('a', { class: 'btn btn-violet', href: '/create?ai=1' }, icon('bolt'), 'Make with AI'),
+        h('a', { class: 'btn btn-main', href: '/create' }, icon('plus'), 'New quiz'))),
     segmented([['quizzes', 'Quizzes'], ['reports', 'Game reports']], tab, (v) => {
       tab = v; history.replaceState(null, '', v === 'reports' ? '/library?tab=reports' : '/library'); draw();
     }),

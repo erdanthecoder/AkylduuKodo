@@ -5,7 +5,7 @@ import { icon, logo, wordmark, verifiedBadge } from './ui/icons.js';
 import { OWNER_UID } from './config.js';
 import { site } from './services/site.js';
 import { blook } from './ui/blooks.js';
-import { loading } from './ui/kit.js';
+import { loader } from './ui/loader.js';
 import { connect, net } from './net/index.js';
 import * as session from './services/session.js';
 import { route, onRoute, render, navigate } from './router.js';
@@ -113,7 +113,7 @@ onRoute(async (match, mod, query, keep) => {
   }
   const chrome = match.opts.chrome !== false;
   document.body.classList.toggle('in-game', !chrome);
-  pageRoot = h('main', { id: 'page' }, loading());
+  pageRoot = h('main', { id: 'page' }, loader());
   fill(app, chrome ? topbar(location.pathname) : null, chrome ? banner : null, pageRoot, chrome ? tabbar(location.pathname) : null);
   window.scrollTo(0, 0);
 
@@ -135,8 +135,7 @@ onRoute(async (match, mod, query, keep) => {
 
 async function boot() {
   session.setPrefs({});
-  fill(app, h('div', { class: 'loading pattern', style: { minHeight: '100vh' } },
-    h('div', { class: 'stack', style: { justifyItems: 'center' } }, logo(), h('div', { class: 'spinner light' }))));
+  fill(app, loader({ full: true }));
   try {
     await connect();
     await session.start();
