@@ -24,11 +24,11 @@ function testsWithoutTrial() {
 
 export const PLANS = {
   free: {
-    quizzes: 10, players: 40, modes: ['classic', 'robotrun', 'obby'],
+    quizzes: 10, players: 40, modes: ['classic', 'robotrun', 'obby', 'skyrace'],
     minutes: [3, 5, 7, 10], reviewDays: 3,
   },
   pro: {
-    quizzes: 300, players: 100, modes: ['classic', 'lasertag', 'robotrun', 'spacecraft', 'obby', 'defense'],
+    quizzes: 300, players: 100, modes: ['classic', 'lasertag', 'robotrun', 'spacecraft', 'obby', 'defense', 'skyrace'],
     minutes: [3, 5, 7, 10, 15, 20, 30], reviewDays: 0,
   },
 };

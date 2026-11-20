@@ -1055,3 +1055,18 @@ button.bcard.is-slot { color: var(--violet); border-color: var(--violet); backgr
 .count-cell b { font-family: 'Lilita One', sans-serif; font-weight: 400; font-size: 1.3rem; line-height: 1.1; font-variant-numeric: tabular-nums; }
 .count-cell small { font-size: 10px; font-weight: 900; text-transform: uppercase; opacity: .8; }
 .count-bar.is-done { background: linear-gradient(90deg, #ffcd1f, #ff8a2a, #ffcd1f); color: #17133f; }
+
+/* Sky Race */
+.pro-tag.is-soon { background: #17133f; color: #fff; }
+.pro-tag.is-new { background: #12c9a6; color: #fff; }
+.sr-bar { position: absolute; left: 0; right: 0; bottom: 0; display: flex; gap: 10px; align-items: center; justify-content: center; flex-wrap: wrap;
+  padding: 10px 12px calc(10px + env(safe-area-inset-bottom)); background: linear-gradient(transparent, rgba(23, 19, 63, .55)); z-index: 3; }
+.sr-charge { display: flex; flex-direction: column; align-items: center; gap: 4px; color: #fff; font-weight: 800; font-size: 13px; text-shadow: 0 1px 3px rgba(0,0,0,.5); }
+.sr-pips { display: flex; gap: 6px; }
+.sr-pips i { width: 18px; height: 18px; border-radius: 50%; background: rgba(255,255,255,.3); border: 2px solid #fff; transition: transform .2s, background .2s; }
+.sr-pips i.is-on { background: #ffcd1f; transform: scale(1.15); }
+.sr-boost { font-family: 'Lilita One', system-ui; font-size: 26px; letter-spacing: 1px; padding: 14px 34px; border-radius: 18px; background: #4a5068; color: #fff; border: none; }
+.sr-boost.is-ready { background: linear-gradient(140deg, #ff8a2a, #ff4772); box-shadow: 0 6px 0 #b5121b, 0 0 24px rgba(255, 138, 42, .8); animation: sr-pulse .7s ease-in-out infinite alternate; }
+.sr-boost:disabled { opacity: .6; }
+@keyframes sr-pulse { to { transform: scale(1.08); } }
+@media (prefers-reduced-motion: reduce) { .sr-boost.is-ready { animation: none; } }
