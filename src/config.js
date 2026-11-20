@@ -62,3 +62,15 @@ export const VERSION = released12() ? '1.2' : '1.1';
 
 /** Pro for free, given by the owner: ugemnomads. (The rules hold the same list.) */
 export const PRO_FREE = ['f4BZrMpjQnV2B7n3iKq68J8poJ63'];
+
+/** Payments (Stripe). Not secret: a payment link and the manage-subscription page. */
+export const STRIPE = {
+  payLink: 'https://buy.stripe.com/test_14A4gy5Mz0ma3Ga2b62oE00',
+  manage: 'https://billing.stripe.com/p/login/test_14A4gy5Mz0ma3Ga2b62oE00',
+  test: true,
+};
+/** Supabase (public URL and publishable key). Paid members are listed in pro_members. */
+export const SUPABASE = {
+  url: 'https://shzujparccfpnunfnhhk.supabase.co',
+  key: 'sb_publishable_zLodYYp009iw0xnFb-6uyg_Rm-lOXgv',
+};

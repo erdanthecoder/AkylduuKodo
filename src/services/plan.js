@@ -6,7 +6,7 @@
 
 import { net } from '../net/index.js';
 import { me, signedIn, setProFlag } from './session.js';
-import { OWNER_UID, BADGES, PRO_FREE } from '../config.js';
+import { OWNER_UID, BADGES, PRO_FREE, SUPABASE, STRIPE } from '../config.js';
 
 export const PRICE = '$13.49';
 
@@ -58,19 +58,40 @@ export function isPro(uid) {
   if (uid === OWNER_UID || BADGES[uid] === 'official' || PRO_FREE.includes(uid)) { known.set(uid, true); return Promise.resolve(true); }
   if (trialOn()) { known.set(uid, true); if (me() && me().uid === uid) setProFlag(true); return Promise.resolve(true); }
   if (!cache.has(uid)) {
-    cache.set(uid, net.store.get('members', uid)
+    // Firestore holds members the owner gave Pro to (and paid ones, synced every
+    // 15 minutes); Supabase knows paid members the moment Stripe tells it.
+    const fs = net.store.get('members', uid)
       .then((m) => Boolean(m && m.plan === 'pro' && (m.until || 0) > Date.now()))
-      .catch(() => false)
+      .catch(() => false);
+    cache.set(uid, Promise.all([fs, paidUntil(uid)])
+      .then(([a, until]) => a || until > Date.now())
       .then((v) => { known.set(uid, v); if (me() && me().uid === uid) setProFlag(v); return v; }));
   }
   return cache.get(uid);
 }
 export const forget = (uid) => { cache.delete(uid); known.delete(uid); };
 
+/** When a paid membership ends (ms), from the Stripe webhook's table; 0 if none. */
+export async function paidUntil(uid) {
+  if (!uid || !/^[A-Za-z0-9]{10,40}$/.test(uid) || typeof fetch !== 'function') return 0;
+  try {
+    const r = await fetch(`${SUPABASE.url}/rest/v1/pro_members?uid=eq.${uid}&select=until`, { headers: { apikey: SUPABASE.key } });
+    if (!r.ok) return 0;
+    const rows = await r.json();
+    return Number(rows[0] && rows[0].until) || 0;
+  } catch { return 0; }
+}
+
 export async function membership(uid) {
   if (!uid) return null;
-  return net.store.get('members', uid).catch(() => null);
+  const [m, until] = await Promise.all([net.store.get('members', uid).catch(() => null), paidUntil(uid)]);
+  if (until > Date.now() && (!m || (m.until || 0) < until)) return { plan: 'pro', until, paid: true };
+  return m;
 }
+
+/** The Stripe page to pay for Pro, tied to this account. */
+export const payUrl = (uid) => `${STRIPE.payLink}?client_reference_id=${encodeURIComponent(uid)}`;
+export const manageUrl = () => STRIPE.manage;
 
 /** The plan of whoever is signed in. */
 export async function myPlan() {

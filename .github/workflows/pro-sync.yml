@@ -1,0 +1,59 @@
+name: Sync paid Pro members
+
+# Stripe tells a Supabase function who paid (public.pro_members). Every 15
+# minutes this copies them into Firestore members/{uid}, which the security
+# rules read. Paid memberships only: members the owner gave by hand are left alone.
+on:
+  schedule:
+    - cron: '*/15 * * * *'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: pro-sync
+  cancel-in-progress: false
+
+jobs:
+  sync:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+      - name: Copy paid members into Firestore
+        env:
+          SA: ${{ secrets.FIREBASE_SERVICE_ACCOUNT_AKYLDUUKODO }}
+          SUPABASE_URL: https://shzujparccfpnunfnhhk.supabase.co
+          SUPABASE_KEY: sb_publishable_zLodYYp009iw0xnFb-6uyg_Rm-lOXgv
+        run: |
+          printf '%s' "$SA" > "$RUNNER_TEMP/sa.json"
+          export GOOGLE_APPLICATION_CREDENTIALS="$RUNNER_TEMP/sa.json"
+          npm install --no-save --no-package-lock firebase-admin@12.7.0 >/dev/null 2>&1
+          node -e "
+            const admin = require('firebase-admin');
+            admin.initializeApp({ credential: admin.credential.applicationDefault(), projectId: 'akylduukodo' });
+            const db = admin.firestore();
+            (async () => {
+              const r = await fetch(process.env.SUPABASE_URL + '/rest/v1/pro_members?select=uid,until,status', { headers: { apikey: process.env.SUPABASE_KEY } });
+              if (!r.ok) throw new Error('Supabase ' + r.status);
+              const rows = await r.json();
+              let n = 0;
+              for (const row of rows) {
+                if (!/^[A-Za-z0-9]{10,40}$/.test(row.uid)) continue;
+                const ref = db.collection('members').doc(row.uid);
+                const cur = (await ref.get()).data();
+                // never shorten a membership the owner gave by hand
+                if (cur && !cur.paid && (cur.until || 0) >= row.until) continue;
+                if (cur && cur.paid && cur.until === row.until) continue;
+                await ref.set({ plan: 'pro', until: Number(row.until) || 0, paid: true, status: row.status || 'active' });
+                n += 1;
+              }
+              console.log('Paid members: ' + rows.length + ', updated: ' + n);
+            })().catch((e) => { console.error(e.message); process.exit(1); });
+          "
+      - name: Forget the key
+        if: always()
+        run: rm -f "$RUNNER_TEMP/sa.json"
