@@ -157,32 +157,105 @@ function reveal({ id, duplicate, refund }, box) {
     };
     document.addEventListener('keydown', key);
 
-    function burst() {
+    const wait = (ms) => new Promise((res) => setTimeout(res, calm ? Math.min(ms, 30) : ms));
+    const say = (text, cls = '') => { fill(hint, text); hint.className = `ub-hint ${cls}`; };
+
+    async function burst() {
       sfx('boom');
-      root.style.setProperty('--rc', r.colour);
-      root.classList.add('ub-burst', `ub-${r.id}`);
-      fill(hint); dots.remove(); skip.remove();
-      for (let i = 0; i < 14; i++) {
-        const a = (i / 14) * Math.PI * 2;
-        stage.append(h('i', { class: 'ub-spark', style: { '--dx': `${Math.cos(a) * 160}px`, '--dy': `${Math.sin(a) * 160}px`, background: i % 2 ? r.colour : '#fff' } }));
+      root.style.setProperty('--rc', ladder[0].colour);
+      root.classList.add('ub-burst');
+      say(''); dots.remove(); skip.remove();
+      sparks(ladder[0].colour);
+      await wait(420);
+
+      // 1. a mystery card: just a black shadow, spinning, while the drums roll
+      const shadow = blook(id);
+      shadow.classList.add('is-unknown');
+      const mystery = h('div', { class: 'bcard is-big ub-mystery' }, h('div', { class: 'ub-q' }, '?'), h('div', { class: 'bcard-art' }, shadow));
+      stage.replaceChildren(h('div', { class: 'ub-shine' }), mystery);
+      say('Who is it…?');
+      for (let i = 0; i < 6; i++) { sfx('tick'); await wait(110); }
+
+      // 2. the surprise: rare or better can start looking ordinary, then upgrade
+      const fakeOut = rank >= 2 && (rank === 4 || Math.random() < 0.6);
+      if (fakeOut) {
+        mystery.style.setProperty('--rc', RARITIES[0].colour);
+        root.style.setProperty('--rc', RARITIES[0].colour);
+        say('Hmm, just a common…');
+        await wait(900);
+        say('WAIT!', 'ub-wait');
+        sfx('tagged');
+        mystery.classList.add('ub-crack');
+        await wait(600);
+        for (let i = 1; i <= rank; i++) {
+          const c = RARITIES[i].colour;
+          mystery.style.setProperty('--rc', c);
+          root.style.setProperty('--rc', c);
+          say(`${RARITIES[i].name}…`, 'ub-up');
+          sfx(i === rank ? 'go' : 'jump');
+          sparks(c);
+          await wait(i === rank ? 500 : 420);
+        }
       }
-      setTimeout(() => {
-        const card = blookCard(id, { big: true });
-        card.classList.add('ub-card');
-        const again = progress.me().coins >= box.price && progress.boxOpen(box)
-          ? h('button', { class: 'btn btn-main', onclick: () => finish('again') }, 'Open another', coin(), String(box.price)) : null;
-        stage.replaceChildren(h('div', { class: 'ub-shine' }), card);
-        root.append(h('div', { class: 'ub-result' },
-          h('h2', { class: 'ub-rarity', style: { color: r.colour } }, `${r.name}!`),
-          duplicate
-            ? h('p', {}, `${blookName(id)} again. `, h('b', {}, `+${refund} coins`), ' back.')
-            : h('p', {}, h('span', { class: 'ub-new' }, 'NEW'), ` ${blookName(id)} is yours!`),
-          h('div', { class: 'row', style: { justifyContent: 'center' } },
-            again, h('button', { class: `btn${again ? '' : ' btn-main'}`, onclick: () => finish() }, 'Done'))));
-        sfx(big ? 'win' : rank >= 2 ? 'checkpoint' : 'reveal');
-        if (!calm && rank >= 2) setTimeout(() => celebrate([r.colour, '#ffffff', '#ffcd1f']), 250);
-        if (!calm && rank === 4) setTimeout(() => celebrate([r.colour, '#ffcd1f']), 1100);
-      }, calm ? 50 : 420);
+
+      // 3. legendary: lights out, then the letters slam in one by one
+      if (rank === 4) {
+        root.classList.add('ub-dark');
+        say('');
+        const word = h('div', { class: 'ub-word', style: { color: r.colour } });
+        root.append(word);
+        for (const ch of 'LEGENDARY') {
+          word.append(h('span', {}, ch));
+          sfx('drum');
+          await wait(150);
+        }
+        await wait(500);
+        word.remove();
+        root.classList.remove('ub-dark');
+      }
+
+      // 4. the reveal
+      root.style.setProperty('--rc', r.colour);
+      root.classList.add(`ub-${r.id}`);
+      const card = blookCard(id, { big: true });
+      card.classList.add('ub-card');
+      sparks(r.colour, 22);
+      const again = progress.me().coins >= box.price && progress.boxOpen(box)
+        ? h('button', { class: 'btn btn-main', onclick: () => finish('again') }, 'Open another', coin(), String(box.price)) : null;
+      stage.replaceChildren(h('div', { class: 'ub-shine' }), h('div', { class: 'ub-ring' }), card);
+      say('');
+      root.append(h('div', { class: 'ub-result' },
+        h('h2', { class: 'ub-rarity', style: { color: r.colour } }, `${r.name}!`),
+        duplicate
+          ? h('p', {}, `${blookName(id)} again. `, h('b', {}, `+${refund} coins`), ' back.')
+          : h('p', {}, h('span', { class: 'ub-new' }, 'NEW'), ` ${blookName(id)} is yours!`),
+        h('div', { class: 'row', style: { justifyContent: 'center' } },
+          again, h('button', { class: `btn${again ? '' : ' btn-main'}`, onclick: () => finish() }, 'Done'))));
+      sfx(big ? 'win' : rank >= 2 ? 'checkpoint' : 'reveal');
+      if (duplicate) coinRain(Math.min(24, 4 + refund));
+      if (!calm && rank >= 2) setTimeout(() => celebrate([r.colour, '#ffffff', '#ffcd1f']), 250);
+      if (!calm && rank === 4) { setTimeout(() => celebrate([r.colour, '#ffcd1f']), 1100); coinRain(30); }
+    }
+
+    function sparks(colour, n = 14) {
+      if (calm) return;
+      for (let i = 0; i < n; i++) {
+        const a = (i / n) * Math.PI * 2;
+        const d = 140 + Math.random() * 60;
+        const sp = h('i', { class: 'ub-spark', style: { '--dx': `${Math.cos(a) * d}px`, '--dy': `${Math.sin(a) * d}px`, background: i % 2 ? colour : '#fff' } });
+        stage.append(sp);
+        setTimeout(() => sp.remove(), 800);
+      }
+    }
+
+    function coinRain(n) {
+      if (calm) return;
+      for (let i = 0; i < n; i++) {
+        const c = h('span', { class: 'coin ub-coin', style: { left: `${Math.random() * 100}%`, animationDelay: `${Math.random() * 0.8}s`, animationDuration: `${1.2 + Math.random()}s` } }, 'Q');
+        root.append(c);
+        setTimeout(() => c.remove(), 2600);
+      }
+      sfx('coin');
     }
 
     function tap() {
@@ -198,7 +271,7 @@ function reveal({ id, duplicate, refund }, box) {
       art.classList.add(`ub-shake${taps}`);
       sfx(taps === 1 ? 'tap' : taps === 2 ? 'drum' : 'boost');
       fill(hint, taps === 1 ? 'Again!' : taps === 2 ? (rank >= 3 ? 'Something big is in there…' : 'One more!') : '');
-      if (taps === 3) setTimeout(burst, calm ? 0 : 450);
+      if (taps === 3) setTimeout(() => { burst().catch((e) => { console.error(e); finish(); }); }, calm ? 0 : 450);
     }
     stage.addEventListener('click', tap);
     skip.onclick = () => { while (taps < 2) { taps += 1; dots.children[taps - 1].classList.add('is-on'); } taps = 2; tap(); };

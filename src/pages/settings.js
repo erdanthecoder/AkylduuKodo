@@ -15,6 +15,7 @@ import { LIMITS, BADGES } from '../config.js';
 import { sfx } from '../game/sound.js';
 import { nameBadges } from '../ui/badges.js';
 import * as siteSvc from '../services/site.js';
+import { unfollowAll } from '../services/channels.js';
 
 export function blookPicker(current, onPick) {
   const grid = h('div', { class: 'blook-grid', role: 'radiogroup', 'aria-label': 'Blook' });
@@ -267,6 +268,7 @@ async function deleteAccount() {
         const p = session.myProfile();
         for (const q of await myQuizzes()) await deleteQuiz(q.id);
         for (const r of await myReports()) await deleteReport(r.id);
+        await unfollowAll();
         const steps = [{ op: 'del', col: 'users', id: u.uid }];
         if (p && p.username) steps.unshift({ op: 'del', col: 'usernames', id: p.username });
         await net.store.batch(steps);

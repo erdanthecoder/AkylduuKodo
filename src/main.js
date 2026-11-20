@@ -28,6 +28,7 @@ route('/library', () => import('./pages/library.js'), { auth: true });
 route('/host/:quizId', () => import('./pages/host-setup.js'), { auth: true });
 route('/lobby/:pin', () => import('./pages/host-live.js'), { chrome: false, auth: true });
 route('/u/:username', () => import('./pages/profile.js'));
+route('/channels', () => import('./pages/channels.js'));
 route('/blooks', () => import('./pages/blooks.js'));
 route('/owner', () => import('./pages/owner.js'), { auth: true });
 route('/settings', () => import('./pages/settings.js'));
@@ -43,6 +44,7 @@ route('*', () => import('./pages/notfound.js'));
 const NAV = [
   ['/', 'Home', 'home'],
   ['/discover', 'Discover', 'compass'],
+  ['/channels', 'Channels', 'users'],
   ['/blooks', 'Blooks', 'star'],
   ['/library', 'My quizzes', 'list'],
   ['/create', 'Create', 'plus'],
@@ -55,7 +57,7 @@ function topbar(path) {
   return h('header', { class: 'topbar' },
     h('a', { class: 'logo', href: '/', 'aria-label': 'Quickzy home' }, logo(), wordmark()),
     h('nav', { class: 'nav', 'aria-label': 'Main' },
-      ...NAV.filter(([href]) => signed || href === '/' || href === '/discover' || href === '/blooks')
+      ...NAV.filter(([href]) => signed || href === '/' || href === '/discover' || href === '/channels' || href === '/blooks')
         .map(([href, label]) => h('a', { href, class: on(href) }, label)),
       user && user.uid === OWNER_UID ? h('a', { href: '/owner', class: `nav-owner ${on('/owner')}` }, verifiedBadge(null, 'owner'), 'Owner') : null),
     h('div', { class: 'topbar-end' },

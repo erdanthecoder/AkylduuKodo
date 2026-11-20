@@ -376,6 +376,26 @@ if ((which === 'owner' || which === 'all') && !EMULATOR) {
   await stranger.goto(`${BASE}/owner`);
   await stranger.waitForURL(/\/login/);
   await stranger.context().close();
+
+  say('channels: follow a creator, see the count and the feed');
+  await host.goto(`${BASE}/`);
+  const hostChannel = await host.locator('.me-chip').getAttribute('href');
+  await own.goto(`${BASE}${hostChannel}`);
+  await own.waitForSelector('.channel .follow-btn:has-text("Follow")');
+  const before = Number(await own.locator('.channel-stats b').first().getAttribute('data-n'));
+  await own.click('.follow-btn');
+  await own.waitForSelector('.follow-btn:has-text("Following")');
+  await own.reload();
+  await own.waitForSelector('.follow-btn:has-text("Following")');
+  const after = Number(await own.locator('.channel-stats b').first().getAttribute('data-n'));
+  if (after !== before + 1) fail(`followers ${before} -> ${after}`);
+  await own.goto(`${BASE}/channels`);
+  await own.waitForSelector('text=New from channels you follow');
+  await own.waitForSelector(`.channel-card[href="${hostChannel}"]`);
+  await own.screenshot({ path: `${SHOTS}/channels.png`, fullPage: true });
+  await own.goto(`${BASE}${hostChannel}`);
+  await own.click('.follow-btn');
+  await own.waitForSelector('.follow-btn:has-text("Follow"):not(:has-text("Following"))');
   await own.context().close();
 }
 
@@ -473,7 +493,7 @@ if (which === 'account' || which === 'all') {
   while (!(await boxBtn.isDisabled()) && opened < 15) {
     await boxBtn.click();
     for (let t = 0; t < 3; t++) { await host.click('.ub-stage'); await host.waitForTimeout(120); }
-    await host.waitForSelector('.ub-card');
+    await host.waitForSelector('.ub-card', { timeout: 15000 });
     if (opened === 0) await host.screenshot({ path: `${SHOTS}/box-reveal.png` });
     await host.click('.ub-result button:has-text("Done")');
     await host.waitForSelector('.ub-root', { state: 'detached' });
