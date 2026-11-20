@@ -118,15 +118,25 @@ export function wordmark() {
   return word;
 }
 
-const BADGE_TITLE = { verified: 'Verified creator', official: 'Official Quickzy', owner: 'Quickzy owner' };
+export const BADGE_TITLE = { verified: 'Trusted quiz maker', official: 'Official Quickzy', owner: 'Quickzy owner', kg: 'Kyrgyzstan' };
 
-/** kind: 'verified' (blue), 'official' (black) or 'owner' (green). */
+/** kind: 'verified' (blue), 'official' (black), 'owner' (green) or 'kg' (the Kyrgyz flag). */
 export function verifiedBadge(title, kind = 'verified') {
   title = title || BADGE_TITLE[kind];
   const b = document.createElement('span');
   b.className = `verified is-${kind}`;
   b.title = title;
   b.setAttribute('aria-label', title);
+  if (kind === 'kg') {
+    // a little red disc with the yellow sun and the tunduk
+    const rays = Array.from({ length: 20 }, (_, i) => {
+      const a = (i / 20) * Math.PI * 2;
+      return `M${(12 + Math.cos(a) * 4).toFixed(2)} ${(12 + Math.sin(a) * 4).toFixed(2)}L${(12 + Math.cos(a) * 8).toFixed(2)} ${(12 + Math.sin(a) * 8).toFixed(2)}`;
+    }).join('');
+    b.innerHTML = `<svg viewBox="0 0 24 24" aria-hidden="true"><path d="${rays}" stroke="#ffef00" stroke-width="1.3"/><circle cx="12" cy="12" r="4.4" fill="#ffef00"/>`
+      + '<circle cx="12" cy="12" r="2.8" fill="none" stroke="#e8112d" stroke-width=".8"/><path d="M9.6 11.2h4.8M9.6 12.8h4.8M11.2 9.6v4.8M12.8 9.6v4.8" stroke="#e8112d" stroke-width=".6"/></svg>';
+    return b;
+  }
   b.append(icon('check', { size: 12, stroke: 3.6 }));
   return b;
 }

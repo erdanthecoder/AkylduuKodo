@@ -1,7 +1,8 @@
 // parts.js — pieces several pages share: quiz cards, author lines, covers.
 
+import { nameBadges } from '../ui/badges.js';
 import { h, svg, plural } from '../ui/dom.js';
-import { icon, verifiedBadge } from '../ui/icons.js';
+import { icon } from '../ui/icons.js';
 import { blook } from '../ui/blooks.js';
 import { navigate } from '../router.js';
 import { badgeOf } from '../services/quizzes.js';
@@ -38,7 +39,7 @@ export function cover(quiz, { big = false } = {}) {
 /** "by Name ✓" — the badge appears once the author is confirmed verified. */
 export function authorLine(quiz, { size = 22 } = {}) {
   const badge = h('span', { style: { display: 'inline-flex' } });
-  badgeOf(quiz.owner).then((kind) => { if (kind) badge.append(verifiedBadge(null, kind)); });
+  badgeOf(quiz.owner).then((kind) => { if (kind) badge.append(nameBadges(kind)); });
   const b = blook(quiz.authorBlook || 'dog');
   b.style.width = `${size}px`; b.style.height = `${size}px`;
   return h('a', { class: 'quiz-meta author', href: quiz.authorUsername ? `/u/${quiz.authorUsername}` : null, onclick: (e) => e.stopPropagation() },

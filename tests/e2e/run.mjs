@@ -308,7 +308,16 @@ if ((which === 'owner' || which === 'all') && !EMULATOR) {
   });
   if (made !== 'KWIRRSUM2VQVWnr1nUDbPP9bqMk2') fail(`owner account not created: ${made}`);
   await own.goto(`${BASE}/settings`);
-  await own.waitForSelector('text=Quickzy owner');
+  await own.waitForSelector('text=Your badges');
+
+  say('owner: choose which badges to wear');
+  for (const name of ['Kyrgyzstan', 'Trusted quiz maker']) {
+    await own.locator('.set-row', { hasText: name }).locator('.switch').click();
+  }
+  await own.waitForSelector('text=Badges saved');
+  await own.goto(`${BASE}/settings`);
+  await own.waitForFunction(() => document.querySelectorAll('.set-hero .badge-set .verified').length === 3);
+  await own.screenshot({ path: `${SHOTS}/owner-badges.png` });
 
   say('owner: the Owner link and panel');
   await own.click('.nav-owner');
