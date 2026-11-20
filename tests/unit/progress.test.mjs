@@ -56,3 +56,32 @@ test('game rewards stay within the limits the rules allow', () => {
   assert.ok(small.xp >= 40 && small.coins >= 10);
   assert.ok(rewardFor({ s: 0, c: 0, r: 1 }, 5).coins > small.coins);
 });
+
+import { BOXES, boxOpen, WINTER_ENDS } from '../../src/services/progress.js';
+import { LIMITED, REGULAR } from '../../src/ui/blooks.js';
+
+test('each pack only gives blooks from its own pool', () => {
+  const rand = seeded(9);
+  for (const box of BOXES) {
+    assert.ok(box.pool.length > 0, box.id);
+    for (let i = 0; i < 2000; i++) assert.ok(box.pool.includes(drawFromBox(rand, box.pool)), box.id);
+  }
+});
+
+test('the winter pack is limited, costs 25, and has a legendary Santa', () => {
+  const w = BOXES.find((b) => b.id === 'winter');
+  assert.equal(w.price, 25);
+  assert.deepEqual([...w.pool].sort(), ['elf', 'gingerbread', 'reindeer', 'santa', 'snowman']);
+  assert.equal(rarityOf('santa').id, 'legendary');
+  assert.ok(boxOpen(w, WINTER_ENDS - 1000));
+  assert.ok(!boxOpen(w, WINTER_ENDS + 1000));
+});
+
+test('limited blooks are never free and never in normal boxes', () => {
+  for (const id of LIMITED) {
+    assert.ok(!STARTERS.includes(id), id);
+    assert.ok(!REGULAR.includes(id), id);
+  }
+  const rand = seeded(5);
+  for (let i = 0; i < 5000; i++) assert.ok(!LIMITED.includes(drawFromBox(rand)));
+});

@@ -348,8 +348,10 @@ if ((which === 'owner' || which === 'all') && !EMULATOR) {
   if (await own.locator('.owner-row:has-text("@owner") button:has-text("blue check"):visible').count()) fail('owner row offers a blue check');
   const other = own.locator('.owner-row').filter({ hasText: '@quizmaster' }).first();
   {
-    await other.locator('button:has-text("+100 coins")').click();
-    await own.waitForSelector('text=100 coins');
+    await other.locator('button:has-text("Give coins")').click();
+    await own.fill('.modal input[type=number]', '250');
+    await own.click('.modal button:has-text("Give")');
+    await own.waitForSelector('text=Gave host 250 coins');
     await other.locator('button:has-text("Give blue check")').click();
     await other.locator('button:has-text("Remove blue check")').waitFor();
     // and take it back, so the earned-badge test later starts clean

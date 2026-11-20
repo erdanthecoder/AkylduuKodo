@@ -115,7 +115,25 @@ async function users() {
       };
     };
     refresh();
-    const coins = act(h('button', { class: 'btn btn-sm' }, '+100 coins'), async () => { await siteSvc.giveCoins(u, 100); u.coins = (u.coins || 0) + 100; }, `Gave ${u.displayName} 100 coins`);
+    const coins = h('button', { class: 'btn btn-sm btn-main' }, icon('star', { size: 14 }), 'Give coins');
+    coins.addEventListener('click', async () => {
+      const amount = await modal((close) => {
+        const box = h('input', { class: 'input input-xl', type: 'number', min: 1, max: 100000, step: 1, value: 100, inputmode: 'numeric', 'aria-label': 'How many coins' });
+        const err = h('p', { class: 'error-text' });
+        const go = () => {
+          const n = Math.floor(Number(box.value));
+          if (!(n >= 1 && n <= 100000)) { fill(err, 'Choose between 1 and 100,000 coins.'); return; }
+          close(n);
+        };
+        box.addEventListener('keydown', (e) => { if (e.key === 'Enter') go(); });
+        return [h('h2', {}, `Give ${u.displayName} coins`),
+          h('div', { class: 'row' }, ...[50, 100, 500, 1000].map((n) => h('button', { class: 'btn btn-sm', onclick: () => { box.value = n; } }, String(n)))),
+          box, err,
+          h('div', { class: 'row end' }, h('button', { class: 'btn', onclick: () => close() }, 'Cancel'), h('button', { class: 'btn btn-main', onclick: go }, 'Give'))];
+      });
+      if (!amount) return;
+      try { await siteSvc.giveCoins(u, amount); u.coins = (u.coins || 0) + amount; toast(`Gave ${u.displayName} ${fmt(amount)} coins`, 'ok'); } catch (e) { toast(explain(e), 'bad'); }
+    });
     const gift = h('button', { class: 'btn btn-sm' }, icon('star', { size: 14 }), 'Give a blook');
     gift.addEventListener('click', async () => {
       const pick = await modal((close) => [h('h2', {}, `Give ${u.displayName} a blook`),

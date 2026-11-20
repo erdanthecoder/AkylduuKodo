@@ -475,8 +475,7 @@ button.bcard:hover { transform: translateY(-3px) rotate(-1deg); }
 .bcard-name { font-size: 0.92rem; }
 .bcard-count { position: absolute; right: 8px; bottom: 6px; font-size: 0.75rem; font-weight: 900; color: var(--muted); }
 .bcard.is-locked { background: #ecebf5; box-shadow: 0 5px 0 #cfc9ee; border-color: #cfc9ee; }
-.bcard.is-locked .bcard-rarity { background: #b9b4d6; }
-.bcard.is-locked .bcard-art { filter: brightness(0) opacity(0.18); }
+.bcard.is-locked .bcard-art { filter: brightness(0); opacity: 0.85; }
 .bcard.is-slot { border-style: dashed; box-shadow: none; color: var(--muted); gap: 8px; }
 button.bcard.is-slot { color: var(--violet); border-color: var(--violet); background: #f5f3ff; }
 .bcard.r-epic:not(.is-locked) { background: linear-gradient(160deg, #fff, #f1e6ff); }
@@ -611,3 +610,19 @@ button.bcard.is-slot { color: var(--violet); border-color: var(--violet); backgr
 .ai-ok { display: flex; align-items: center; gap: 6px; margin: 0; color: var(--okd); font-weight: 900; }
 .ai-skipped summary { cursor: pointer; color: var(--muted); font-weight: 800; font-size: 0.88rem; }
 .ai-skipped ul { margin: 6px 0 0; padding-left: 20px; font-size: 0.85rem; color: var(--muted); }
+
+/* packs */
+.box-card { position: relative; overflow: hidden; }
+.box-peek { display: flex; gap: 4px; justify-content: center; flex-wrap: wrap; }
+.box-peek .blook { width: 30px; height: 30px; background: rgba(255, 255, 255, 0.2); border-radius: 9px; padding: 2px; }
+.box-peek .blook.is-unknown svg { filter: brightness(0); opacity: 0.85; }
+.limited-tag { position: relative; z-index: 1; display: inline-flex; align-items: center; gap: 4px; background: #e2384d; color: #fff; font-weight: 900; font-size: 0.72rem; border-radius: 999px; padding: 4px 10px; box-shadow: 0 3px 0 #a61e30; }
+.box-card.is-limited { box-shadow: 0 6px 0 #133a8f, 0 0 0 3px #fff inset; }
+.box-card.is-limited > * { position: relative; z-index: 1; }
+.snow { position: absolute !important; inset: 0; z-index: 0 !important; pointer-events: none;
+  background-image: radial-gradient(3px 3px at 20% 30%, #fff 60%, transparent 61%), radial-gradient(2px 2px at 70% 20%, #fff 60%, transparent 61%),
+    radial-gradient(3px 3px at 40% 70%, #fff 60%, transparent 61%), radial-gradient(2px 2px at 85% 60%, #fff 60%, transparent 61%),
+    radial-gradient(2px 2px at 10% 85%, #fff 60%, transparent 61%), radial-gradient(3px 3px at 60% 90%, #fff 60%, transparent 61%);
+  background-size: 140px 140px; animation: snowfall 6s linear infinite; opacity: 0.85; }
+@keyframes snowfall { from { background-position: 0 -140px; } to { background-position: 30px 0; } }
+[data-motion='calm'] .snow { animation: none; }
