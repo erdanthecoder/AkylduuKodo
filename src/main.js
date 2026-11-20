@@ -140,9 +140,39 @@ function drawEvent(ev) {
   fill(eventBar, h('span', { class: 'event-spark' }, icon('star', { size: 16 })), h('b', {}, ev.title || info.name), h('span', { class: 'grow event-blurb' }, info.blurb), left);
 }
 
+// the owner's countdown: ticks every second, then celebrates
+const countBar = h('div', { class: 'count-bar', hidden: true });
+let countTimer = 0;
+function drawCountdown(c) {
+  clearInterval(countTimer);
+  if (!c || !c.to) { countBar.hidden = true; return; }
+  countBar.hidden = false;
+  const cells = ['d', 'h', 'm', 's'].map((u) => h('span', { class: 'count-cell' }, h('b', {}, '00'), h('small', {}, u)));
+  fill(countBar, icon('clock', { size: 18 }), h('b', { class: 'count-title' }, c.title), h('span', { class: 'count-cells' }, ...cells));
+  let fired = false;
+  const tick = () => {
+    const ms = c.to - Date.now();
+    if (ms <= 0) {
+      clearInterval(countTimer);
+      if (fired) return;
+      fired = true;
+      fill(countBar, icon('star', { size: 18 }), h('b', { class: 'count-title' }, "It's here!"), h('button', { class: 'btn btn-sm btn-main', onclick: () => location.reload() }, 'Refresh to see it'));
+      countBar.classList.add('is-done');
+      import('./ui/confetti.js').then((m) => m.celebrate()).catch(() => {});
+      return;
+    }
+    const parts = [Math.floor(ms / 86400000), Math.floor(ms / 3600000) % 24, Math.floor(ms / 60000) % 60, Math.floor(ms / 1000) % 60];
+    parts.forEach((v, i) => { cells[i].firstChild.textContent = String(v).padStart(2, '0'); });
+    cells[0].hidden = parts[0] === 0;
+  };
+  tick();
+  countTimer = setInterval(tick, 1000);
+}
+
 async function loadBanner() {
-  const { announce, announceAt, event } = await site(true).catch(() => ({ announce: '' }));
+  const { announce, announceAt, event, countdown } = await site(true).catch(() => ({ announce: '' }));
   drawEvent(event);
+  drawCountdown(countdown);
   let dismissed = '';
   try { dismissed = localStorage.getItem('quickzy.announce.closed') || ''; } catch { /* ignore */ }
   const id = `${announceAt}`;
@@ -163,7 +193,7 @@ onRoute(async (match, mod, query, keep) => {
   document.body.classList.toggle('in-game', !chrome);
   pageRoot = h('main', { id: 'page' }, loader());
   app.classList.toggle('with-side', chrome);
-  fill(app, chrome ? sidebar(location.pathname) : null, chrome ? topbar(location.pathname) : null, chrome ? eventBar : null, chrome ? banner : null, pageRoot, chrome ? tabbar(location.pathname) : null);
+  fill(app, chrome ? sidebar(location.pathname) : null, chrome ? topbar(location.pathname) : null, chrome ? countBar : null, chrome ? eventBar : null, chrome ? banner : null, pageRoot, chrome ? tabbar(location.pathname) : null);
   window.scrollTo(0, 0);
 
   let page;

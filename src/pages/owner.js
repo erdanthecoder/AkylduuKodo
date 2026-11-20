@@ -48,7 +48,23 @@ async function announcement() {
   text.value = s.announce;
   const save = act(h('button', { class: 'btn btn-main' }, 'Show to everyone'), () => siteSvc.setAnnouncement(text.value), 'Announcement saved');
   const clear = act(h('button', { class: 'btn' }, 'Remove'), async () => { text.value = ''; await siteSvc.setAnnouncement(''); }, 'Announcement removed');
-  return h('section', { class: 'card stack' }, h('h2', {}, 'Announcement'), text, h('div', { class: 'row end' }, clear, save));
+  // a countdown on every page: pick a title and a moment (in your own time zone)
+  const title = h('input', { class: 'input', maxlength: 80, placeholder: 'e.g. Quickzy 1.2 lands in', value: s.countdown ? s.countdown.title : '' });
+  const pad = (n) => String(n).padStart(2, '0');
+  const local = (ms) => { const d = new Date(ms); return `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}T${pad(d.getHours())}:${pad(d.getMinutes())}`; };
+  const when = h('input', { class: 'input', type: 'datetime-local', value: local(s.countdown ? s.countdown.to : Date.now() + 86400000), 'aria-label': 'When' });
+  const start = act(h('button', { class: 'btn btn-main' }, icon('clock', { size: 16 }), 'Start countdown'), async () => {
+    const to = new Date(when.value).getTime();
+    if (!title.value.trim()) throw new Error('Give the countdown a title.');
+    if (!(to > Date.now())) throw new Error('Pick a time in the future.');
+    await siteSvc.setCountdown(title.value, to);
+  }, 'Countdown started for everyone');
+  const stopIt = act(h('button', { class: 'btn' }, 'Remove countdown'), () => siteSvc.setCountdown(null), 'Countdown removed');
+  return h('div', { class: 'stack', style: { gap: '18px' } },
+    h('section', { class: 'card stack' }, h('h2', {}, 'Announcement'), text, h('div', { class: 'row end' }, clear, save)),
+    h('section', { class: 'card stack' }, h('h2', {}, 'Countdown'),
+      h('p', { class: 'muted small', style: { margin: 0 } }, 'A live countdown at the top of every page. When it reaches zero, everyone gets a "It\'s here!" moment.'),
+      title, when, h('div', { class: 'row end' }, stopIt, start)));
 }
 
 /* --------------------------------------------------------------- quizzes */
@@ -270,6 +286,6 @@ export default async function Owner() {
     h('div', { class: 'row', style: { gap: '10px' } }, h('h1', {}, 'Owner'), h('span', { style: { transform: 'scale(1.5)', display: 'inline-flex' } }, verifiedBadge(null, 'owner'))),
     h('p', { class: 'muted', style: { margin: 0 } }, 'Only your account can open this page, and the database refuses these actions from anyone else.'),
     stats(),
-    segmented([['quizzes', 'Quizzes'], ['users', 'Players'], ['games', 'Live games'], ['abuse', 'Admin abuse'], ['events', 'Events'], ['announcement', 'Announcement']], tab, (v) => { tab = v; draw(); }),
+    segmented([['quizzes', 'Quizzes'], ['users', 'Players'], ['games', 'Live games'], ['abuse', 'Admin abuse'], ['events', 'Events'], ['announcement', 'Announcement & countdown']], tab, (v) => { tab = v; draw(); }),
     body);
 }

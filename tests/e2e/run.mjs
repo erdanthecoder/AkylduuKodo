@@ -407,6 +407,22 @@ if ((which === 'owner' || which === 'all') && !EMULATOR) {
   await visitor.reload();
   await visitor.waitForTimeout(800);
   if (await visitor.locator('.announce:not([hidden])').count()) fail('dismissed announcement came back');
+
+  say('owner: a countdown ticks on every page, then celebrates');
+  await own.fill('input[placeholder^="e.g. Quickzy 1.2"]', 'Quickzy 1.2 lands in');
+  await own.evaluate(() => {
+    const d = new Date(Date.now() + 3 * 60000);
+    const p = (n) => String(n).padStart(2, '0');
+    const el = document.querySelector('input[type="datetime-local"]');
+    el.value = `${d.getFullYear()}-${p(d.getMonth() + 1)}-${p(d.getDate())}T${p(d.getHours())}:${p(d.getMinutes())}`;
+  });
+  await own.click('button:has-text("Start countdown")');
+  await own.waitForSelector('text=Countdown started for everyone');
+  await visitor.reload();
+  await visitor.waitForSelector('.count-bar:has-text("Quickzy 1.2 lands in")');
+  await visitor.screenshot({ path: `${SHOTS}/countdown.png` });
+  await own.click('button:has-text("Remove countdown")');
+  await own.waitForSelector('text=Countdown removed');
   await visitor.context().close();
 
   say('owner: players tab, give coins and a blue check');

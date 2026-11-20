@@ -22,6 +22,7 @@ export async function site(fresh = false) {
     ]).then(([a, f, ev]) => ({
       event: ev && ev.kind && ev.ends > Date.now() ? ev : null,
       announce: (a && a.text) || '', announceAt: (a && a.at) || 0,
+      countdown: a && a.countdown && a.countdown.to > Date.now() - 3600000 ? a.countdown : null,
       featured: (f && Array.isArray(f.ids)) ? f.ids : [],
       wear: cleanWear(f && f.wear),
     }));
@@ -31,7 +32,14 @@ export async function site(fresh = false) {
 
 export async function setAnnouncement(text) {
   const t = String(text || '').trim().slice(0, 200);
-  await net.store.set('site', 'announce', { text: t, at: Date.now() });
+  await net.store.set('site', 'announce', { text: t, at: Date.now() }, { merge: true });
+  siteCache = null;
+}
+
+/** A countdown on every page, e.g. to the next update. null removes it. */
+export async function setCountdown(title, to) {
+  const countdown = title && to ? { title: String(title).trim().slice(0, 80), to: Number(to) } : null;
+  await net.store.set('site', 'announce', { countdown }, { merge: true });
   siteCache = null;
 }
 

@@ -1043,3 +1043,15 @@ button.bcard.is-slot { color: var(--violet); border-color: var(--violet); backgr
 .video-edit { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; }
 .video-edit .q-video { margin: 0; width: 220px; }
 .together-note { display: flex; align-items: center; gap: 10px; margin-bottom: 14px; background: #eef7ff; color: #0f4c8a; font-weight: 800; }
+
+/* --------------------------------------------------------------- countdown */
+.count-bar { display: flex; align-items: center; justify-content: center; flex-wrap: wrap; gap: 12px; padding: 8px 16px; color: #fff; position: relative; z-index: 2;
+  background: linear-gradient(90deg, #17133f, #6b4cff, #ff4772, #17133f); background-size: 300% 100%; animation: event-slide 8s linear infinite; }
+.count-bar[hidden] { display: none !important; }
+.count-title { font-family: 'Lilita One', sans-serif; font-weight: 400; font-size: 1.15rem; letter-spacing: .5px; }
+.count-cells { display: inline-flex; gap: 6px; }
+.count-cell { display: inline-grid; justify-items: center; min-width: 46px; padding: 3px 6px; border-radius: 10px; background: #ffffff22; }
+.count-cell[hidden] { display: none; }
+.count-cell b { font-family: 'Lilita One', sans-serif; font-weight: 400; font-size: 1.3rem; line-height: 1.1; font-variant-numeric: tabular-nums; }
+.count-cell small { font-size: 10px; font-weight: 900; text-transform: uppercase; opacity: .8; }
+.count-bar.is-done { background: linear-gradient(90deg, #ffcd1f, #ff8a2a, #ffcd1f); color: #17133f; }
