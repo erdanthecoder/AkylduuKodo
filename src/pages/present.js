@@ -37,6 +37,8 @@ export function slideView(s, { votes = {}, reveal = false, pin = '', count = 0 }
   const kids = [];
   if (s.t === 'title') {
     kids.push(h('div', { class: 'sl-title' }, h('h1', {}, s.head), s.body ? h('p', {}, s.body) : null));
+  } else if (s.t === 'content' && s.img && !s.head && !String(s.body || '').trim()) {
+    kids.push(h('img', { class: 'sl-full', src: s.img, alt: '', referrerpolicy: 'no-referrer' }));
   } else if (s.t === 'content') {
     kids.push(h('div', { class: `sl-content${s.img ? ' has-img' : ''}` },
       h('div', {}, h('h2', {}, s.head), h('ul', {}, ...String(s.body || '').split('\n').filter((l) => l.trim()).map((l) => h('li', {}, l)))),
@@ -69,6 +71,30 @@ export function slideView(s, { votes = {}, reveal = false, pin = '', count = 0 }
     pin ? h('div', { class: 'sl-pin' }, h('small', {}, `Join at ${location.host}`), h('b', {}, `${pin.slice(0, 3)} ${pin.slice(3)}`), count ? h('small', {}, `${count} answered`) : null) : null);
 }
 
+/* ------------------------------------------------- PowerPoint import */
+
+/** A button that reads a .pptx file and hands back its slides. */
+function importButton(label, onSlides, { main = false } = {}) {
+  const file = h('input', { type: 'file', accept: '.pptx,application/vnd.openxmlformats-officedocument.presentationml.presentation', hidden: true });
+  const btn = h('button', { class: `btn${main ? ' btn-lg' : ''}`, type: 'button', onclick: () => file.click() }, icon('download', { size: 18 }), label);
+  file.addEventListener('change', async () => {
+    const f = file.files[0];
+    file.value = '';
+    if (!f) return;
+    const was = btn.innerHTML;
+    btn.disabled = true;
+    try {
+      const { readPptx } = await import('../services/pptx.js');
+      const res = await readPptx(f, { onProgress: (i, n) => { btn.textContent = `Reading slide ${i} of ${n}…`; } });
+      await onSlides(res);
+      sfx('win');
+      toast(`Imported ${res.slides.length} slides. Now add polls, quizzes and guesses between them!`, 'ok');
+    } catch (e) { toast(e.message || 'Could not read that file', 'bad'); }
+    btn.disabled = false; btn.innerHTML = was;
+  });
+  return h('span', {}, btn, file);
+}
+
 /* ---------------------------------------------------- list and editor */
 
 export default async function Present({ params }) {
@@ -86,8 +112,12 @@ export default async function Present({ params }) {
     h('section', { class: 'pres-hero' },
       h('div', { class: 'pres-badge' }, 'Presentation+'),
       h('h1', {}, 'Slides that talk back'),
-      h('p', {}, 'Mix your slides with live polls, quiz questions and guess-the-number graphs. Your audience joins with a PIN and answers on their phones.'),
-      create),
+      h('p', {}, 'Bring your PowerPoint, then add live polls, quiz questions and guess-the-number graphs between the slides. Your audience joins with a PIN and answers on their phones.'),
+      h('div', { class: 'row' }, importButton('Import PowerPoint (.pptx)', async ({ title, slides }) => {
+        const id = await D.saveDeck({ title, slides });
+        navigate(`/present/${id}`);
+      }, { main: true }), create),
+      h('small', { class: 'pres-note' }, 'Google Slides and Keynote: use File → Download / Export as .pptx.')),
     decks.length
       ? h('div', { class: 'pres-grid' }, ...decks.map((d) => h('a', { class: 'pres-card', href: `/present/${d.id}` },
         h('div', { class: 'pres-thumb' }, d.slides && d.slides[0] ? slideView(d.slides[0]) : null),
@@ -142,7 +172,10 @@ async function editor(id) {
           deck.slides.length > 1 ? h('button', { class: 'btn btn-sm btn-ghost', onclick: () => { deck.slides.splice(cur, 1); cur = Math.max(0, cur - 1); dirty = true; draw(); } }, icon('trash', { size: 14 })) : null)),
       h('label', { class: 'field' }, h('span', {}, s.t === 'title' || s.t === 'content' ? 'Heading' : 'Question'), inp('head', { maxlength: 140 })),
       s.t === 'title' || s.t === 'content' ? h('label', { class: 'field' }, h('span', {}, s.t === 'title' ? 'Subtitle' : 'Points (one per line)'), inp('body', { tag: 'textarea', rows: 4, maxlength: 600 })) : null,
-      s.t === 'content' ? h('label', { class: 'field' }, h('span', {}, 'Picture link (optional)'), inp('img', { type: 'url', placeholder: 'https://…', maxlength: 290 })) : null,
+      s.t === 'content' && String(s.img || '').startsWith('data:')
+        ? h('div', { class: 'field' }, h('span', {}, 'Picture (from PowerPoint)'), h('div', { class: 'row' }, h('img', { src: s.img, alt: '', style: { height: '70px', borderRadius: '8px' } }),
+          h('button', { class: 'btn btn-sm btn-ghost', onclick: () => { s.img = ''; dirty = true; drawForm(); drawPreview(); drawRail(); } }, icon('trash', { size: 14 }), 'Remove picture')))
+        : s.t === 'content' ? h('label', { class: 'field' }, h('span', {}, 'Picture link (optional)'), inp('img', { type: 'url', placeholder: 'https://…', maxlength: 290 })) : null,
       s.t === 'poll' || s.t === 'quiz' ? h('div', { class: 'field' }, h('span', {}, s.t === 'quiz' ? 'Answers (tick the right one)' : 'Choices'), opts()) : null,
       s.t === 'guess' ? h('div', { class: 'row' },
         h('label', { class: 'field grow' }, h('span', {}, 'From'), inp('min', { type: 'number' })),
@@ -161,7 +194,12 @@ async function editor(id) {
   });
   window.addEventListener('beforeunload', (e) => { if (dirty) e.preventDefault(); }, { once: true });
   return h('div', { class: 'page pres-editor' },
-    h('div', { class: 'row spread pres-top' }, h('div', { class: 'row grow' }, h('span', { class: 'pres-badge' }, 'Presentation+'), title), h('div', { class: 'row' }, delBtn, save, present)),
+    h('div', { class: 'row spread pres-top' }, h('div', { class: 'row grow' }, h('span', { class: 'pres-badge' }, 'Presentation+'), title),
+      h('div', { class: 'row' }, importButton('Add from PowerPoint', ({ slides }) => {
+        const room = D.MAX_SLIDES - deck.slides.length;
+        deck.slides.splice(cur + 1, 0, ...slides.slice(0, room)); cur += 1; dirty = true; draw();
+      }), delBtn, save, present)),
+    h('p', { class: 'pres-tip' }, icon('info', { size: 16 }), 'Tip: pick a slide on the left, then press Fun poll, Quiz question or Guess the number to add one right after it.'),
     h('div', { class: 'pres-layout' }, rail, h('div', { class: 'stack' }, preview, form)));
 }
 

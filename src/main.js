@@ -53,6 +53,13 @@ route('*', () => import('./pages/notfound.js'));
 
 const isOn = (path, href) => (href === '/' ? path === '/' : path.startsWith(href)) ? 'is-on' : '';
 
+/** "Install the app", shown only when the browser can do it. */
+function installLink() {
+  const btn = h('button', { class: 'side-link side-install', type: 'button', hidden: true, onclick: () => import('./ui/install.js').then((m) => m.install()) }, icon('download', { size: 20 }), h('span', {}, 'Install the app'));
+  import('./ui/install.js').then((m) => { const draw = () => { btn.hidden = !m.canInstall(); }; draw(); m.onInstallChange(draw); }).catch(() => {});
+  return btn;
+}
+
 /** The left sidebar on bigger screens: everything in one tidy place. */
 function sidebar(path) {
   const { user, profile } = { user: session.me(), profile: session.myProfile() };
@@ -77,6 +84,7 @@ function sidebar(path) {
     h('div', { class: 'side-end' },
       h('button', { class: 'side-link', type: 'button', onclick: () => import('./ui/whatsnew.js').then((m) => m.showWhatsNew()) }, icon('bolt', { size: 20 }), h('span', {}, `What's new in ${VERSION}`)),
       h('button', { class: 'side-link side-invite', type: 'button', onclick: () => import('./services/invite.js').then((m) => m.shareInvite()) }, icon('users', { size: 20 }), h('span', {}, 'Invite friends')),
+      installLink(),
       music,
       link('/settings', 'Settings', 'gear', 'gear-btn'),
       signed && profile
@@ -224,6 +232,7 @@ onRoute(async (match, mod, query, keep) => {
 async function boot() {
   session.setPrefs({});
   import('./services/invite.js').then((m) => m.captureRef()).catch(() => {});
+  import('./ui/install.js').then((m) => m.setupInstall()).catch(() => {});
   fill(app, loader({ full: true }));
   try {
     await connect();

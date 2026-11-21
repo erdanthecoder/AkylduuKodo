@@ -28,7 +28,8 @@ export function blank(t = 'content') {
 }
 
 const clip = (v, n) => String(v ?? '').slice(0, n);
-const okImg = (v) => (typeof v === 'string' && /^https:\/\/[^\s"'<>]{8,290}$/.test(v) ? v : '');
+// a picture link, or a small picture brought in from PowerPoint
+const okImg = (v) => (typeof v === 'string' && (/^https:\/\/[^\s"'<>]{8,290}$/.test(v) || (/^data:image\/jpeg;base64,[A-Za-z0-9+/=]+$/.test(v) && v.length < 125000)) ? v : '');
 /** Keep a slide to its own fields and sizes. */
 export function cleanSlide(s) {
   const t = KINDS.some((k) => k[0] === s.t) ? s.t : 'content';

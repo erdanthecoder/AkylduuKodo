@@ -87,7 +87,11 @@ const SOUNDS = {
   drum: () => { noise({ dur: 0.08, gain: 0.25, freq: 300 }); tone(110, { dur: 0.1, type: 'sine', gain: 0.3, slide: -50 }); },
 };
 
+// a little buzz on phones for the moments that matter (Android; iPhones ignore it)
+const BUZZ = { right: 35, wrong: [60, 50, 60], win: [30, 40, 30, 40, 90], boom: 70, tagged: [40, 30, 40], checkpoint: 25 };
+
 export function sfx(name) {
+  if (BUZZ[name] && prefs().vibrate !== false && typeof navigator !== 'undefined' && navigator.vibrate) { try { navigator.vibrate(BUZZ[name]); } catch { /* not allowed yet */ } }
   if (!prefs().sound) return;
   const fn = SOUNDS[name];
   if (fn) { try { fn(); } catch { /* audio not available */ } }

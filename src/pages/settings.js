@@ -4,7 +4,7 @@ import { h, fill, debounce } from '../ui/dom.js';
 import { icon, verifiedBadge } from '../ui/icons.js';
 import { blook, blookName, rarityOf } from '../ui/blooks.js';
 import { usableBlooks, me as wallet, levelInfo } from '../services/progress.js';
-import { field, input, passwordInput, toggle, busy, toast, confirm, modal } from '../ui/kit.js';
+import { field, input, passwordInput, toggle, busy, toast, confirm, modal, segmented } from '../ui/kit.js';
 import { net, explain } from '../net/index.js';
 import { navigate } from '../router.js';
 import * as session from '../services/session.js';
@@ -300,7 +300,20 @@ function deviceSection() {
     row('Quickzy intro', 'Watch the intro cutscene again.', intro),
     row('Sound effects', 'Clicks, chimes and game sounds.', toggle(p.sound, (v) => { session.setPrefs({ sound: v }); if (v) sfx('pick'); })),
     row('Music', 'Background music in the lobby and in games.', toggle(p.music, (v) => session.setPrefs({ music: v }))),
-    row('Animations', 'Turn off for calmer screens with less movement.', toggle(p.motion, (v) => session.setPrefs({ motion: v }))));
+    row('Animations', 'Turn off for calmer screens with less movement.', toggle(p.motion, (v) => session.setPrefs({ motion: v }))),
+    row('Vibration', 'A little buzz on your phone for right and wrong answers.', toggle(p.vibrate !== false, (v) => { session.setPrefs({ vibrate: v }); if (v && navigator.vibrate) navigator.vibrate(40); })),
+    row('Theme', 'Light, dark, or the same as your device.', segmented([['light', 'Light'], ['dark', 'Dark'], ['auto', 'Auto']], p.theme || 'light', (v) => session.setPrefs({ theme: v }))),
+    installRow());
+}
+
+function installRow() {
+  const r = h('div');
+  import('../ui/install.js').then((m) => {
+    const draw = () => fill(r, m.installed() ? row('Quickzy app', 'You are using the Quickzy app. Nice!', h('span', { class: 'pill pill-ok' }, icon('check', { size: 14 }), 'Installed'))
+      : m.canInstall() ? row('Quickzy app', 'Put Quickzy on your home screen and open it like an app.', h('button', { class: 'btn btn-sm btn-main', onclick: () => m.install() }, icon('download', { size: 16 }), 'Install')) : null);
+    draw(); m.onInstallChange(draw);
+  }).catch(() => {});
+  return r;
 }
 
 export default async function Settings({ query }) {
