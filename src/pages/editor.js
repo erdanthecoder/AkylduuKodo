@@ -532,6 +532,16 @@ export default async function Editor({ params, query = {} }) {
     mine ? null : h('div', { class: 'card together-note' }, icon('users', { size: 18 }), `You are editing ${quiz.authorName || 'a friend'}'s quiz together. Your saves go straight into their quiz; they publish it.`),
     h('div', { class: 'editor' }, list, h('div', { class: 'card' }, edit)));
 
+  // a video quiz: start by picking the first clip
+  if (query.video && !quiz.id) {
+    setTimeout(async () => {
+      const plan = await myPlan();
+      if (!plan.pro) { toast('Video clips are for Pro members.', 'bad'); return; }
+      const v = await pickVideo(null);
+      if (v) { quiz.questions[at].video = v; touch(); drawEdit(); }
+    }, 300);
+  }
+
   return {
     el,
     destroy() {

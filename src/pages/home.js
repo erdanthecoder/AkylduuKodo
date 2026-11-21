@@ -113,7 +113,7 @@ export default async function Home() {
         h('h1', { style: { marginTop: '14px' } }, 'Make a quiz.', h('br'), h('em', { class: 'hero-cycle' }, 'Play it like a game.')),
         h('p', {}, 'Host it live on the big screen. Everyone joins with a PIN or a QR code and plays on their own device.'),
         h('div', { class: 'row' },
-          h('a', { class: 'btn btn-main btn-lg', href: signedIn() ? '/create' : '/signup' }, icon('plus'), 'Create a quiz'),
+          h('a', { class: 'btn btn-main btn-lg', href: signedIn() ? '/new' : '/signup' }, icon('plus'), 'Create'),
           h('a', { class: 'btn btn-dark btn-lg', href: '/discover' }, icon('compass'), 'Discover'),
         ),
       ),

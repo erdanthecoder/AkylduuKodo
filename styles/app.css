@@ -1535,3 +1535,12 @@ button.bcard.is-slot { color: var(--violet); border-color: var(--violet); backgr
 .site-foot nav { display: flex; flex-wrap: wrap; gap: 6px 16px; }
 .site-foot a { color: inherit; font-weight: 800; }
 @media (max-width: 600px) { .features { grid-template-columns: 1fr 1fr; gap: 10px; } .mode-card { min-height: 150px; padding: 12px; } .mode-card h3 { font-size: 1.1rem; } .mode-card p { font-size: .78rem; } .mode-card .mode-art { width: 72px; height: 72px; } }
+/* Create chooser */
+.create-kinds { display: grid; gap: 14px; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); }
+.create-kind { display: grid; gap: 8px; align-content: start; padding: 20px; border-radius: 22px; background: var(--card); color: var(--ink); border: 3px solid var(--c); box-shadow: 0 6px 0 var(--c); text-decoration: none; transition: transform .12s, box-shadow .12s; }
+.create-kind:hover { transform: translateY(-4px); }
+.create-kind:active { transform: translateY(5px); box-shadow: 0 1px 0 var(--c); }
+.create-kind b { display: flex; gap: 8px; align-items: center; font: 400 1.4rem 'Lilita One', system-ui; }
+.create-kind small { color: var(--ink-2); font-weight: 700; }
+.create-kind-ic { display: grid; place-items: center; width: 54px; height: 54px; border-radius: 16px; background: var(--c); color: #fff; transform: rotate(-5deg); }
+.create-kind.is-locked { opacity: .7; }

@@ -24,6 +24,7 @@ route('/play/:pin', () => import('./pages/play.js'), { chrome: false });
 route('/discover', () => import('./pages/discover.js'));
 route('/quiz/:id', () => import('./pages/quiz.js'));
 route('/practice/:id', () => import('./pages/practice.js'), { chrome: false });
+route('/new', () => import('./pages/create.js'), { auth: true });
 route('/create', () => import('./pages/editor.js'), { auth: true });
 route('/edit/:id', () => import('./pages/editor.js'), { auth: true });
 route('/library', () => import('./pages/library.js'), { auth: true });
@@ -72,7 +73,6 @@ function sidebar(path) {
     session.setPrefs({ music: on });
     fill(e.currentTarget, icon(on ? 'volume' : 'mute', { size: 18 }));
   });
-  const proTag = h('span', { class: 'side-tag' }, 'PRO');
   return h('aside', { class: 'sidebar', 'aria-label': 'Main' },
     h('a', { class: 'logo side-logo', href: '/', 'aria-label': 'Quickzy home' }, logo(), wordmark(), h('span', { class: 'ver' }, VERSION)),
     h('a', { class: 'btn btn-main side-join', href: '/join' }, icon('play', { size: 18 }), 'Join a game'),
@@ -82,10 +82,9 @@ function sidebar(path) {
       link('/channels', 'Channels', 'users'),
       link('/blooks', 'Blooks', 'star'),
       signed ? h('div', { class: 'side-sep' }) : null,
-      signed ? link('/create', 'Create a quiz', 'plus') : null,
+      signed ? link('/new', 'Create', 'plus') : null,
       signed ? link('/library', 'My quizzes', 'list') : null,
       signed ? link('/homework', 'Homework', 'book') : null,
-      signed ? link('/present', 'Presentation+', 'chart', '', proTag) : null,
       h('div', { class: 'side-sep' }),
       h('a', { href: '/pro', class: `side-link side-pro ${isOn(path, '/pro')}` }, verifiedBadge(null, 'pro'), h('span', {}, 'Quickzy Pro')),
       user && user.uid === OWNER_UID ? h('a', { href: '/owner', class: `side-link nav-owner ${isOn(path, '/owner')}` }, verifiedBadge(null, 'owner'), h('span', {}, 'Owner panel')) : null),
