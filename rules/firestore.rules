@@ -59,11 +59,13 @@ service cloud.firestore {
         && existsAfter(/databases/$(database)/documents/usernames/$(request.resource.data.username))
         && getAfter(/databases/$(database)/documents/usernames/$(request.resource.data.username)).data.uid == uid;
       allow update: if me(uid)
-        && onlyKeys(['username', 'displayName', 'blook', 'createdAt', 'xp', 'coins', 'owned', 'customs', 'lastGame', 'channel', 'lastGift', 'banner', 'bio', 'metOwner'])
+        && onlyKeys(['username', 'displayName', 'blook', 'createdAt', 'xp', 'coins', 'owned', 'customs', 'lastGame', 'channel', 'lastGift', 'banner', 'bio', 'metOwner', 'streak', 'lastDay'])
         && progressOk()
         && str(request.resource.data.get('banner', ''), 300)
         && str(request.resource.data.get('bio', ''), 160)
         && request.resource.data.get('metOwner', false) is bool
+        && request.resource.data.get('streak', 0) is int && request.resource.data.get('streak', 0) <= 10000
+        && str(request.resource.data.get('lastDay', ''), 10)
         && request.resource.data.get('channel', true) is bool
         && str(request.resource.data.get('lastGift', ''), 40)
         && request.resource.data.createdAt == resource.data.createdAt

@@ -8,6 +8,7 @@ import { blook } from './ui/blooks.js';
 import { loader } from './ui/loader.js';
 import { connect, net } from './net/index.js';
 import * as session from './services/session.js';
+import { levelOf as levelOfXp } from './services/progress.js';
 import { route, onRoute, render, navigate } from './router.js';
 import { VERSION, RELEASE_1_2 } from './config.js';
 
@@ -55,43 +56,60 @@ const isOn = (path, href) => (href === '/' ? path === '/' : path.startsWith(href
 
 /** "Install the app", shown only when the browser can do it. */
 function installLink() {
-  const btn = h('button', { class: 'side-link side-install', type: 'button', hidden: true, onclick: () => import('./ui/install.js').then((m) => m.install()) }, icon('download', { size: 20 }), h('span', {}, 'Install the app'));
+  const btn = h('button', { class: 'side-install', type: 'button', hidden: true, onclick: () => import('./ui/install.js').then((m) => m.install()) }, icon('download', { size: 16 }), h('span', {}, 'Install the app'));
   import('./ui/install.js').then((m) => { const draw = () => { btn.hidden = !m.canInstall(); }; draw(); m.onInstallChange(draw); }).catch(() => {});
   return btn;
 }
 
-/** The left sidebar on bigger screens: everything in one tidy place. */
+/** The left sidebar on bigger screens: calm, short, and everything in reach. */
 function sidebar(path) {
   const { user, profile } = { user: session.me(), profile: session.myProfile() };
   const signed = user && !user.isAnonymous;
-  const link = (href, label, ic, extra = '') => h('a', { href, class: `side-link ${isOn(path, href)} ${extra}` }, icon(ic, { size: 20 }), h('span', {}, label));
-  const group = (title, ...links) => h('div', { class: 'side-group' }, h('small', {}, title), ...links.filter(Boolean));
-  const music = h('button', { class: 'side-link side-music', type: 'button' });
-  const drawMusic = () => {
-    const on = session.prefs().music;
-    fill(music, icon(on ? 'volume' : 'mute', { size: 20 }), h('span', {}, on ? 'Music on' : 'Music off'));
-  };
-  music.addEventListener('click', () => { session.setPrefs({ music: !session.prefs().music }); drawMusic(); });
-  drawMusic();
+  const link = (href, label, ic, extra = '', tag = null) => h('a', { href, class: `side-link ${isOn(path, href)} ${extra}` }, icon(ic, { size: 20 }), h('span', {}, label), tag);
+  const tool = (label, ic, onclick, extra = '') => h('button', { class: `side-tool ${extra}`, type: 'button', title: label, 'aria-label': label, onclick }, icon(ic, { size: 18 }));
+  const music = tool('Music', session.prefs().music ? 'volume' : 'mute', (e) => {
+    const on = !session.prefs().music;
+    session.setPrefs({ music: on });
+    fill(e.currentTarget, icon(on ? 'volume' : 'mute', { size: 18 }));
+  });
+  const proTag = h('span', { class: 'side-tag' }, 'PRO');
   return h('aside', { class: 'sidebar', 'aria-label': 'Main' },
     h('a', { class: 'logo side-logo', href: '/', 'aria-label': 'Quickzy home' }, logo(), wordmark(), h('span', { class: 'ver' }, VERSION)),
     h('a', { class: 'btn btn-main side-join', href: '/join' }, icon('play', { size: 18 }), 'Join a game'),
     h('nav', { class: 'side-nav' },
-      group('Play', link('/', 'Home', 'home'), link('/discover', 'Discover', 'compass'), link('/channels', 'Channels', 'users'), link('/teachers', 'For teachers', 'book')),
-      signed ? group('Make', link('/create', 'Create a quiz', 'plus'), link('/library', 'My quizzes', 'list'), link('/homework', 'Homework', 'book'), h('a', { href: '/present', class: `side-link side-pro ${isOn(path, '/present')}` }, icon('chart', { size: 20 }), h('span', {}, 'Presentation+'))) : null,
-      group('Collect', link('/blooks', 'Blooks', 'star'), h('a', { href: '/pro', class: `side-link side-pro ${isOn(path, '/pro')}` }, verifiedBadge(null, 'pro'), h('span', {}, 'Quickzy Pro'))),
-      user && user.uid === OWNER_UID ? group('Owner', h('a', { href: '/owner', class: `side-link nav-owner ${isOn(path, '/owner')}` }, verifiedBadge(null, 'owner'), h('span', {}, 'Owner panel'))) : null),
+      link('/', 'Home', 'home'),
+      link('/discover', 'Discover', 'compass'),
+      link('/channels', 'Channels', 'users'),
+      link('/blooks', 'Blooks', 'star'),
+      signed ? h('div', { class: 'side-sep' }) : null,
+      signed ? link('/create', 'Create a quiz', 'plus') : null,
+      signed ? link('/library', 'My quizzes', 'list') : null,
+      signed ? link('/homework', 'Homework', 'book') : null,
+      signed ? link('/present', 'Presentation+', 'chart', '', proTag) : null,
+      h('div', { class: 'side-sep' }),
+      h('a', { href: '/pro', class: `side-link side-pro ${isOn(path, '/pro')}` }, verifiedBadge(null, 'pro'), h('span', {}, 'Quickzy Pro')),
+      user && user.uid === OWNER_UID ? h('a', { href: '/owner', class: `side-link nav-owner ${isOn(path, '/owner')}` }, verifiedBadge(null, 'owner'), h('span', {}, 'Owner panel')) : null),
     h('div', { class: 'side-end' },
-      h('button', { class: 'side-link', type: 'button', onclick: () => import('./ui/whatsnew.js').then((m) => m.showWhatsNew()) }, icon('bolt', { size: 20 }), h('span', {}, `What's new in ${VERSION}`)),
-      h('button', { class: 'side-link side-invite', type: 'button', onclick: () => import('./services/invite.js').then((m) => m.shareInvite()) }, icon('users', { size: 20 }), h('span', {}, 'Invite friends')),
       installLink(),
-      music,
-      link('/settings', 'Settings', 'gear', 'gear-btn'),
       signed && profile
-        ? h('a', { class: 'me-chip side-me', href: `/u/${profile.username}`, 'aria-label': 'Your profile' },
-          blook(profile.blook), h('span', {}, profile.displayName))
+        ? h('a', { class: 'side-card', href: `/u/${profile.username}`, 'aria-label': 'Your profile' },
+          blook(profile.blook),
+          h('div', { class: 'side-card-text' }, h('b', {}, profile.displayName),
+            h('small', {}, `Level ${levelOfXp(profile.xp || 0)} · `, h('span', { class: 'side-coins' }, `${profile.coins || 0}`), ' coins')),
+          streakChip(profile))
         : signed ? null
-          : h('div', { class: 'side-auth' }, h('a', { class: 'btn btn-dark btn-sm', href: '/login' }, 'Sign in'), h('a', { class: 'btn btn-sm', href: '/signup' }, 'Sign up'))));
+          : h('div', { class: 'side-auth' }, h('a', { class: 'btn btn-main btn-sm', href: '/signup' }, 'Sign up free'), h('a', { class: 'btn btn-dark btn-sm', href: '/login' }, 'Sign in')),
+      h('div', { class: 'side-tools' },
+        tool(`What's new in ${VERSION}`, 'bolt', () => import('./ui/whatsnew.js').then((m) => m.showWhatsNew())),
+        tool('Invite friends', 'users', () => import('./services/invite.js').then((m) => m.shareInvite())),
+        music,
+        h('a', { class: `side-tool ${isOn(path, '/settings')}`, href: '/settings', title: 'Settings', 'aria-label': 'Settings' }, icon('gear', { size: 18 })))));
+}
+
+/** The daily streak flame, next to your name. */
+function streakChip(profile) {
+  const n = Number(profile.streak) || 0;
+  return n > 0 ? h('span', { class: 'streak-chip', title: `${n}-day streak` }, '🔥', String(n)) : null;
 }
 
 /** The slim bar on phones (the sidebar is hidden there; the tab bar is at the bottom). */
@@ -247,6 +265,10 @@ async function boot() {
   }
   // know early whether this account is Pro (badges, flags, custom blooks)
   if (session.signedIn()) import('./services/plan.js').then((p) => p.myPlan()).catch(() => {});
+  // the daily streak and its chest (not during the browser tests)
+  if (session.signedIn() && !navigator.webdriver) {
+    session.whenProfile().then(() => import('./services/streak.js')).then(async (m) => { const r = await m.checkIn(); if (r) setTimeout(() => m.showDaily(r), 1200); }).catch(() => {});
+  }
   // invites: reward a friend who joined with a link, and whoever invited them
   const settle = () => { if (session.signedIn()) import('./services/invite.js').then((m) => m.whenReady(session)).catch(() => {}); };
   settle();

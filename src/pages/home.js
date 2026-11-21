@@ -10,6 +10,7 @@ import { signedIn } from '../services/session.js';
 import { popularQuizzes, quizzesBy } from '../services/quizzes.js';
 import { OFFICIAL_UID } from '../config.js';
 import { quizCard, cover, authorLine } from './parts.js';
+import { ornamentBand } from '../ui/ornament.js';
 
 export function joinBox() {
   const pin = h('input', {
@@ -86,12 +87,30 @@ export default async function Home() {
       return b;
     });
 
+  // the hero's last words change: game, race, treasure hunt...
+  const WORDS = ['a game.', 'a race.', 'a treasure hunt.', 'a sky climb.', 'a battle.'];
+  let wi = 0;
+  const cyc = setInterval(() => {
+    const el = document.querySelector('.hero-cycle');
+    if (!el) { clearInterval(cyc); return; }
+    wi = (wi + 1) % WORDS.length;
+    el.classList.add('is-out');
+    setTimeout(() => { el.textContent = `Play it like ${WORDS[wi]}`; el.classList.remove('is-out'); }, 280);
+  }, 2600);
+  // sections slide in as they scroll into view
+  setTimeout(() => {
+    const io = 'IntersectionObserver' in window ? new IntersectionObserver((es) => es.forEach((e) => {
+      if (e.isIntersecting) { e.target.classList.add('is-in'); io.unobserve(e.target); }
+    }), { threshold: 0.12 }) : null;
+    document.querySelectorAll('.reveal').forEach((el) => (io ? io.observe(el) : el.classList.add('is-in')));
+  }, 0);
+
   return h('div', { class: 'page' },
     h('section', { class: 'hero pattern' },
       h('div', { class: 'hero-blooks' }, ...floaters),
       h('div', { style: { position: 'relative' } },
         h('span', { class: 'pill pill-dark' }, icon('bolt', { size: 14 }), 'Live quiz games'),
-        h('h1', { style: { marginTop: '14px' } }, 'Make a quiz.', h('br'), h('em', {}, 'Play it like a game.')),
+        h('h1', { style: { marginTop: '14px' } }, 'Make a quiz.', h('br'), h('em', { class: 'hero-cycle' }, 'Play it like a game.')),
         h('p', {}, 'Host it live on the big screen. Everyone joins with a PIN or a QR code and plays on their own device.'),
         h('div', { class: 'row' },
           h('a', { class: 'btn btn-main btn-lg', href: signedIn() ? '/create' : '/signup' }, icon('plus'), 'Create a quiz'),
@@ -103,8 +122,27 @@ export default async function Home() {
 
     daily,
 
-    h('div', { class: 'section-head' }, h('h2', {}, 'Ten ways to play')),
-    h('div', { class: 'features' },
+    h('section', { class: 'how reveal' },
+      h('h2', {}, 'How Quickzy works'),
+      h('div', { class: 'how-steps' },
+        ...[['1', 'Make or pick a quiz', 'Write your own in minutes, or pick a ready one from Discover.', '#6b4cff'],
+          ['2', 'Everyone joins', 'Players type the PIN or scan the QR code. No accounts, no downloads.', '#2f9bff'],
+          ['3', 'Play it like a game', 'Race planes, climb towers, hunt treasure: right answers power you up.', '#ff4772']]
+          .map(([n, t, d, c]) => h('div', { class: 'how-step', style: { '--c': c } }, h('b', { class: 'how-n' }, n), h('h3', {}, t), h('p', {}, d))))),
+
+    h('section', { class: 'trust reveal' },
+      ornamentBand({ count: 11, height: 30 }),
+      h('h2', {}, 'Made for classrooms. Safe for kids.'),
+      h('div', { class: 'trust-grid' },
+        ...[['shield', 'No ads, ever', 'Nothing to click away to, nothing sold to children.'],
+          ['users', 'No chat with strangers', 'Players only see names and scores. Hosts can remove anyone.'],
+          ['lock', 'Join without an account', 'Kids play with just a PIN and a nickname.'],
+          ['star', 'Made in Kyrgyzstan', 'Built with care, for schools everywhere.']]
+          .map(([ic, t, d]) => h('div', { class: 'trust-item' }, h('span', { class: 'trust-ic' }, icon(ic, { size: 22 })), h('b', {}, t), h('small', {}, d)))),
+      h('a', { class: 'btn', href: '/teachers' }, 'For teachers', icon('arrowRight', { size: 16 }))),
+
+    h('div', { class: 'section-head' }, h('h2', {}, `${MODES.length} ways to play`)),
+    h('div', { class: 'features reveal' },
       ...MODES.map((m) => h('div', { class: 'mode-card', style: { background: m.bg } },
         modeArt(m.id),
         h('h3', {}, m.name),
@@ -118,8 +156,12 @@ export default async function Home() {
       h('a', { href: '/discover', class: 'btn btn-sm' }, 'See all', icon('arrowRight', { size: 16 }))),
     popular,
 
-    h('footer', { class: 'row spread muted small', style: { marginTop: '50px', paddingTop: '20px', borderTop: '2px solid var(--line)' } },
-      h('span', {}, 'Quickzy'),
-      h('span', { class: 'row' }, h('a', { href: '/terms' }, 'Terms'), h('a', { href: '/privacy' }, 'Privacy'))),
+    h('footer', { class: 'site-foot' },
+      ornamentBand({ count: 9, height: 22 }),
+      h('div', { class: 'site-foot-row' },
+        h('b', {}, 'Quickzy'),
+        h('nav', {}, h('a', { href: '/discover' }, 'Discover'), h('a', { href: '/teachers' }, 'For teachers'), h('a', { href: '/pro' }, 'Pro'),
+          h('a', { href: '/terms' }, 'Terms'), h('a', { href: '/privacy' }, 'Privacy'))),
+      h('small', {}, `© ${new Date().getFullYear()} Quickzy · Made with care in Kyrgyzstan`)),
   );
 }
