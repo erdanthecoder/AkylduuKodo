@@ -47,6 +47,10 @@ function drawPickup(ctx, x, y, kind, t) {
 }
 const MAX_CHARGE = 15;
 const START_CHARGE = 6;
+// energy also burns while you move (and slowly while you wait), so everyone
+// keeps answering questions, not just the ones who shoot a lot
+const MOVE_DRAIN = 0.5;   // per second at full speed
+const IDLE_DRAIN = 0.08;  // per second, always
 const TAG_POINTS = 100;
 
 export const WALLS = [
@@ -303,8 +307,10 @@ export function mountPlayer(game) {
   let killer = '';
   const seenFeed = new Set();
 
-  game.grantText = (g) => `+${g} charges`;
-  const meter = () => game.setMeter('Laser', charges / MAX_CHARGE, `${charges}`);
+  game.grantText = (g) => `+${g} energy`;
+  const meter = () => game.setMeter('Energy', charges / MAX_CHARGE, `${Math.floor(charges)}`);
+  let shownCharge = -1;
+  let nextAsk = 0;
   meter();
 
   unsubs.push(live.on(P('snap'), (s) => {
@@ -350,14 +356,14 @@ export function mountPlayer(game) {
   async function recharge() {
     if (game.asking) return;
     me.shield = true;
-    const r = await game.ask({ title: 'Recharge your laser' });
+    const r = await game.ask({ title: 'Recharge your energy' });
     if (r && r.g) charges = Math.min(MAX_CHARGE, charges + r.g);
     meter();
   }
 
   function fire() {
     if (cool > 0 || me.dead || game.asking) return;
-    if (charges <= 0) { recharge(); return; }
+    if (charges < 1) { recharge(); return; }
     cool = clock() < rapidUntil ? 0.27 : COOLDOWN;
     charges -= 1;
     meter();
@@ -376,7 +382,7 @@ export function mountPlayer(game) {
     fx.burst(x2, y2, { n: 8, color: colourOf(uid), speed: 160, life: 0.3 });
     sfx('laser');
     game.sendAct({ k: 's', a: Math.round(me.a * 1000) / 1000, h: hit });
-    if (charges === 0) setTimeout(() => { if (!game.asking && charges === 0) recharge(); }, 500);
+    if (charges < 1) setTimeout(() => { if (!game.asking && charges < 1) recharge(); }, 500);
   }
 
   let tSec = 0;
@@ -396,8 +402,13 @@ export function mountPlayer(game) {
     me.shield = game.asking || now < shieldUntil;
     if (!me.dead && !game.asking) {
       const fast = clock() < speedUntil ? 1.55 : 1;
-      me.x += ctl.x * SPEED * fast * dt;
-      me.y += ctl.y * SPEED * fast * dt;
+      const tired = charges <= 0 ? 0.35 : 1;      // out of energy: crawl
+      const push = Math.min(1, Math.hypot(ctl.x, ctl.y));
+      me.x += ctl.x * SPEED * fast * tired * dt;
+      me.y += ctl.y * SPEED * fast * tired * dt;
+      charges = Math.max(0, charges - (IDLE_DRAIN + MOVE_DRAIN * push) * dt);
+      if (Math.floor(charges) !== shownCharge) { shownCharge = Math.floor(charges); meter(); }
+      if (charges <= 0 && now > nextAsk) { nextAsk = now + 4000; game.flash('Out of energy! Answer to recharge', 'is-bad'); recharge(); }
       PICKUPS.forEach(([px, py, kind], i) => {
         if (taken[i] > clock() || Math.hypot(px - me.x, py - me.y) > R + 18) return;
         taken[i] = clock() + 14000;
@@ -523,4 +534,4 @@ export function mountScreen(el, { ref, live }) {
   return () => { stop(); view.destroy(); };
 }
 
-export const screenNote = () => h('span', {}, 'Tag rivals with your laser. Answer questions to recharge.');
+export const screenNote = () => h('span', {}, 'Tag rivals with your laser. Moving and shooting use energy: answer questions to recharge.');
