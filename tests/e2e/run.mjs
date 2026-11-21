@@ -73,7 +73,12 @@ await host.click('button:has-text("Save profile")');
 await host.waitForSelector('text=Profile saved');
 
 say('build a quiz in the editor');
-await host.goto(`${BASE}/create`);
+await host.goto(`${BASE}/new`);
+await host.waitForSelector('.create-kind:has-text("Video quiz")');
+await host.screenshot({ path: `${SHOTS}/create-chooser.png` });
+await host.click('.create-kind:has-text("Quiz") >> nth=0');
+await host.waitForURL(/\/create$/);
+
 await host.fill('input[aria-label="Quiz title"]', 'Space and Science');
 await host.fill('textarea.q-text', 'Which planet is the largest?');
 const opts = host.locator('.opt input[type=text]');
