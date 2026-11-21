@@ -31,6 +31,7 @@ route('/lobby/:pin', () => import('./pages/host-live.js'), { chrome: false, auth
 route('/u/:username', () => import('./pages/profile.js'));
 route('/channels', () => import('./pages/channels.js'));
 route('/pro', () => import('./pages/pro.js'));
+route('/teachers', () => import('./pages/teachers.js'));
 route('/blooks', () => import('./pages/blooks.js'));
 route('/owner', () => import('./pages/owner.js'), { auth: true });
 route('/settings', () => import('./pages/settings.js'));
@@ -63,12 +64,13 @@ function sidebar(path) {
     h('a', { class: 'logo side-logo', href: '/', 'aria-label': 'Quickzy home' }, logo(), wordmark(), h('span', { class: 'ver' }, VERSION)),
     h('a', { class: 'btn btn-main side-join', href: '/join' }, icon('play', { size: 18 }), 'Join a game'),
     h('nav', { class: 'side-nav' },
-      group('Play', link('/', 'Home', 'home'), link('/discover', 'Discover', 'compass'), link('/channels', 'Channels', 'users')),
+      group('Play', link('/', 'Home', 'home'), link('/discover', 'Discover', 'compass'), link('/channels', 'Channels', 'users'), link('/teachers', 'For teachers', 'book')),
       signed ? group('Make', link('/create', 'Create a quiz', 'plus'), link('/library', 'My quizzes', 'list')) : null,
       group('Collect', link('/blooks', 'Blooks', 'star'), h('a', { href: '/pro', class: `side-link side-pro ${isOn(path, '/pro')}` }, verifiedBadge(null, 'pro'), h('span', {}, 'Quickzy Pro'))),
       user && user.uid === OWNER_UID ? group('Owner', h('a', { href: '/owner', class: `side-link nav-owner ${isOn(path, '/owner')}` }, verifiedBadge(null, 'owner'), h('span', {}, 'Owner panel'))) : null),
     h('div', { class: 'side-end' },
       h('button', { class: 'side-link', type: 'button', onclick: () => import('./ui/whatsnew.js').then((m) => m.showWhatsNew()) }, icon('bolt', { size: 20 }), h('span', {}, `What's new in ${VERSION}`)),
+      h('button', { class: 'side-link side-invite', type: 'button', onclick: () => import('./services/invite.js').then((m) => m.shareInvite()) }, icon('users', { size: 20 }), h('span', {}, 'Invite friends')),
       music,
       link('/settings', 'Settings', 'gear', 'gear-btn'),
       signed && profile
@@ -215,6 +217,7 @@ onRoute(async (match, mod, query, keep) => {
 
 async function boot() {
   session.setPrefs({});
+  import('./services/invite.js').then((m) => m.captureRef()).catch(() => {});
   fill(app, loader({ full: true }));
   try {
     await connect();
@@ -229,6 +232,11 @@ async function boot() {
   }
   // know early whether this account is Pro (badges, flags, custom blooks)
   if (session.signedIn()) import('./services/plan.js').then((p) => p.myPlan()).catch(() => {});
+  // invites: reward a friend who joined with a link, and whoever invited them
+  const settle = () => { if (session.signedIn()) import('./services/invite.js').then((m) => m.whenReady(session)).catch(() => {}); };
+  settle();
+  let wasIn = session.signedIn();
+  session.onSession(() => { const now = session.signedIn(); if (now && !wasIn) settle(); wasIn = now; });
 
   // the owner's admin abuse reaches every open screen; coin rain is real coins
   import('./ui/abuse.js').then(({ listen }) => listen(net.live, 'abuse', async (e) => {

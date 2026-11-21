@@ -52,6 +52,8 @@ export default async function Home() {
 
   // one official quiz a day, the same for everyone that day
   const daily = h('div');
+  const inviteSlot = h('div');
+  import('../services/invite.js').then((m) => fill(inviteSlot, m.inviteCard())).catch(() => {});
   quizzesBy(OFFICIAL_UID).then((list) => {
     if (!list.length) return;
     const day = Math.floor(Date.now() / 86400000);
@@ -100,6 +102,8 @@ export default async function Home() {
         modeArt(m.id),
         h('h3', {}, m.name),
         h('p', {}, m.tagline)))),
+
+    inviteSlot,
 
     h('div', { class: 'section-head' },
       h('h2', {}, 'Popular quizzes'),

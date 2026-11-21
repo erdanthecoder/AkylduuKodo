@@ -1159,3 +1159,35 @@ button.bcard.is-slot { color: var(--violet); border-color: var(--violet); backgr
 .cf-cost { position: absolute; top: 10px; right: 10px; font-weight: 900; color: #12a37f; }
 @keyframes cf-belt { to { background-position: 28px 0; } }
 @keyframes cf-move { to { left: calc(100% + 30px); } }
+
+/* Invites */
+.invite-card { display: flex; align-items: center; gap: 14px; padding: 14px 16px; border-radius: 18px; background: linear-gradient(135deg, #fff0f5, #f1ecff); border: 2px solid #ffc2d6; color: #17133f; text-align: left; }
+.invite-card b { display: block; }
+.invite-card small { display: block; color: #5b5680; font-weight: 700; }
+.invite-card.is-compact { max-width: 460px; margin: 6px auto; }
+@media (max-width: 480px) { .invite-card { flex-wrap: wrap; justify-content: center; text-align: center; } }
+
+/* Teachers */
+.tch-hero { display: grid; grid-template-columns: 1.2fr 1fr; gap: 24px; align-items: center; padding: 30px; border-radius: 28px; color: #fff;
+  background: linear-gradient(135deg, #6b4cff, #4a2fd6 55%, #ff4772); }
+.tch-hero h1 { margin: 10px 0; font: 400 clamp(30px, 5vw, 48px) 'Lilita One', system-ui; line-height: 1.05; }
+.tch-hero p { font-weight: 700; opacity: .95; }
+.tch-hero .pill { background: rgba(255,255,255,.2); color: #fff; }
+.tch-hero-art { display: grid; justify-items: center; gap: 14px; }
+.tch-screen { display: grid; justify-items: center; gap: 2px; padding: 16px 26px; border-radius: 18px; background: #fff; color: #17133f; box-shadow: 0 10px 0 rgba(0,0,0,.15); }
+.tch-screen .logo-mark { width: 44px; height: 44px; }
+.tch-screen b { font-size: 12px; letter-spacing: 2px; text-transform: uppercase; color: #6b6890; }
+.tch-screen span { font: 400 34px 'Lilita One', system-ui; letter-spacing: 2px; }
+.tch-kids { display: flex; flex-wrap: wrap; gap: 6px; justify-content: center; }
+.tch-kids > * { animation: sr-pulse .9s ease-in-out infinite alternate; }
+.tch-kids > *:nth-child(2n) { animation-delay: .3s; }
+.tch-steps { display: grid; grid-template-columns: repeat(auto-fit, minmax(210px, 1fr)); gap: 12px; }
+.tch-step { display: flex; gap: 12px; padding: 16px; border-radius: 18px; background: var(--card, #fff); border: 2px solid var(--line); }
+.tch-step p, .tch-card p { margin: 4px 0 0; color: var(--muted, #6b6890); font-weight: 600; font-size: 14px; }
+.tch-num { flex: none; display: grid; place-items: center; width: 34px; height: 34px; border-radius: 50%; background: #6b4cff; color: #fff; font: 400 18px 'Lilita One', system-ui; }
+.tch-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(230px, 1fr)); gap: 12px; }
+.tch-card { padding: 18px; border-radius: 18px; background: var(--card, #fff); border: 2px solid var(--line); animation: f12-in .4s both; }
+.tch-ic { display: inline-grid; place-items: center; width: 38px; height: 38px; border-radius: 12px; background: #efeaff; color: #6b4cff; margin-bottom: 8px; }
+.tch-cta { text-align: center; padding: 30px 20px; border-radius: 28px; background: linear-gradient(135deg, #ffcd1f, #ff8a2a); color: #3a2209; }
+.tch-cta h2 { margin: 0 0 6px; font: 400 32px 'Lilita One', system-ui; }
+@media (max-width: 760px) { .tch-hero { grid-template-columns: 1fr; padding: 22px; } }

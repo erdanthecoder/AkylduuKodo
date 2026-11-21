@@ -206,6 +206,23 @@ service cloud.firestore {
       allow read: if true;
       allow write: if siteOwner() && uid != request.auth.uid;
     }
+    // Invites: a brand-new account says who invited it, once; the inviter
+    // marks it claimed when they collect the reward
+    match /referrals/{uid} {
+      allow read: if signedIn() && (request.auth.uid == uid || resource.data.by == request.auth.uid);
+      allow create: if me(uid) && account()
+        && onlyKeys(['by', 'name', 'at', 'claimed'])
+        && str(request.resource.data.by, 40) && request.resource.data.by != uid
+        && exists(/databases/$(database)/documents/users/$(request.resource.data.by))
+        && str(request.resource.data.name, 30)
+        && request.resource.data.at == request.time
+        && request.resource.data.claimed == false
+        && get(/databases/$(database)/documents/users/$(uid)).data.createdAt > request.time - duration.value(1, 'd');
+      allow update: if signedIn() && resource.data.by == request.auth.uid && resource.data.claimed == false
+        && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['claimed'])
+        && request.resource.data.claimed == true;
+      allow delete: if me(uid);
+    }
     // Pro memberships: only the owner (later, the payment system) gives them
     match /members/{uid} {
       allow read: if true;
