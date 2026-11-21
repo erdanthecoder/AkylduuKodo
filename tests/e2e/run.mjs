@@ -494,7 +494,7 @@ if ((which === 'owner' || which === 'all') && !EMULATOR) {
 
   say('channels: follow a creator, see the count and the feed');
   await host.goto(`${BASE}/`);
-  const hostChannel = await host.locator('.me-chip').getAttribute('href');
+  const hostChannel = await host.locator('a.side-card').getAttribute('href');
   await own.goto(`${BASE}${hostChannel}`);
   await own.waitForSelector('.profile .follow-btn:has-text("Follow")');
   const before = Number(await own.locator('.profile-stats b[data-n]').first().getAttribute('data-n'));
@@ -671,7 +671,19 @@ if (which === 'account' || which === 'all') {
 
   say('solo practice: play a whole quiz alone');
   await host.goto(`${BASE}/practice/${quizId}`);
-  await host.click('button:has-text("Start")');
+  await host.waitForSelector('.solo-modes');
+  await host.screenshot({ path: `${SHOTS}/solo-modes.png` });
+  await host.click('.solo-mode:has-text("Flashcards")');
+  await host.click('.fc-card');
+  await host.waitForTimeout(600);
+  await host.screenshot({ path: `${SHOTS}/solo-flashcard.png` });
+  await host.click('.fc button:has-text("Quit")');
+  await host.click('.solo-mode:has-text("Bubble Pop")');
+  await host.waitForSelector('.bp-canvas');
+  await host.waitForTimeout(2500);
+  await host.screenshot({ path: `${SHOTS}/solo-bubbles.png` });
+  await host.click('.bp button:has-text("Quit")');
+  await host.click('.solo-mode:has-text("Classic")');
   for (let i = 0; i < 12; i++) {
     const next = await Promise.race([
       host.waitForSelector('.solo-q .pad', { timeout: 15000 }).then(() => 'q'),

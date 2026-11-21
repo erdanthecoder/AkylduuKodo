@@ -1441,3 +1441,97 @@ button.bcard.is-slot { color: var(--violet); border-color: var(--violet); backgr
   .hero h1 { font-size: 2rem; }
   .hero p { margin: 10px 0 16px; font-size: 1rem; }
 }
+
+/* Sidebar (calm edition) */
+.side-nav { display: grid; gap: 2px; }
+.side-sep { height: 1px; margin: 8px 10px; background: rgba(255, 255, 255, 0.1); }
+.side-link { padding: 9px 12px; }
+.side-tag { margin-left: auto; font-size: 10px; font-weight: 900; letter-spacing: 1px; padding: 2px 7px; border-radius: 99px; background: linear-gradient(135deg, #ffe45c, #ffb21f); color: #5a3300; }
+.side-end { margin-top: auto; display: grid; gap: 10px; padding-top: 12px; border-top: 1px solid rgba(255, 255, 255, 0.1); }
+.side-card { display: flex; align-items: center; gap: 10px; padding: 8px; border-radius: 16px; background: rgba(255, 255, 255, 0.06); color: #fff; text-decoration: none; transition: background .15s, transform .15s; }
+.side-card:hover { background: rgba(255, 255, 255, 0.12); transform: translateY(-1px); }
+.side-card .blook { width: 40px; height: 40px; flex: none; }
+.side-card-text { display: grid; min-width: 0; flex: 1; }
+.side-card-text b { font-size: 14px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.side-card-text small { font-size: 11px; font-weight: 800; color: rgba(255, 255, 255, 0.6); }
+.side-coins { color: #ffe45c; }
+.streak-chip { flex: none; display: inline-flex; align-items: center; gap: 2px; padding: 3px 8px; border-radius: 99px; background: #ff8a2a; color: #fff; font-weight: 900; font-size: 12px; box-shadow: 0 0 12px #ff8a2a88; animation: emblem-shine 2.4s ease-in-out infinite; }
+.side-tools { display: flex; justify-content: space-between; gap: 6px; }
+.side-tool { flex: 1; display: grid; place-items: center; height: 38px; border-radius: 12px; border: none; background: rgba(255, 255, 255, 0.06); color: rgba(255, 255, 255, 0.8); cursor: pointer; text-decoration: none; transition: background .15s, transform .15s, color .15s; }
+.side-tool:hover { background: rgba(255, 255, 255, 0.14); color: #fff; transform: translateY(-2px); }
+.side-tool.is-on { background: var(--violet); color: #fff; }
+.side-install { display: flex; align-items: center; justify-content: center; gap: 8px; padding: 8px; border-radius: 12px; border: 1px dashed rgba(255, 255, 255, 0.3); background: none; color: #fff; font: inherit; font-weight: 800; font-size: 13px; cursor: pointer; }
+.side-install:hover { background: rgba(255, 255, 255, 0.08); }
+.side-auth { display: grid; gap: 6px; }
+/* Daily streak */
+.daily-flame { font-size: 64px; line-height: 1; animation: bn-float 1.6s ease-in-out infinite; display: inline-block; }
+.daily-days { display: grid; grid-template-columns: repeat(7, 1fr); gap: 6px; }
+.daily-day { display: grid; justify-items: center; gap: 2px; padding: 6px 2px; border-radius: 12px; background: var(--line); font-size: 18px; }
+.daily-day small { font-size: 10px; font-weight: 900; color: var(--ink-2); }
+.daily-day.is-on { background: #ffe3c7; }
+.daily-day.is-today { outline: 3px solid #ff8a2a; animation: th-pop .5s both; }
+.daily-chest { position: relative; width: 120px; height: 100px; margin: 4px auto; border: none; background: none; cursor: pointer; animation: th-shake .5s ease-in-out infinite; }
+.daily-chest.is-open { animation: none; cursor: default; }
+.dc-box { position: absolute; left: 0; right: 0; bottom: 0; height: 58%; border-radius: 10px; background: linear-gradient(#ffb21f, #c97a0b); border: 4px solid #6b4120; box-shadow: inset 0 0 0 4px #ffe45c; }
+.dc-lid { position: absolute; left: 0; right: 0; top: 4%; height: 42%; border-radius: 40px 40px 8px 8px; background: linear-gradient(#ffd34d, #e8a21a); border: 4px solid #6b4120; transform-origin: 50% 100%; transition: transform .4s cubic-bezier(.3, 1.6, .5, 1); z-index: 1; }
+.daily-chest.is-open .dc-lid { transform: rotate(-35deg) translate(-12px, -22px); }
+.daily-coins { font: 400 56px 'Lilita One', system-ui; color: #ff8a2a; text-shadow: 0 3px 0 #0002; animation: th-pop .6s cubic-bezier(.3, 1.8, .5, 1) both; }
+.daily-after p { margin: -6px 0 6px; font-weight: 900; color: var(--ink-2); }
+/* Solo minigames */
+.solo-modes { display: grid; grid-template-columns: repeat(auto-fill, minmax(150px, 1fr)); gap: 10px; }
+.solo-mode { position: relative; display: grid; justify-items: start; gap: 4px; text-align: left; padding: 14px; border-radius: 18px; border: 3px solid var(--c); background: var(--card); color: var(--ink); font: inherit; cursor: pointer; box-shadow: 0 5px 0 var(--c); transition: transform .12s, box-shadow .12s; }
+.solo-mode:hover { transform: translateY(-3px); }
+.solo-mode:active { transform: translateY(4px); box-shadow: 0 1px 0 var(--c); }
+.solo-mode.is-off { opacity: .45; cursor: default; }
+.solo-mode-ic { font-size: 28px; line-height: 1; }
+.solo-mode small { color: var(--ink-2); font-weight: 700; font-size: 12px; }
+.solo-mode-best { position: absolute; top: 10px; right: 10px; display: inline-flex; gap: 3px; align-items: center; font-size: 11px; font-weight: 900; padding: 2px 8px; border-radius: 99px; background: var(--c); color: #fff; }
+.solo-hearts { letter-spacing: 2px; }
+.solo-speed { font-weight: 900; padding: 2px 10px; border-radius: 99px; background: #ff8a2a; color: #fff; }
+.bp { position: fixed; inset: 0; display: grid; grid-template-rows: auto auto 1fr; background: radial-gradient(circle at 50% 120%, #2fb8ff, #0b3a7a 70%); color: #fff; z-index: 5; }
+.bp-head { display: flex; justify-content: space-between; align-items: center; padding: 10px 14px; gap: 10px; }
+.bp-head .solo-top { flex: 1; }
+.bp-q { margin: 4px 16px 0; text-align: center; font: 400 clamp(20px, 4vw, 32px) 'Lilita One', system-ui; text-shadow: 0 2px 8px #0006; }
+.bp-canvas { width: 100%; height: 100%; touch-action: none; cursor: pointer; }
+.fc { min-height: 100dvh; display: grid; align-content: center; justify-items: center; gap: 18px; padding: 20px 16px; background: linear-gradient(160deg, #12c9a6, #2f9bff); }
+.fc .solo-top { width: min(560px, 100%); color: #fff; }
+.fc-card { position: relative; width: min(560px, 100%); aspect-ratio: 3 / 2; border: none; background: none; cursor: pointer; perspective: 1200px; padding: 0; }
+.fc-face { position: absolute; inset: 0; display: grid; align-content: center; justify-items: center; gap: 10px; padding: 20px; border-radius: 24px; background: #fff; color: #17133f; box-shadow: 0 12px 0 #0002, 0 20px 40px #0003; backface-visibility: hidden; transition: transform .55s cubic-bezier(.3, 1.3, .5, 1); text-align: center; }
+.fc-face h2 { margin: 0; font: 400 clamp(22px, 4vw, 34px) 'Lilita One', system-ui; }
+.fc-face small { font-weight: 900; color: #6b6890; text-transform: uppercase; letter-spacing: 1px; font-size: 11px; }
+.fc-back { transform: rotateY(180deg); background: linear-gradient(135deg, #fff, #e8fff9); }
+.fc-card.is-flipped .fc-front { transform: rotateY(-180deg); }
+.fc-card.is-flipped .fc-back { transform: rotateY(0); }
+.fc .solo-top { display: flex; justify-content: space-between; align-items: center; font-weight: 900; }
+/* Home: cycling hero word, how it works, trust, footer, reveal */
+.hero-cycle { display: inline-block; transition: opacity .28s, transform .28s; }
+.hero-cycle.is-out { opacity: 0; transform: translateY(10px); }
+.reveal { opacity: 0; transform: translateY(26px); transition: opacity .6s ease, transform .6s cubic-bezier(.2, .9, .3, 1.1); }
+.reveal.is-in { opacity: 1; transform: none; }
+@media (prefers-reduced-motion: reduce) { .reveal { opacity: 1; transform: none; transition: none; } }
+.mode-card h3, .mode-card p { position: relative; z-index: 1; text-shadow: 0 2px 6px rgba(0, 0, 0, .35); }
+.mode-card { min-height: 190px; transition: transform .15s; }
+.mode-card:hover { transform: translateY(-4px) rotate(-.6deg); }
+.mode-card .mode-art { width: 104px; height: 104px; }
+.how { margin: 44px 0 10px; text-align: center; width: 100%; justify-self: stretch; }
+.how-steps { grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)) !important; }
+.how-steps { display: grid; gap: 14px; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); margin-top: 16px; text-align: left; }
+.how-step { position: relative; padding: 22px 18px 18px; border-radius: 20px; background: var(--card); border: 2px solid var(--line); }
+.how-step h3 { margin: 10px 0 4px; }
+.how-step p { margin: 0; color: var(--ink-2); }
+.how-n { display: grid; place-items: center; width: 42px; height: 42px; border-radius: 14px; background: var(--c); color: #fff; font: 400 22px 'Lilita One', system-ui; box-shadow: 0 4px 0 rgba(0, 0, 0, .18); transform: rotate(-6deg); }
+.trust { margin: 44px 0 10px; padding: 26px 20px; border-radius: 26px; background: #17133f; color: #fff; display: grid; justify-items: center; gap: 14px; text-align: center; overflow: hidden; }
+.trust h2 { color: #fff; margin: 0; }
+.trust-grid { display: grid; gap: 12px; width: 100%; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); text-align: left; }
+.trust-item { display: grid; gap: 4px; padding: 14px; border-radius: 16px; background: rgba(255, 255, 255, .07); }
+.trust-item small { color: rgba(255, 255, 255, .72); }
+.trust-ic { display: grid; place-items: center; width: 40px; height: 40px; border-radius: 12px; background: #12c9a6; color: #fff; }
+.trust .btn { background: #fff; color: #17133f; }
+.orn-band { max-width: 100%; }
+.orn-horn { stroke-dasharray: 90; stroke-dashoffset: 90; animation: ornDraw 1.4s ease forwards; }
+@keyframes ornDraw { to { stroke-dashoffset: 0; } }
+.site-foot { margin-top: 56px; padding-top: 18px; border-top: 2px solid var(--line); display: grid; gap: 10px; justify-items: center; text-align: center; color: var(--ink-2); }
+.site-foot-row { display: flex; flex-wrap: wrap; gap: 10px 22px; justify-content: space-between; align-items: center; width: 100%; }
+.site-foot nav { display: flex; flex-wrap: wrap; gap: 6px 16px; }
+.site-foot a { color: inherit; font-weight: 800; }
+@media (max-width: 600px) { .features { grid-template-columns: 1fr 1fr; gap: 10px; } .mode-card { min-height: 150px; padding: 12px; } .mode-card h3 { font-size: 1.1rem; } .mode-card p { font-size: .78rem; } .mode-card .mode-art { width: 72px; height: 72px; } }
