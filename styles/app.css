@@ -1310,3 +1310,20 @@ button.bcard.is-slot { color: var(--violet); border-color: var(--violet); backgr
 .ub-result { animation: f12-in .5s .5s both; }
 .ub-rarity { font-family: 'Lilita One', system-ui; font-size: clamp(34px, 7vw, 56px); text-shadow: 0 4px 0 #0003, 0 0 24px currentColor; animation: th-pop .6s .35s cubic-bezier(.3, 1.8, .5, 1) both; }
 @media (prefers-reduced-motion: reduce) { .ub-card, .ub-holo, .ub-beams, .ub-stars i { animation: none; } }
+/* Homework */
+.hw-head { display: grid; grid-template-columns: minmax(0, 340px) 1fr; gap: 20px; align-items: center; background: var(--card); border-radius: 24px; padding: 16px; box-shadow: 0 6px 0 #0000000f; }
+.hw-head .quiz-cover { border-radius: 16px; }
+.hw-info { display: grid; gap: 8px; justify-items: start; }
+.hw-info h1 { margin: 0; font: 400 clamp(26px, 4vw, 38px) 'Lilita One', system-ui; }
+.hw-due { display: inline-flex; align-items: center; gap: 8px; padding: 8px 14px; border-radius: 14px; background: #e8fff6; color: #0b7a5a; }
+.hw-due.is-closed { background: #ffe8ec; color: #b5121b; }
+.hw-due small { font-weight: 700; opacity: .8; }
+.hw-stats { display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px; }
+.hw-stats > div { background: var(--card); border-radius: 18px; padding: 16px; text-align: center; display: grid; box-shadow: 0 4px 0 #0000000d; }
+.hw-stats b { font: 400 32px 'Lilita One', system-ui; color: #6b4cff; }
+.hw-stats small { font-weight: 800; color: var(--ink-2); }
+.hw-row { display: flex; align-items: center; gap: 14px; text-decoration: none; color: inherit; }
+.hw-row small { display: block; }
+.hw-ic { display: grid; place-items: center; width: 44px; height: 44px; border-radius: 14px; background: #efeaff; color: #6b4cff; }
+.hw-hero { background: linear-gradient(135deg, #12c9a6, #2f9bff); }
+@media (max-width: 640px) { .hw-head { grid-template-columns: 1fr; } .hw-stats b { font-size: 24px; } }

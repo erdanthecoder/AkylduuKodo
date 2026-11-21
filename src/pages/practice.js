@@ -192,6 +192,14 @@ export default async function Practice({ params }) {
     sfx(record ? 'win' : 'reveal');
     if (record || right === marked.length) celebrate();
     const reward = h('div', { class: 'reward' });
+    // homework: hand in the first try
+    const hwId = new URLSearchParams(location.search).get('hw');
+    const handIn = h('div');
+    if (hwId && /^[A-Za-z0-9]{6,40}$/.test(hwId)) {
+      import('../services/homework.js').then((m) => m.submit(hwId, { score, right, total: marked.length }))
+        .then((ok) => fill(handIn, h('p', { class: 'pill pill-ok', style: { margin: '0 auto' } }, icon('check', { size: 14 }), ok ? 'Homework handed in!' : 'Your first try was already handed in.')))
+        .catch(() => fill(handIn, h('p', { class: 'pill' }, 'This homework is closed.')));
+    }
     const today = new Date().toISOString().slice(0, 10);
     const claimKey = `solo:${quiz.id}:${today}`.slice(0, 40);
     let claimed = [];
@@ -216,6 +224,7 @@ export default async function Practice({ params }) {
         h('div', { class: 'row', style: { justifyContent: 'center' } },
           h('span', { class: 'pill' }, icon('check', { size: 14 }), `${right} of ${marked.length} right`),
           h('span', { class: 'pill' }, icon('bolt', { size: 14 }), `Best streak ${bestStreak}`)),
+        handIn,
         reward,
         h('div', { class: 'row', style: { justifyContent: 'center' } },
           h('button', { class: 'btn btn-main', onclick: () => run() }, icon('shuffle', { size: 18 }), 'Play again'),

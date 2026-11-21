@@ -211,6 +211,31 @@ service cloud.firestore {
       allow read: if true;
       allow write: if siteOwner() && uid != request.auth.uid;
     }
+    // Homework: a teacher sets a quiz with a due date; students hand in once
+    match /homework/{hid} {
+      allow read: if true;
+      allow create: if account() && request.resource.data.owner == request.auth.uid
+        && onlyKeys(['owner', 'ownerName', 'quizId', 'quizTitle', 'title', 'dueAt', 'createdAt'])
+        && str(request.resource.data.ownerName, 30) && str(request.resource.data.quizId, 60)
+        && str(request.resource.data.quizTitle, 80) && str(request.resource.data.title, 80)
+        && request.resource.data.dueAt is int && request.resource.data.dueAt > request.time.toMillis()
+        && request.resource.data.dueAt < request.time.toMillis() + 2678400000
+        && request.resource.data.createdAt == request.time;
+      allow delete: if signedIn() && resource.data.owner == request.auth.uid;
+      match /results/{uid} {
+        allow read: if signedIn() && (request.auth.uid == uid
+          || get(/databases/$(database)/documents/homework/$(hid)).data.owner == request.auth.uid);
+        allow create: if me(uid) && account()
+          && onlyKeys(['name', 'score', 'right', 'total', 'at'])
+          && str(request.resource.data.name, 30)
+          && request.resource.data.score is int && request.resource.data.score >= 0 && request.resource.data.score <= 200000
+          && request.resource.data.right is int && request.resource.data.total is int
+          && request.resource.data.right >= 0 && request.resource.data.right <= request.resource.data.total && request.resource.data.total <= 200
+          && request.resource.data.at == request.time
+          && get(/databases/$(database)/documents/homework/$(hid)).data.dueAt > request.time.toMillis();
+      }
+    }
+
     // Invites: a brand-new account says who invited it, once; the inviter
     // marks it claimed when they collect the reward
     match /referrals/{uid} {

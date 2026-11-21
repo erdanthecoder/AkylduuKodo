@@ -578,6 +578,18 @@ if (which === 'invite' || which === 'all') {
   const after = await host.evaluate(async () => { const p = await window.__quickzy.session.reloadProfile(); return { coins: p.coins || 0, buddy: Boolean(p.owned && p.owned.buddy) }; });
   if (after.coins < coins0 + 150 || !after.buddy) fail(`inviter reward missing: ${JSON.stringify(after)} from ${coins0}`);
   await pal.context().close();
+
+  say('homework: set a quiz as homework and see the results page');
+  await host.goto(`${BASE}/quiz/${quizId}`);
+  await host.click('button:has-text("Set as homework")');
+  await host.click('.modal button:has-text("1 week")');
+  await host.click('.modal button:has-text("Set homework")');
+  await host.waitForURL(/\/hw\//);
+  await host.waitForSelector('text=Copy link for students');
+  await host.waitForSelector('text=Nobody has handed it in yet');
+  await host.screenshot({ path: `${SHOTS}/homework.png` });
+  await host.goto(`${BASE}/homework`);
+  await host.waitForSelector('.hw-row');
 }
 
 if (which === 'account' || which === 'all') {

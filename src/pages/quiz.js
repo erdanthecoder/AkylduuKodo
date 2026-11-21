@@ -39,6 +39,7 @@ export default async function Quiz({ params }) {
         h('div', { class: 'row', style: { marginTop: '6px' } },
           h('a', { class: 'btn btn-main btn-lg', href: `/practice/${quiz.id}` }, icon('play'), 'Play solo'),
           h('a', { class: 'btn btn-violet btn-lg', href: signedIn() ? `/host/${quiz.id}` : `/login?next=/host/${quiz.id}` }, icon('users'), 'Host live'),
+          h('button', { class: 'btn btn-lg', onclick: () => import('./homework.js').then((m) => m.assignDialog(quiz)) }, icon('book'), 'Set as homework'),
           mine ? h('a', { class: 'btn btn-lg', href: `/edit/${quiz.id}` }, icon('edit'), 'Edit') : dup,
           h('button', { class: 'btn btn-ghost', onclick: () => copy(location.href, 'Link copied') }, icon('copy', { size: 18 }), 'Copy link')))),
     h('h2', {}, 'Questions'),
