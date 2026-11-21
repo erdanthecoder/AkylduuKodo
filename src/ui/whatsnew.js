@@ -27,9 +27,15 @@ export const NEWS_11 = [
 ];
 
 export const NEWS_12 = [
-  ['play', '#ff8a2a', 'Sky Race', 'A brand new game: fly your plane, answer 3 to charge a BOOST, and outrun the fighter jets. 10 boosts each, 3 minutes.'],
-  ['star', '#6b4cff', 'A real 3D film', 'Quickzy 1.2 arrives with a cinematic film above the clouds.'],
-  ['bolt', '#ffcd1f', 'Faster and smoother', 'Lots of small fixes all over Quickzy.'],
+  ['play', '#ff8a2a', 'Sky Race', 'Fly your plane, answer 3 to charge a BOOST, and outrun the fighter jets. 10 boosts, 3 minutes.'],
+  ['user', '#6b4cff', 'New profiles', 'A big banner (pick a scene or use your own picture), a bio, stats, emblems and an animated founder profile.'],
+  ['trophy', '#ffb21f', 'Achievements', '16 goals to reach, and a special badge for playing a game hosted by the founder.'],
+  ['compass', '#2f9bff', 'A new Discover', 'Featured quizzes with real photos, Trending, and a shelf for every subject.'],
+  ['book', '#12c9a6', 'Homework', 'Set any quiz with a due date. Students play it on their own and you see every score.'],
+  ['chart', '#ff4772', 'Presentation+ (Pro)', 'Slides with live polls, quiz questions and guess-the-number graphs, answered on phones.'],
+  ['star', '#a560ff', 'Sky Climb, rebuilt', 'Floating islands, scenery in every world, checkpoint arches, dust, trails and flying critters.'],
+  ['bolt', '#ffcd1f', 'Better box openings', 'Cards spin in, holographic foil on rare ones, light beams, and the card tilts in your hand.'],
+  ['star', '#17133f', 'A brand new logo', 'A Q made of the four answer colours, with a lightning tail.'],
 ];
 
 export const NEWS = VERSION === '1.2' ? NEWS_12 : NEWS_11;

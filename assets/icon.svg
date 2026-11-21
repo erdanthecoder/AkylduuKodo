@@ -1,12 +1,1 @@
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64">
-  <defs>
-    <linearGradient id="g" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#7c5cff"/><stop offset=".55" stop-color="#a14dff"/><stop offset="1" stop-color="#ff4772"/></linearGradient>
-    <linearGradient id="b" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#ffe45c"/><stop offset="1" stop-color="#ffb21f"/></linearGradient>
-  </defs>
-  <rect x="3" y="7" width="58" height="54" rx="18" fill="#3d22b8"/>
-  <rect x="3" y="3" width="58" height="53" rx="18" fill="url(#g)"/>
-  <path d="M9 22 C11 11 20 7 32 7" stroke="#fff" stroke-width="3.5" stroke-linecap="round" opacity=".35" fill="none"/>
-  <path d="M30 12 a17.5 17.5 0 1 0 0.01 0 Z M30 21 a8.5 8.5 0 1 1 -0.01 0 Z" fill="#fff" fill-rule="evenodd"/>
-  <path d="M38 33 L55 31 L46 42 L58 41.5 L33 63 L41 47 L31.5 47.5 Z" fill="url(#b)" stroke="#2a1580" stroke-width="2.6" stroke-linejoin="round"/>
-  <path d="M52 8 l1.6 4 4 1.6 -4 1.6 -1.6 4 -1.6 -4 -4 -1.6 4 -1.6 Z" fill="#fff"/>
-</svg>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64"><defs><linearGradient id="ia" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#3a24a8"/><stop offset="1" stop-color="#17133f"/></linearGradient><radialGradient id="ib" cx=".3" cy=".25" r=".8"><stop offset="0" stop-color="#7c5cff" stop-opacity=".9"/><stop offset="1" stop-color="#7c5cff" stop-opacity="0"/></radialGradient></defs><rect x="2" y="5" width="60" height="57" rx="17" fill="#0e0b2b"/><rect x="2" y="2" width="60" height="57" rx="17" fill="url(#ia)"/><rect x="2" y="2" width="60" height="57" rx="17" fill="url(#ib)"/><path d="M9.55 26.64 A19.5 19.5 0 0 1 27.64 8.55 L28.37 19.02 A9 9 0 0 0 20.02 27.37 Z" fill="#ff4772"/><path d="M30.36 8.55 A19.5 19.5 0 0 1 48.45 26.64 L37.98 27.37 A9 9 0 0 0 29.63 19.02 Z" fill="#2f9bff"/><path d="M48.45 29.36 A19.5 19.5 0 0 1 30.36 47.45 L29.63 36.98 A9 9 0 0 0 37.98 28.63 Z" fill="#ffcd1f"/><path d="M27.64 47.45 A19.5 19.5 0 0 1 9.55 29.36 L20.02 28.63 A9 9 0 0 0 28.37 36.98 Z" fill="#12c9a6"/><path d="M36 35 L52 33 L44.5 42.5 L57 42 L35 62 L41.5 47.5 L32.5 48 Z" fill="#fff" stroke="#17133f" stroke-width="2.6" stroke-linejoin="round"/><path d="M52 7.5 l1.7 4.3 4.3 1.7 -4.3 1.7 -1.7 4.3 -1.7 -4.3 -4.3 -1.7 4.3 -1.7 Z" fill="#ffe45c"/></svg>
