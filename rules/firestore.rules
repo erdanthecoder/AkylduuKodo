@@ -211,6 +211,17 @@ service cloud.firestore {
       allow read: if true;
       allow write: if siteOwner() && uid != request.auth.uid;
     }
+    // Presentation+ decks: Pro members only; private to their owner
+    match /decks/{did} {
+      allow read: if signedIn() && resource.data.owner == request.auth.uid;
+      allow create, update: if account() && pro() && request.resource.data.owner == request.auth.uid
+        && (resource == null || resource.data.owner == request.auth.uid)
+        && request.resource.data.keys().hasOnly(['owner', 'title', 'slides', 'updatedAt'])
+        && str(request.resource.data.title, 80)
+        && request.resource.data.slides is list && request.resource.data.slides.size() <= 40;
+      allow delete: if signedIn() && resource.data.owner == request.auth.uid;
+    }
+
     // Homework: a teacher sets a quiz with a due date; students hand in once
     match /homework/{hid} {
       allow read: if true;

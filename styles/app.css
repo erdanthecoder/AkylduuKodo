@@ -1327,3 +1327,71 @@ button.bcard.is-slot { color: var(--violet); border-color: var(--violet); backgr
 .hw-ic { display: grid; place-items: center; width: 44px; height: 44px; border-radius: 14px; background: #efeaff; color: #6b4cff; }
 .hw-hero { background: linear-gradient(135deg, #12c9a6, #2f9bff); }
 @media (max-width: 640px) { .hw-head { grid-template-columns: 1fr; } .hw-stats b { font-size: 24px; } }
+/* Presentation+ */
+.pres-badge { display: inline-block; padding: 4px 12px; border-radius: 99px; font-weight: 900; font-size: 12px; letter-spacing: 1px; color: #5a3300; background: linear-gradient(135deg, #ffe45c, #ffb21f); box-shadow: 0 2px 0 #b5860b; }
+.pres-hero { display: grid; justify-items: start; gap: 10px; padding: 30px; border-radius: 28px; color: #fff; background: radial-gradient(circle at 85% 20%, #ff477266, transparent 40%), linear-gradient(135deg, #17133f, #3a2399 60%, #6b4cff); }
+.pres-hero h1 { margin: 0; font: 400 clamp(30px, 5vw, 50px) 'Lilita One', system-ui; }
+.pres-hero p { margin: 0; max-width: 620px; font-weight: 700; opacity: .9; }
+.pres-upsell { justify-items: center; }
+.pres-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(230px, 1fr)); gap: 14px; }
+.pres-card { display: grid; gap: 6px; padding: 10px; border-radius: 20px; background: var(--card); text-decoration: none; color: inherit; box-shadow: 0 4px 0 #0000000f; transition: transform .15s; }
+.pres-card:hover { transform: translateY(-4px); }
+.pres-thumb { position: relative; aspect-ratio: 16 / 9; border-radius: 12px; overflow: hidden; container-type: inline-size; }
+.pres-thumb .slide { position: absolute; inset: 0; font-size: 4.2cqw; }
+.slide { position: relative; width: 100%; height: 100%; color: #fff; display: grid; align-content: center; padding: 6% 7%; box-sizing: border-box; overflow: hidden; font-size: clamp(14px, 2.2vw, 30px); }
+.slide h1 { font: 400 3.2em 'Lilita One', system-ui; margin: 0; line-height: 1.05; }
+.slide h2 { font: 400 2em 'Lilita One', system-ui; margin: 0 0 .5em; line-height: 1.1; }
+.sl-title { text-align: center; } .sl-title p { font-size: 1.2em; font-weight: 800; opacity: .9; margin: .4em 0 0; }
+.sl-content { display: grid; gap: 4%; align-items: center; } .sl-content.has-img { grid-template-columns: 1.2fr 1fr; }
+.sl-content ul { margin: 0; padding-left: 1.1em; font-weight: 800; font-size: 1.1em; line-height: 1.5; }
+.sl-content img { width: 100%; max-height: 70%; object-fit: cover; border-radius: .6em; box-shadow: 0 .3em 1em #0005; }
+.sl-q { text-align: center; }
+.sl-bars { display: flex; gap: 3%; align-items: flex-end; height: 55%; }
+.sl-bar { flex: 1; display: grid; grid-template-rows: 1fr auto; gap: .3em; height: 100%; transition: opacity .3s; }
+.sl-bar.is-wrong { opacity: .4; }
+.sl-bar-track { display: flex; align-items: flex-end; background: #ffffff1f; border-radius: .4em; }
+.sl-bar-track i { display: grid; place-items: start center; width: 100%; min-height: 1.6em; border-radius: .4em; transition: height .5s cubic-bezier(.3, 1.4, .5, 1); }
+.sl-bar-track b { font: 400 1.1em 'Lilita One', system-ui; padding-top: .2em; }
+.sl-bar > span { display: flex; justify-content: center; align-items: center; gap: .3em; padding: .4em; border-radius: .4em; font-weight: 900; text-align: center; font-size: .8em; }
+.sl-bar.is-right > span { box-shadow: 0 0 0 .2em #fff, 0 0 1em #fff; }
+.sl-guess { position: relative; height: 50%; margin: 0 2%; }
+.sl-hist { display: flex; align-items: flex-end; gap: 2px; height: 85%; border-bottom: .15em solid #fffa; }
+.sl-hist i { flex: 1; background: #ffffffb3; border-radius: .2em .2em 0 0; transition: height .5s; min-height: 2px; }
+.sl-axis { display: flex; justify-content: space-between; font-weight: 900; font-size: .8em; margin-top: .3em; }
+.sl-mark { position: absolute; top: -6%; bottom: 10%; width: .2em; transform: translateX(-50%); }
+.sl-mark small { position: absolute; top: -1.6em; left: 50%; transform: translateX(-50%); white-space: nowrap; padding: .15em .5em; border-radius: .4em; font-weight: 900; font-size: .7em; }
+.sl-mark.is-avg { background: #ffcd1f; } .sl-mark.is-avg small { background: #ffcd1f; color: #3a2209; }
+.sl-mark.is-ans { background: #12c9a6; animation: th-pop .5s both; } .sl-mark.is-ans small { background: #12c9a6; top: auto; bottom: -1.8em; }
+.sl-pin { position: absolute; top: 3%; right: 3%; display: grid; justify-items: center; padding: .4em .9em; border-radius: .6em; background: #fff; color: #17133f; font-size: .6em; }
+.sl-pin b { font: 400 2em 'Lilita One', system-ui; letter-spacing: .1em; }
+.pres-editor { max-width: 1400px; }
+.pres-top { margin-bottom: 14px; gap: 10px; } .pres-title { font-weight: 900; font-size: 20px; max-width: 420px; }
+.pres-layout { display: grid; grid-template-columns: 220px 1fr; gap: 16px; align-items: start; }
+.pres-rail { display: grid; gap: 8px; max-height: 80vh; overflow-y: auto; padding-right: 4px; }
+.pres-mini { display: grid; grid-template-columns: 18px 1fr; gap: 6px; align-items: start; padding: 4px; border-radius: 12px; border: 3px solid transparent; background: none; cursor: pointer; font-weight: 900; color: var(--ink-2); }
+.pres-mini.is-on { border-color: #6b4cff; }
+.pres-add { display: flex; flex-wrap: wrap; gap: 4px; padding-top: 6px; border-top: 2px dashed var(--line); }
+.pres-preview { aspect-ratio: 16 / 9; border-radius: 18px; overflow: hidden; box-shadow: 0 8px 24px #0002; container-type: inline-size; }
+.pres-preview .slide { font-size: 2.4cqw; }
+.pres-bg { width: 40px; height: 28px; border-radius: 8px; border: 3px solid transparent; cursor: pointer; } .pres-bg.is-on { border-color: #17133f; }
+.pres-live { position: fixed; inset: 0; background: #0b0920; display: grid; grid-template-rows: 1fr auto; }
+.pres-stage { display: grid; place-items: center; padding: 1vmin; overflow: hidden; container-type: size; }
+.pres-stage .slide { width: min(100cqw, 177.7cqh); height: min(56.25cqw, 100cqh); border-radius: 1vmin; font-size: min(2.3cqw, 4cqh); }
+.pres-controls { display: flex; justify-content: center; align-items: center; gap: 8px; padding: 10px; background: #17133f; flex-wrap: wrap; }
+.pres-count { color: #fff; font-weight: 900; min-width: 60px; text-align: center; }
+.aud { min-height: 100dvh; display: grid; grid-template-rows: auto 1fr; background: linear-gradient(160deg, #17133f, #3a2399); color: #fff; }
+.aud-top { display: flex; justify-content: space-between; align-items: center; gap: 10px; padding: 12px 16px; background: #0003; }
+.aud-box { display: grid; align-content: center; justify-items: center; gap: 16px; padding: 20px 16px; text-align: center; }
+.aud-box h2 { margin: 0; font: 400 clamp(24px, 6vw, 36px) 'Lilita One', system-ui; }
+.aud-opts { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; width: min(560px, 100%); }
+.aud-opt { min-height: 90px; border: none; border-radius: 18px; color: #fff; font: 900 18px Nunito, system-ui; padding: 12px; cursor: pointer; box-shadow: 0 6px 0 #0004; transition: transform .1s; }
+.aud-opt:active { transform: translateY(4px); box-shadow: 0 2px 0 #0004; }
+.aud-opt:disabled { opacity: .55; } .aud-opt.is-mine { opacity: 1; outline: 4px solid #fff; }
+.aud-opt.is-right { opacity: 1; outline: 4px solid #12c9a6; } .aud-opt.is-wrong:not(.is-mine) { opacity: .3; }
+.aud-num { font: 400 64px 'Lilita One', system-ui; }
+.aud-range { width: min(520px, 100%); accent-color: #ffcd1f; height: 40px; }
+.aud-sent { font-weight: 900; font-size: 18px; }
+.aud-look { display: grid; justify-items: center; gap: 10px; } .aud-look .logo-mark { width: 80px; height: 80px; }
+@media (max-width: 760px) { .pres-layout { grid-template-columns: 1fr; } .pres-rail { grid-auto-flow: column; grid-auto-columns: 150px; max-height: none; overflow-x: auto; } .sl-content.has-img { grid-template-columns: 1fr; } }
+.sl-bars { height: 9em; } .sl-guess { height: 7em; margin-top: 1.4em; }
+.pres-controls .btn-ghost { color: #fff; }

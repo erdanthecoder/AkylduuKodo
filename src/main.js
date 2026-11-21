@@ -33,6 +33,10 @@ route('/channels', () => import('./pages/channels.js'));
 route('/pro', () => import('./pages/pro.js'));
 route('/teachers', () => import('./pages/teachers.js'));
 route('/hw/:id', () => import('./pages/homework.js'));
+route('/present', () => import('./pages/present.js'), { auth: true });
+route('/present/:id/live', () => import('./pages/present.js').then((m) => ({ default: m.PresentLive })), { chrome: false, auth: true });
+route('/present/:id', () => import('./pages/present.js'), { auth: true });
+route('/show/:pin', () => import('./pages/present.js').then((m) => ({ default: m.Audience })), { chrome: false });
 route('/homework', () => import('./pages/homework.js').then((m) => ({ default: m.MyHomework })));
 route('/blooks', () => import('./pages/blooks.js'));
 route('/owner', () => import('./pages/owner.js'), { auth: true });
@@ -67,7 +71,7 @@ function sidebar(path) {
     h('a', { class: 'btn btn-main side-join', href: '/join' }, icon('play', { size: 18 }), 'Join a game'),
     h('nav', { class: 'side-nav' },
       group('Play', link('/', 'Home', 'home'), link('/discover', 'Discover', 'compass'), link('/channels', 'Channels', 'users'), link('/teachers', 'For teachers', 'book')),
-      signed ? group('Make', link('/create', 'Create a quiz', 'plus'), link('/library', 'My quizzes', 'list'), link('/homework', 'Homework', 'book')) : null,
+      signed ? group('Make', link('/create', 'Create a quiz', 'plus'), link('/library', 'My quizzes', 'list'), link('/homework', 'Homework', 'book'), h('a', { href: '/present', class: `side-link side-pro ${isOn(path, '/present')}` }, icon('chart', { size: 20 }), h('span', {}, 'Presentation+'))) : null,
       group('Collect', link('/blooks', 'Blooks', 'star'), h('a', { href: '/pro', class: `side-link side-pro ${isOn(path, '/pro')}` }, verifiedBadge(null, 'pro'), h('span', {}, 'Quickzy Pro'))),
       user && user.uid === OWNER_UID ? group('Owner', h('a', { href: '/owner', class: `side-link nav-owner ${isOn(path, '/owner')}` }, verifiedBadge(null, 'owner'), h('span', {}, 'Owner panel'))) : null),
     h('div', { class: 'side-end' },

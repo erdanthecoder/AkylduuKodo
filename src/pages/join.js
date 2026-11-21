@@ -62,6 +62,11 @@ export default async function Join({ params }) {
   const uid = me().uid;
   let meta;
   try { meta = await getMeta(pin); } catch (err) { return problem(explain(err)); }
+  // not a game? it may be a Presentation+ room
+  if (!meta) {
+    const show = await net.live.get(`shows/${pin}/meta`).catch(() => null);
+    if (show) { queueMicrotask(() => navigate(`/show/${pin}`, { replace: true })); return h('div'); }
+  }
   const why = joinProblem(meta);
   const already = meta ? await net.live.get(gamePath(pin, `players/${uid}`)).catch(() => null) : null;
   if (already) { queueMicrotask(() => navigate(`/play/${pin}`, { replace: true })); return h('div'); }
