@@ -149,7 +149,7 @@ await host.click('.modal button:has-text("Done")');
 
 say('discover finds it');
 await host.goto(`${BASE}/discover?q=planet`);
-await host.waitForSelector('.quiz-card:has-text("Space and Science")');
+await host.waitForSelector('.quiz-card:has-text("Space and Science") >> visible=true');
 
 /* ------------------------------------------------------------- games */
 
