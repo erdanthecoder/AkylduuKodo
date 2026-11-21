@@ -241,6 +241,9 @@ function drawSky(ctx, w, h, camY, t, flash = 0) {
   ctx.restore();
 }
 
+// rock colours under each world's islands: [lit side, shade]
+const ROCK = [['#8a5a2b', '#6b4120'], ['#5b3a1a', '#3e2810'], ['#7fb8d6', '#4f8fb3'], ['#c98a4a', '#a0662e'], ['#8f97c8', '#6a72a8'], ['#5a3fb8', '#3a2380']];
+
 function drawLedge(ctx, f, x, y, t, alpha = 1) {
   const W = WORLDS[f.level];
   ctx.globalAlpha = alpha;
@@ -274,20 +277,42 @@ function drawLedge(ctx, f, x, y, t, alpha = 1) {
       for (let k = 0; k < 3; k++) { const cx = x + f.w * (0.25 + k * 0.25); ctx.fillRect(cx - 6, y - 4 - Math.abs(Math.sin(t * 6 + k)) * 3, 12, 5); }
     }
   } else {
-    ctx.fillStyle = f.kind === 'move' ? '#ffcd1f' : f.kind === 'crumble' ? '#d99a4e' : f.kind === 'fade' ? '#8fe8ff' : W.ledge;
-    rr(ctx, x, y, f.w, H, 8); ctx.fill();
+    // a floating island: a grassy top, a chunky rock body that tapers into
+    // hanging stones, and a soft highlight
+    const top = f.kind === 'move' ? '#ffcd1f' : f.kind === 'crumble' ? '#e7b46e' : f.kind === 'fade' ? '#a8f0ff' : f.kind === 'ice' ? '#e6fbff' : W.ledge;
+    const rock = ROCK[f.level];
+    const depth = Math.min(46, 18 + f.w * 0.16);
+    const bob = f.kind === 'move' ? 0 : Math.sin(t * 1.2 + f.n) * 1.5;
+    y += bob;
+    // underside
+    ctx.fillStyle = rock[1];
+    ctx.beginPath();
+    ctx.moveTo(x + 2, y + H - 4);
+    ctx.lineTo(x + f.w - 2, y + H - 4);
+    ctx.lineTo(x + f.w * 0.82, y + H + depth * 0.55);
+    ctx.lineTo(x + f.w * 0.62, y + H + depth * 0.75);
+    ctx.lineTo(x + f.w * 0.5, y + H + depth);
+    ctx.lineTo(x + f.w * 0.36, y + H + depth * 0.7);
+    ctx.lineTo(x + f.w * 0.16, y + H + depth * 0.5);
+    ctx.closePath(); ctx.fill();
+    ctx.fillStyle = rock[0];
+    ctx.beginPath();
+    ctx.moveTo(x + 2, y + H - 4); ctx.lineTo(x + f.w * 0.5, y + H - 4); ctx.lineTo(x + f.w * 0.36, y + H + depth * 0.62); ctx.lineTo(x + f.w * 0.16, y + H + depth * 0.42); ctx.closePath(); ctx.fill();
+    // little hanging stones
+    ctx.fillStyle = rock[1];
+    for (let i = 0; i < 2; i++) { const sx = x + f.w * (0.3 + i * 0.35); const sy2 = y + H + depth * 0.6 + 8 + Math.sin(t * 2 + i + f.n) * 2; ctx.beginPath(); ctx.arc(sx, sy2, 3 + i, 0, Math.PI * 2); ctx.fill(); }
+    // the top
+    ctx.fillStyle = top;
+    rr(ctx, x, y, f.w, H, 9); ctx.fill();
+    ctx.fillStyle = 'rgba(255,255,255,0.45)';
+    rr(ctx, x + 6, y + 3, f.w - 12, 4, 2); ctx.fill();
     ctx.fillStyle = W.edge;
     rr(ctx, x, y + H - 6, f.w, 6, 3); ctx.fill();
-    if (f.kind === 'ice') {
-      ctx.fillStyle = 'rgba(255,255,255,0.85)';
-      ctx.fillRect(x + 10, y + 4, f.w * 0.35, 3);
-      for (let i = 12; i < f.w - 8; i += 22) { ctx.beginPath(); ctx.moveTo(x + i, y + H); ctx.lineTo(x + i + 4, y + H + 10); ctx.lineTo(x + i + 8, y + H); ctx.fill(); }
+    if (f.kind === 'move') {
+      // arrows show it slides
+      ctx.fillStyle = 'rgba(23,19,63,.45)';
+      for (const d of [-1, 1]) { const ax = x + f.w / 2 + d * (f.w / 2 - 12); ctx.beginPath(); ctx.moveTo(ax + d * 6, y + 9); ctx.lineTo(ax - d * 2, y + 4); ctx.lineTo(ax - d * 2, y + 14); ctx.fill(); }
     }
-    if (f.kind === 'crumble') {
-      ctx.strokeStyle = 'rgba(0,0,0,.3)'; ctx.lineWidth = 2;
-      ctx.beginPath(); ctx.moveTo(x + f.w * 0.3, y); ctx.lineTo(x + f.w * 0.36, y + H); ctx.moveTo(x + f.w * 0.7, y); ctx.lineTo(x + f.w * 0.62, y + H); ctx.stroke();
-    }
-    if (f.kind === 'fade') { ctx.shadowColor = '#8fe8ff'; ctx.shadowBlur = 12; rr(ctx, x, y, f.w, 4, 2); ctx.fill(); ctx.shadowBlur = 0; }
     if (f.level === 1 && f.kind === 'solid') {
       // a bit of moss
       ctx.fillStyle = '#4bb35f';
@@ -459,6 +484,7 @@ export function mountPlayer(game) {
   let summitDone = false;
   game.grantText = (g) => `+${g} energy`;
   const geo = { s: 1, ox: 0, base: 0 };
+  const trail = [];
   const pop = (x, y, opts) => fx.burst(geo.ox + x * geo.s, geo.base - (y - cam) * geo.s, opts);
   const showBanner = (text, sub) => { banner = { text, sub, t: 2.6 }; };
   showBanner('LEVEL 1', WORLDS[0].name);
@@ -502,7 +528,8 @@ export function mountPlayer(game) {
         if (energy > 0 || summitDone) {
           if (!summitDone) energy -= 1;
           me.vy = feathers > 0 ? jumpV * 1.3 : jumpV; me.on = null; me.squash = 0.7;
-          if (feathers > 0) feathers -= 1;
+          if (feathers > 0) { feathers -= 1; pop(me.x, me.y, { n: 16, color: '#ff8ad8', speed: 200, life: 0.5 }); }
+          pop(me.x, me.y, { n: 9, color: '#ffffffcc', speed: 130, life: 0.35 });
           sfx('jump');
           if (energy === 0 && !summitDone) setTimeout(() => { if (energy === 0 && !game.asking) refuel(); }, 900);
         } else { game.flash('No energy: answer to refuel', 'is-bad'); refuel(); }
@@ -514,6 +541,8 @@ export function mountPlayer(game) {
     me.y += me.vy * dt;
     me.x = Math.max(PR, Math.min(TW - PR, me.x));
     if (me.on === null) me.peak = Math.max(me.peak, me.y);
+    trail.push({ x: me.x, y: me.y, air: me.on === null });
+    if (trail.length > 10) trail.shift();
 
     // landing: only when falling through the top of a ledge
     if (me.vy <= 0) {
@@ -531,7 +560,7 @@ export function mountPlayer(game) {
         const drop = me.peak - me.y;
         if (me.on === null) {
           me.squash = 1.25; sfx('land');
-          pop(me.x, me.y, { n: 6, color: '#fff', speed: 90, life: 0.3 });
+          pop(me.x, me.y, { n: 12, color: '#ffffffd9', speed: 120, life: 0.4 });
           if (drop > GAP * 3.5) { shake.kick(Math.min(14, drop / 60)); game.flash(`Fell ${Math.round(drop / GAP)} ledges!`, 'is-bad'); sfx('bump'); }
         }
         me.peak = me.y;
@@ -593,7 +622,7 @@ export function mountPlayer(game) {
     shake.apply(ctx);
     drawSky(ctx, w, h, cam, tSec, lightning);
     drawCritters(ctx, w, h, cam, tSec);
-    const s = Math.min(w / (TW + 70), h / 640);
+    const s = Math.min(w / (TW + 70), h / 560);
     const ox = (w - TW * s) / 2 - 20 * s;
     const base = h - 40;
     const sy = (y) => base - (y - cam) * s;
@@ -637,6 +666,13 @@ export function mountPlayer(game) {
       drawBlook(ctx, info.blook, x, y, 30 * s, { alpha: 0.45 });
       nameTag(ctx, info.name, x, y - 18 * s, { bg: 'rgba(23,19,63,.4)', size: 10 });
     }
+    // a motion trail while in the air, and a soft shadow on the ground
+    trail.forEach((p, k) => {
+      if (!p.air) return;
+      ctx.fillStyle = `rgba(255,255,255,${(k / trail.length) * 0.35})`;
+      ctx.beginPath(); ctx.arc(p.x * s, sy(p.y) - PR * s, (4 + k * 1.4) * s, 0, Math.PI * 2); ctx.fill();
+    });
+    if (me.on !== null) { ctx.fillStyle = 'rgba(0,0,0,.18)'; ctx.beginPath(); ctx.ellipse(me.x * s, sy(me.y) + 2 * s, PR * 1.2 * s, 4 * s, 0, 0, Math.PI * 2); ctx.fill(); }
     drawBlook(ctx, game.blook, me.x * s, sy(me.y) - PR * s, PR * 2.2 * s, { squash: me.squash, flip: me.face < 0 });
     ctx.restore();
     fx.draw(ctx);
