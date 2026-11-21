@@ -1399,3 +1399,45 @@ button.bcard.is-slot { color: var(--violet); border-color: var(--violet); backgr
 .pres-note { opacity: .8; font-weight: 700; }
 .pres-tip { display: flex; align-items: center; gap: 6px; margin: 0 0 12px; color: var(--ink-2); font-weight: 800; }
 .slide .sl-full { position: absolute; inset: 0; width: 100%; height: 100% !important; max-height: none; object-fit: cover; border-radius: 0; box-shadow: none; }
+.install-steps { text-align: left; display: grid; gap: 8px; font-weight: 700; margin: 0; padding-left: 22px; }
+.install-steps svg { vertical-align: middle; }
+.install-card { display: flex; align-items: center; gap: 12px; padding: 12px 14px; border-radius: 18px; background: var(--night); color: #fff; }
+.install-card small { display: block; opacity: .8; font-weight: 700; }
+
+/* Dark mode (Settings → Theme) */
+:root[data-theme="dark"] {
+  --bg: #0d0b24;
+  --card: #1a1640;
+  --ink: #f1efff;
+  --ink-2: #c3bfe6;
+  --muted: #8f8ab8;
+  --line: #2c2660;
+  --line-2: #3a3375;
+  --shadow: 0 2px 0 rgba(0, 0, 0, 0.3), 0 12px 30px -18px rgba(0, 0, 0, 0.8);
+  color-scheme: dark;
+}
+:root[data-theme="dark"] body { background: var(--bg); color: var(--ink); }
+:root[data-theme="dark"] .input, :root[data-theme="dark"] .textarea, :root[data-theme="dark"] select { background: #120f33; color: var(--ink); border-color: var(--line-2); }
+:root[data-theme="dark"] .btn:not(.btn-main):not(.btn-dark):not(.btn-violet):not(.btn-ok):not(.btn-gold):not(.btn-ghost) { background: #262058; color: var(--ink); box-shadow: 0 var(--press) 0 #0b0920; }
+:root[data-theme="dark"] .chip { background: #262058; color: var(--ink); }
+:root[data-theme="dark"] .chip.is-on { background: var(--violet); color: #fff; }
+:root[data-theme="dark"] .modal, :root[data-theme="dark"] .card, :root[data-theme="dark"] .quiz-card, :root[data-theme="dark"] .set-row { color: var(--ink); }
+:root[data-theme="dark"] .ach, :root[data-theme="dark"] .tch-card, :root[data-theme="dark"] .tch-step, :root[data-theme="dark"] .th-bar { background: var(--card); color: var(--ink); }
+:root[data-theme="dark"] .invite-card { background: linear-gradient(135deg, #2a1f55, #1f1a4a); border-color: #4a3a8a; color: var(--ink); }
+:root[data-theme="dark"] .invite-card small { color: var(--ink-2); }
+:root[data-theme="dark"] .hw-due { background: #0f3b33; color: #9bffdf; }
+:root[data-theme="dark"] .hw-due.is-closed { background: #4a1426; color: #ffc2d0; }
+:root[data-theme="dark"] .tabbar { background: #120f33; border-color: var(--line); }
+:root[data-theme="dark"] .table th, :root[data-theme="dark"] .table td { border-color: var(--line); }
+:root[data-theme="dark"] .seg { background: #120f33; }
+:root[data-theme="dark"] .seg button { color: var(--ink-2); }
+:root[data-theme="dark"] .seg button.is-on { background: #2e2675; color: #fff; box-shadow: none; }
+:root[data-theme="dark"] .join-box { background: #1a1640; }
+:root[data-theme="dark"] .join-box h2 { color: var(--ink); }
+/* phones: joining is what most people come for, so it goes first */
+@media (max-width: 640px) {
+  .hero .hero-join { order: -1; }
+  .hero { padding: 22px 18px; gap: 20px; }
+  .hero h1 { font-size: 2rem; }
+  .hero p { margin: 10px 0 16px; font-size: 1rem; }
+}

@@ -193,5 +193,10 @@ export function setPrefs(patch) {
   const next = { ...prefs(), ...patch };
   try { localStorage.setItem(PREFS_KEY, JSON.stringify(next)); } catch { /* private mode */ }
   document.documentElement.dataset.motion = next.motion ? 'full' : 'calm';
+  // light, dark, or follow the device
+  const dark = next.theme === 'dark' || (next.theme === 'auto' && typeof matchMedia === 'function' && matchMedia('(prefers-color-scheme: dark)').matches);
+  document.documentElement.dataset.theme = dark ? 'dark' : 'light';
+  const meta = document.querySelector('meta[name="theme-color"]');
+  if (meta) meta.setAttribute('content', dark ? '#0d0b24' : '#17133f');
   return next;
 }

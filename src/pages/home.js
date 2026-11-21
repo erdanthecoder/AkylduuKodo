@@ -53,6 +53,13 @@ export default async function Home() {
   // one official quiz a day, the same for everyone that day
   const daily = h('div');
   const inviteSlot = h('div');
+  const installSlot = h('div');
+  import('../ui/install.js').then((m) => {
+    const draw = () => fill(installSlot, m.canInstall() ? h('div', { class: 'install-card' },
+      icon('download', { size: 22 }), h('div', { class: 'grow' }, h('b', {}, 'Get the Quickzy app'), h('small', {}, 'One tap from your home screen. Free.')),
+      h('button', { class: 'btn btn-main btn-sm', onclick: () => m.install() }, 'Install')) : null);
+    draw(); m.onInstallChange(draw);
+  }).catch(() => {});
   import('../services/invite.js').then((m) => fill(inviteSlot, m.inviteCard())).catch(() => {});
   quizzesBy(OFFICIAL_UID).then((list) => {
     if (!list.length) return;
@@ -91,7 +98,7 @@ export default async function Home() {
           h('a', { class: 'btn btn-dark btn-lg', href: '/discover' }, icon('compass'), 'Discover'),
         ),
       ),
-      h('div', { style: { position: 'relative' } }, joinBox()),
+      h('div', { class: 'hero-join', style: { position: 'relative' } }, joinBox()),
     ),
 
     daily,
@@ -103,6 +110,7 @@ export default async function Home() {
         h('h3', {}, m.name),
         h('p', {}, m.tagline)))),
 
+    installSlot,
     inviteSlot,
 
     h('div', { class: 'section-head' },

@@ -54,7 +54,7 @@ jobs:
       - name: Collect the files the site serves
         run: |
           mkdir _site
-          cp -r index.html manifest.webmanifest assets src styles vendor _site/
+          cp -r index.html manifest.webmanifest sw.js assets src styles vendor _site/
           (cd _site && zip -qr ../quickzy-site.zip .)
       - uses: actions/upload-artifact@v4
         with:
