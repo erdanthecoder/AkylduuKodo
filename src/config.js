@@ -52,9 +52,9 @@ export const BADGES = {
 export const OFFICIAL_UID = 'XH9Z5D7tLmRHStlxumgaJyTo1BP2';
 export const OWNER_UID = 'KWIRRSUM2VQVWnr1nUDbPP9bqMk2';
 
-/** Quickzy 1.2 arrives by itself on this moment (21 November 2026, 12:00 in Dubai).
+/** Quickzy 1.2 arrives by itself on this moment (midnight in Amman, the night of 21–22 November 2026).
  *  Until then the site counts down to it; the owner can try 1.2 early. */
-export const RELEASE_1_2 = Date.UTC(2026, 10, 21, 8, 0, 0);   // 12:00 in Dubai, 21 Nov 2026
+export const RELEASE_1_2 = Date.UTC(2026, 10, 21, 21, 0, 0);   // midnight in Amman (UTC+3), the night of 21–22 Nov 2026
 export const released12 = (now = Date.now()) => now >= RELEASE_1_2;
 
 /** Shown in the sidebar and the What's new popup. */
