@@ -219,7 +219,22 @@ function reveal({ id, duplicate, refund }, box) {
       root.style.setProperty('--rc', r.colour);
       root.classList.add(`ub-${r.id}`);
       const card = blookCard(id, { big: true });
-      card.classList.add('ub-card');
+      card.classList.add('ub-card', `ub-card-${r.id}`);
+      if (rank >= 2) card.append(h('i', { class: 'ub-holo', 'aria-hidden': 'true' }));
+      // hold it in your hand: the card tilts towards the finger or mouse
+      const tilt = (e) => {
+        const b = card.getBoundingClientRect();
+        const px = ((e.touches ? e.touches[0].clientX : e.clientX) - b.left) / b.width - 0.5;
+        const py = ((e.touches ? e.touches[0].clientY : e.clientY) - b.top) / b.height - 0.5;
+        card.style.setProperty('--rx', `${(-py * 18).toFixed(1)}deg`);
+        card.style.setProperty('--ry', `${(px * 22).toFixed(1)}deg`);
+        card.style.setProperty('--hx', `${Math.round((px + 0.5) * 360)}deg`);
+      };
+      root.addEventListener('pointermove', tilt);
+      root.addEventListener('touchmove', tilt, { passive: true });
+      root.classList.add('ub-revealed');
+      root.append(h('div', { class: 'ub-beams', 'aria-hidden': 'true' }, ...Array.from({ length: 12 }, (_, k) => h('i', { style: { '--k': k } }))),
+        h('div', { class: 'ub-stars', 'aria-hidden': 'true' }, ...Array.from({ length: 16 }, (_, k) => h('i', { style: { '--k': k } }))));
       sparks(r.colour, 22);
       const again = progress.me().coins >= box.price && progress.boxOpen(box)
         ? h('button', { class: 'btn btn-main', onclick: () => finish('again') }, 'Open another', coin(), String(box.price)) : null;

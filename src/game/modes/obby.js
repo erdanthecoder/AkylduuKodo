@@ -241,6 +241,9 @@ function drawSky(ctx, w, h, camY, t, flash = 0) {
   ctx.restore();
 }
 
+// rock colours under each world's islands: [lit side, shade]
+const ROCK = [['#8a5a2b', '#6b4120'], ['#5b3a1a', '#3e2810'], ['#7fb8d6', '#4f8fb3'], ['#c98a4a', '#a0662e'], ['#8f97c8', '#6a72a8'], ['#5a3fb8', '#3a2380']];
+
 function drawLedge(ctx, f, x, y, t, alpha = 1) {
   const W = WORLDS[f.level];
   ctx.globalAlpha = alpha;
@@ -274,20 +277,42 @@ function drawLedge(ctx, f, x, y, t, alpha = 1) {
       for (let k = 0; k < 3; k++) { const cx = x + f.w * (0.25 + k * 0.25); ctx.fillRect(cx - 6, y - 4 - Math.abs(Math.sin(t * 6 + k)) * 3, 12, 5); }
     }
   } else {
-    ctx.fillStyle = f.kind === 'move' ? '#ffcd1f' : f.kind === 'crumble' ? '#d99a4e' : f.kind === 'fade' ? '#8fe8ff' : W.ledge;
-    rr(ctx, x, y, f.w, H, 8); ctx.fill();
+    // a floating island: a grassy top, a chunky rock body that tapers into
+    // hanging stones, and a soft highlight
+    const top = f.kind === 'move' ? '#ffcd1f' : f.kind === 'crumble' ? '#e7b46e' : f.kind === 'fade' ? '#a8f0ff' : f.kind === 'ice' ? '#e6fbff' : W.ledge;
+    const rock = ROCK[f.level];
+    const depth = Math.min(46, 18 + f.w * 0.16);
+    const bob = f.kind === 'move' ? 0 : Math.sin(t * 1.2 + f.n) * 1.5;
+    y += bob;
+    // underside
+    ctx.fillStyle = rock[1];
+    ctx.beginPath();
+    ctx.moveTo(x + 2, y + H - 4);
+    ctx.lineTo(x + f.w - 2, y + H - 4);
+    ctx.lineTo(x + f.w * 0.82, y + H + depth * 0.55);
+    ctx.lineTo(x + f.w * 0.62, y + H + depth * 0.75);
+    ctx.lineTo(x + f.w * 0.5, y + H + depth);
+    ctx.lineTo(x + f.w * 0.36, y + H + depth * 0.7);
+    ctx.lineTo(x + f.w * 0.16, y + H + depth * 0.5);
+    ctx.closePath(); ctx.fill();
+    ctx.fillStyle = rock[0];
+    ctx.beginPath();
+    ctx.moveTo(x + 2, y + H - 4); ctx.lineTo(x + f.w * 0.5, y + H - 4); ctx.lineTo(x + f.w * 0.36, y + H + depth * 0.62); ctx.lineTo(x + f.w * 0.16, y + H + depth * 0.42); ctx.closePath(); ctx.fill();
+    // little hanging stones
+    ctx.fillStyle = rock[1];
+    for (let i = 0; i < 2; i++) { const sx = x + f.w * (0.3 + i * 0.35); const sy2 = y + H + depth * 0.6 + 8 + Math.sin(t * 2 + i + f.n) * 2; ctx.beginPath(); ctx.arc(sx, sy2, 3 + i, 0, Math.PI * 2); ctx.fill(); }
+    // the top
+    ctx.fillStyle = top;
+    rr(ctx, x, y, f.w, H, 9); ctx.fill();
+    ctx.fillStyle = 'rgba(255,255,255,0.45)';
+    rr(ctx, x + 6, y + 3, f.w - 12, 4, 2); ctx.fill();
     ctx.fillStyle = W.edge;
     rr(ctx, x, y + H - 6, f.w, 6, 3); ctx.fill();
-    if (f.kind === 'ice') {
-      ctx.fillStyle = 'rgba(255,255,255,0.85)';
-      ctx.fillRect(x + 10, y + 4, f.w * 0.35, 3);
-      for (let i = 12; i < f.w - 8; i += 22) { ctx.beginPath(); ctx.moveTo(x + i, y + H); ctx.lineTo(x + i + 4, y + H + 10); ctx.lineTo(x + i + 8, y + H); ctx.fill(); }
+    if (f.kind === 'move') {
+      // arrows show it slides
+      ctx.fillStyle = 'rgba(23,19,63,.45)';
+      for (const d of [-1, 1]) { const ax = x + f.w / 2 + d * (f.w / 2 - 12); ctx.beginPath(); ctx.moveTo(ax + d * 6, y + 9); ctx.lineTo(ax - d * 2, y + 4); ctx.lineTo(ax - d * 2, y + 14); ctx.fill(); }
     }
-    if (f.kind === 'crumble') {
-      ctx.strokeStyle = 'rgba(0,0,0,.3)'; ctx.lineWidth = 2;
-      ctx.beginPath(); ctx.moveTo(x + f.w * 0.3, y); ctx.lineTo(x + f.w * 0.36, y + H); ctx.moveTo(x + f.w * 0.7, y); ctx.lineTo(x + f.w * 0.62, y + H); ctx.stroke();
-    }
-    if (f.kind === 'fade') { ctx.shadowColor = '#8fe8ff'; ctx.shadowBlur = 12; rr(ctx, x, y, f.w, 4, 2); ctx.fill(); ctx.shadowBlur = 0; }
     if (f.level === 1 && f.kind === 'solid') {
       // a bit of moss
       ctx.fillStyle = '#4bb35f';
@@ -295,6 +320,121 @@ function drawLedge(ctx, f, x, y, t, alpha = 1) {
     }
   }
   ctx.globalAlpha = 1;
+}
+
+
+/* ----------------------------------------------------------------- props */
+
+/** Scenery standing on a ledge: every world has its own. Purely for looks. */
+function drawProps(ctx, f, x, y, t) {
+  if (f.kind === 'gate' || f.kind === 'summit') { drawGateArch(ctx, f, x, y, t); return; }
+  if (f.kind === 'ground' || f.kind === 'cloud' || f.kind === 'blink' || f.kind === 'bounce' || f.w < 90) return;
+  const h1 = (f.n * 2654435761) >>> 0;
+  const pick = (k) => ((h1 >>> (k * 3)) & 7) / 7;
+  if (pick(0) < 0.35) return;                      // some ledges stay bare
+  const px = x + 14 + pick(1) * (f.w - 28);
+  const L = f.level;
+  ctx.save();
+  if (L === 0) {
+    // flowers, a bush, or a little signpost
+    const kind = Math.floor(pick(2) * 3);
+    if (kind === 0) for (let i = 0; i < 3; i++) {
+      const fx = px + i * 9 - 9; const sway = Math.sin(t * 2 + i + f.n) * 2;
+      ctx.strokeStyle = '#2f8a3e'; ctx.lineWidth = 2; ctx.beginPath(); ctx.moveTo(fx, y); ctx.lineTo(fx + sway, y - 12); ctx.stroke();
+      ctx.fillStyle = ['#ff4772', '#ffcd1f', '#a560ff'][i]; ctx.beginPath(); ctx.arc(fx + sway, y - 14, 4, 0, Math.PI * 2); ctx.fill();
+    } else if (kind === 1) {
+      ctx.fillStyle = '#3fa357'; for (const [dx, r] of [[-8, 9], [6, 11], [0, 13]]) { ctx.beginPath(); ctx.arc(px + dx, y - 8, r, Math.PI, 0); ctx.fill(); }
+      ctx.fillStyle = '#ff4772'; ctx.beginPath(); ctx.arc(px + 4, y - 14, 2.5, 0, Math.PI * 2); ctx.arc(px - 6, y - 10, 2.5, 0, Math.PI * 2); ctx.fill();
+    } else {
+      ctx.fillStyle = '#8a5a2b'; ctx.fillRect(px - 2, y - 22, 4, 22); ctx.fillRect(px - 12, y - 24, 24, 9);
+      ctx.fillStyle = '#fff'; ctx.font = '700 7px Nunito, system-ui'; ctx.textAlign = 'center'; ctx.fillText('UP!', px, y - 17);
+    }
+  } else if (L === 1) {
+    // mushrooms and tiny pines
+    if (pick(2) < 0.5) {
+      ctx.fillStyle = '#f4e7d0'; ctx.fillRect(px - 3, y - 10, 6, 10);
+      ctx.fillStyle = '#e8112d'; ctx.beginPath(); ctx.arc(px, y - 10, 10, Math.PI, 0); ctx.fill();
+      ctx.fillStyle = '#fff'; for (const dx of [-5, 3]) { ctx.beginPath(); ctx.arc(px + dx, y - 14, 2, 0, Math.PI * 2); ctx.fill(); }
+    } else {
+      ctx.fillStyle = '#5b3a1a'; ctx.fillRect(px - 2, y - 8, 4, 8);
+      ctx.fillStyle = '#1f6b3a'; ctx.beginPath(); ctx.moveTo(px, y - 34); ctx.lineTo(px + 12, y - 8); ctx.lineTo(px - 12, y - 8); ctx.fill();
+    }
+  } else if (L === 2) {
+    // ice crystals and a tiny snowman
+    if (pick(2) < 0.6) {
+      ctx.fillStyle = 'rgba(160,230,255,0.9)';
+      for (const [dx, hh] of [[-6, 16], [0, 24], [6, 14]]) { ctx.beginPath(); ctx.moveTo(px + dx - 4, y); ctx.lineTo(px + dx, y - hh); ctx.lineTo(px + dx + 4, y); ctx.fill(); }
+      ctx.fillStyle = `rgba(255,255,255,${0.5 + Math.sin(t * 4 + f.n) * 0.5})`; ctx.fillRect(px - 1, y - 20, 2, 2);
+    } else {
+      ctx.fillStyle = '#fff'; ctx.beginPath(); ctx.arc(px, y - 7, 7, 0, Math.PI * 2); ctx.arc(px, y - 18, 5, 0, Math.PI * 2); ctx.fill();
+      ctx.fillStyle = '#ff8a2a'; ctx.beginPath(); ctx.moveTo(px + 2, y - 18); ctx.lineTo(px + 8, y - 17); ctx.lineTo(px + 2, y - 16); ctx.fill();
+    }
+  } else if (L === 3) {
+    // cactus and a skull rock
+    ctx.fillStyle = '#3c8d4a';
+    rr(ctx, px - 4, y - 26, 8, 26, 4); ctx.fill();
+    rr(ctx, px - 13, y - 18, 6, 10, 3); ctx.fill(); rr(ctx, px + 7, y - 22, 6, 10, 3); ctx.fill();
+    ctx.fillRect(px - 9, y - 11, 6, 3); ctx.fillRect(px + 3, y - 15, 6, 3);
+  } else if (L === 4) {
+    // a lightning rod that sparks
+    ctx.strokeStyle = '#9aa2d8'; ctx.lineWidth = 2; ctx.beginPath(); ctx.moveTo(px, y); ctx.lineTo(px, y - 26); ctx.stroke();
+    if (Math.sin(t * 7 + f.n) > 0.85) { ctx.strokeStyle = '#ffe45c'; ctx.beginPath(); ctx.moveTo(px, y - 26); ctx.lineTo(px + 5, y - 33); ctx.lineTo(px - 2, y - 36); ctx.lineTo(px + 4, y - 44); ctx.stroke(); }
+  } else {
+    // glowing star crystals
+    ctx.shadowColor = '#b9a3ff'; ctx.shadowBlur = 10 + Math.sin(t * 3 + f.n) * 5;
+    ctx.fillStyle = '#e3d8ff';
+    ctx.beginPath(); ctx.moveTo(px, y - 22); ctx.lineTo(px + 6, y - 8); ctx.lineTo(px, y); ctx.lineTo(px - 6, y - 8); ctx.fill();
+  }
+  ctx.restore();
+}
+
+/** Each level starts at a checkpoint arch with flags and lanterns. */
+function drawGateArch(ctx, f, x, y, t) {
+  const W = WORLDS[f.level];
+  const posts = [x + 10, x + f.w - 18];
+  ctx.save();
+  for (const px of posts) {
+    ctx.fillStyle = f.kind === 'summit' ? '#ffcd1f' : W.edge; ctx.fillRect(px, y - 56, 8, 56);
+    const glow = 0.6 + Math.sin(t * 3 + px) * 0.4;
+    ctx.fillStyle = `rgba(255,214,90,${glow})`; ctx.shadowColor = '#ffd65a'; ctx.shadowBlur = 14;
+    ctx.beginPath(); ctx.arc(px + 4, y - 60, 6, 0, Math.PI * 2); ctx.fill(); ctx.shadowBlur = 0;
+  }
+  // bunting between the posts
+  ctx.strokeStyle = 'rgba(255,255,255,.8)'; ctx.lineWidth = 1.5;
+  ctx.beginPath(); ctx.moveTo(posts[0] + 4, y - 50); ctx.quadraticCurveTo(x + f.w / 2, y - 30, posts[1] + 4, y - 50); ctx.stroke();
+  const cols = ['#ff4772', '#ffcd1f', '#12c9a6', '#2f9bff', '#a560ff'];
+  for (let i = 1; i < 12; i++) {
+    const k = i / 12; const bx = lerp(posts[0] + 4, posts[1] + 4, k); const by = y - 50 + Math.sin(k * Math.PI) * 10 + Math.sin(t * 3 + i) * 1.5;
+    ctx.fillStyle = cols[i % cols.length]; ctx.beginPath(); ctx.moveTo(bx - 5, by); ctx.lineTo(bx + 5, by); ctx.lineTo(bx, by + 10); ctx.fill();
+  }
+  ctx.restore();
+}
+
+/** Creatures that fly past behind the climb, one kind per world. */
+function drawCritters(ctx, w, h, camY, t) {
+  const pos = Math.max(0, camY / GAP / PER);
+  const world = Math.min(LEVELS - 1, Math.round(pos - 0.4));
+  ctx.save();
+  for (let n = 0; n < 4; n++) {
+    const speed = 40 + n * 18;
+    const x = ((t * speed + n * 260) % (w + 160)) - 80;
+    const y = h * (0.15 + n * 0.17) + Math.sin(t * 2 + n) * 10;
+    const flap = Math.sin(t * 12 + n) * 6;
+    if (world === 0 || world === 3) {
+      ctx.strokeStyle = world === 3 ? 'rgba(90,50,20,.6)' : 'rgba(23,19,63,.55)'; ctx.lineWidth = 2;
+      ctx.beginPath(); ctx.moveTo(x - 9, y - flap); ctx.quadraticCurveTo(x - 4, y - 4, x, y); ctx.quadraticCurveTo(x + 4, y - 4, x + 9, y - flap); ctx.stroke();
+    } else if (world === 1) {
+      ctx.fillStyle = `rgba(255,240,120,${0.5 + Math.sin(t * 5 + n) * 0.5})`; ctx.shadowColor = '#fff27a'; ctx.shadowBlur = 8;
+      ctx.beginPath(); ctx.arc((x * 0.7 + n * 90) % w, y + Math.sin(t * 3 + n) * 30, 3, 0, Math.PI * 2); ctx.fill(); ctx.shadowBlur = 0;
+    } else if (world === 2) {
+      ctx.fillStyle = 'rgba(255,255,255,.85)'; ctx.beginPath(); ctx.arc((n * 137 + Math.sin(t + n) * 30) % w, (t * (30 + n * 10) + n * 200) % h, 2.5, 0, Math.PI * 2); ctx.fill();
+    } else if (world === 5) {
+      const cx = ((t * 160 + n * 400) % (w + 400)) - 200; const cy = (n * 90 + 40) % (h * 0.6);
+      const g = ctx.createLinearGradient(cx - 60, cy - 20, cx, cy); g.addColorStop(0, 'rgba(255,255,255,0)'); g.addColorStop(1, 'rgba(255,255,255,.9)');
+      ctx.strokeStyle = g; ctx.lineWidth = 2; ctx.beginPath(); ctx.moveTo(cx - 60, cy - 20); ctx.lineTo(cx, cy); ctx.stroke();
+    }
+  }
+  ctx.restore();
 }
 
 function drawFlag(ctx, x, y, t, colour = '#ff4772') {
@@ -344,6 +484,7 @@ export function mountPlayer(game) {
   let summitDone = false;
   game.grantText = (g) => `+${g} energy`;
   const geo = { s: 1, ox: 0, base: 0 };
+  const trail = [];
   const pop = (x, y, opts) => fx.burst(geo.ox + x * geo.s, geo.base - (y - cam) * geo.s, opts);
   const showBanner = (text, sub) => { banner = { text, sub, t: 2.6 }; };
   showBanner('LEVEL 1', WORLDS[0].name);
@@ -387,7 +528,8 @@ export function mountPlayer(game) {
         if (energy > 0 || summitDone) {
           if (!summitDone) energy -= 1;
           me.vy = feathers > 0 ? jumpV * 1.3 : jumpV; me.on = null; me.squash = 0.7;
-          if (feathers > 0) feathers -= 1;
+          if (feathers > 0) { feathers -= 1; pop(me.x, me.y, { n: 16, color: '#ff8ad8', speed: 200, life: 0.5 }); }
+          pop(me.x, me.y, { n: 9, color: '#ffffffcc', speed: 130, life: 0.35 });
           sfx('jump');
           if (energy === 0 && !summitDone) setTimeout(() => { if (energy === 0 && !game.asking) refuel(); }, 900);
         } else { game.flash('No energy: answer to refuel', 'is-bad'); refuel(); }
@@ -399,6 +541,8 @@ export function mountPlayer(game) {
     me.y += me.vy * dt;
     me.x = Math.max(PR, Math.min(TW - PR, me.x));
     if (me.on === null) me.peak = Math.max(me.peak, me.y);
+    trail.push({ x: me.x, y: me.y, air: me.on === null });
+    if (trail.length > 10) trail.shift();
 
     // landing: only when falling through the top of a ledge
     if (me.vy <= 0) {
@@ -416,7 +560,7 @@ export function mountPlayer(game) {
         const drop = me.peak - me.y;
         if (me.on === null) {
           me.squash = 1.25; sfx('land');
-          pop(me.x, me.y, { n: 6, color: '#fff', speed: 90, life: 0.3 });
+          pop(me.x, me.y, { n: 12, color: '#ffffffd9', speed: 120, life: 0.4 });
           if (drop > GAP * 3.5) { shake.kick(Math.min(14, drop / 60)); game.flash(`Fell ${Math.round(drop / GAP)} ledges!`, 'is-bad'); sfx('bump'); }
         }
         me.peak = me.y;
@@ -477,7 +621,8 @@ export function mountPlayer(game) {
     ctx.save();
     shake.apply(ctx);
     drawSky(ctx, w, h, cam, tSec, lightning);
-    const s = Math.min(w / (TW + 70), h / 640);
+    drawCritters(ctx, w, h, cam, tSec);
+    const s = Math.min(w / (TW + 70), h / 560);
     const ox = (w - TW * s) / 2 - 20 * s;
     const base = h - 40;
     const sy = (y) => base - (y - cam) * s;
@@ -495,6 +640,7 @@ export function mountPlayer(game) {
       const x = ledgeX(f, tSec) + jitter;
       const y = sy(f.y + 22) / s;
       drawLedge(ctx, f, x, y, tSec, visibility(f, tSec));
+      if (visibility(f, tSec) > 0.5) drawProps(ctx, f, x, y, tSec);
       if (f.kind === 'summit') drawFlag(ctx, TW / 2 - 2, y, tSec, '#6b4cff');
       if (f.kind === 'gate' && n > best) drawFlag(ctx, f.w - 50, y, tSec);
       if (f.gem && !gemsTaken.has(n)) {
@@ -520,6 +666,13 @@ export function mountPlayer(game) {
       drawBlook(ctx, info.blook, x, y, 30 * s, { alpha: 0.45 });
       nameTag(ctx, info.name, x, y - 18 * s, { bg: 'rgba(23,19,63,.4)', size: 10 });
     }
+    // a motion trail while in the air, and a soft shadow on the ground
+    trail.forEach((p, k) => {
+      if (!p.air) return;
+      ctx.fillStyle = `rgba(255,255,255,${(k / trail.length) * 0.35})`;
+      ctx.beginPath(); ctx.arc(p.x * s, sy(p.y) - PR * s, (4 + k * 1.4) * s, 0, Math.PI * 2); ctx.fill();
+    });
+    if (me.on !== null) { ctx.fillStyle = 'rgba(0,0,0,.18)'; ctx.beginPath(); ctx.ellipse(me.x * s, sy(me.y) + 2 * s, PR * 1.2 * s, 4 * s, 0, 0, Math.PI * 2); ctx.fill(); }
     drawBlook(ctx, game.blook, me.x * s, sy(me.y) - PR * s, PR * 2.2 * s, { squash: me.squash, flip: me.face < 0 });
     ctx.restore();
     fx.draw(ctx);

@@ -7,6 +7,7 @@
 // has a fixed id (quickzy-<slug>): running it again updates, never duplicates.
 
 import { QUIZZES } from './quizzes.mjs';
+import { COVER_PHOTOS } from './covers.mjs';
 import { split, problem } from '../src/game/questions.js';
 import { words } from '../src/services/quizzes.js';
 import { firebaseConfig } from '../src/config.js';
@@ -37,7 +38,7 @@ for (const q of QUIZZES) {
   // the rules refuse reading a quiz that does not exist yet: that means new
   const exists = await getDoc(ref).then((d) => d.exists(), () => false);
   const data = {
-    owner: user.uid, title: q.title, description: q.description, cover: q.cover,
+    owner: user.uid, title: q.title, description: q.description, cover: q.cover, ...(COVER_PHOTOS[q.slug] ? { image: COVER_PHOTOS[q.slug] } : {}),
     questions: pub, questionCount: pub.length, big: pub.length >= 5, public: true,
     keywords: words(`${q.title} ${q.description} ${pub.map((x) => x.text).join(' ')}`),
     authorName: profile.displayName, authorUsername: profile.username, authorBlook: profile.blook,

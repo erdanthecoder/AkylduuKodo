@@ -27,9 +27,15 @@ export const NEWS_11 = [
 ];
 
 export const NEWS_12 = [
-  ['play', '#ff8a2a', 'Sky Race', 'A brand new game: fly your plane, answer 3 to charge a BOOST, and outrun the fighter jets. 10 boosts each, 3 minutes.'],
-  ['star', '#6b4cff', 'A real 3D film', 'Quickzy 1.2 arrives with a cinematic film above the clouds.'],
-  ['bolt', '#ffcd1f', 'Faster and smoother', 'Lots of small fixes all over Quickzy.'],
+  ['play', '#ff8a2a', 'Sky Race', 'Fly your plane, answer 3 to charge a BOOST, and outrun the fighter jets. 10 boosts, 3 minutes.'],
+  ['user', '#6b4cff', 'New profiles', 'A big banner (pick a scene or use your own picture), a bio, stats, emblems and an animated founder profile.'],
+  ['trophy', '#ffb21f', 'Achievements', '16 goals to reach, and a special badge for playing a game hosted by the founder.'],
+  ['compass', '#2f9bff', 'A new Discover', 'Featured quizzes with real photos, Trending, and a shelf for every subject.'],
+  ['book', '#12c9a6', 'Homework', 'Set any quiz with a due date. Students play it on their own and you see every score.'],
+  ['chart', '#ff4772', 'Presentation+ (Pro)', 'Slides with live polls, quiz questions and guess-the-number graphs, answered on phones.'],
+  ['star', '#a560ff', 'Sky Climb, rebuilt', 'Floating islands, scenery in every world, checkpoint arches, dust, trails and flying critters.'],
+  ['bolt', '#ffcd1f', 'Better box openings', 'Cards spin in, holographic foil on rare ones, light beams, and the card tilts in your hand.'],
+  ['star', '#17133f', 'A brand new logo', 'A Q made of the four answer colours, with a lightning tail.'],
 ];
 
 export const NEWS = VERSION === '1.2' ? NEWS_12 : NEWS_11;
@@ -44,6 +50,7 @@ export function showWhatsNew() {
     h('div', { class: 'row' },
       h('button', { class: 'btn grow', onclick: () => { close(); playFilm(); } }, icon('play', { size: 16 }), `Watch the ${VERSION} film`),
       VERSION !== '1.2' && isOwner() ? h('button', { class: 'btn grow', onclick: () => { close(); playFilm('1.2'); } }, icon('star', { size: 16 }), 'Preview 1.2 (only you)') : null,
+      VERSION === '1.2' || isOwner() ? h('button', { class: 'btn grow', onclick: () => { close(); import('./film12b.js').then((s) => s.playStory()); } }, icon('play', { size: 16 }), 'Watch the teacher\'s story') : null,
       h('button', { class: 'btn btn-main grow', onclick: () => close() }, "Let's play")))]);
 }
 
@@ -61,6 +68,8 @@ export function maybeShowWhatsNew() {
 
 /** The film for this version: 1.2 is the 3D Sky Race film; 1.1 the plane film. */
 export function playFilm(version = VERSION) {
-  if (version === '1.2') return import('./film12.js').then((f) => f.playFilm12({ pilot: pilotBlook() }));
+  // 1.2: the Sky Race film, then the teacher's story (once)
+  if (version === '1.2') return import('./film12.js').then((f) => f.playFilm12({ pilot: pilotBlook() }))
+    .then(() => import('./film12b.js')).then((s) => (s.storySeen() ? null : s.playStory()));
   return import('./flight.js').then((f) => f.playFlight({ pilot: pilotBlook() }));
 }

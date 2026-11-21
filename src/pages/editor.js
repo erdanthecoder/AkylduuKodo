@@ -43,7 +43,7 @@ export default async function Editor({ params, query = {} }) {
         h('h2', {}, 'This quiz could not be opened'), h('p', { class: 'muted' }, 'It may have been deleted, or it belongs to someone else.'),
         h('a', { class: 'btn btn-main', href: '/library' }, 'My quizzes')));
     }
-    quiz = { id: quiz.id, title: quiz.title, description: quiz.description || '', cover: quiz.cover || 0, public: Boolean(quiz.public), questions: quiz.questions,
+    quiz = { id: quiz.id, title: quiz.title, description: quiz.description || '', cover: quiz.cover || 0, image: quiz.image || '', public: Boolean(quiz.public), questions: quiz.questions,
       owner: quiz.owner, editors: quiz.editors || [], authorName: quiz.authorName };
     if (!quiz.questions.length) quiz.questions.push(blankQuestion('mc'));
   } else {
@@ -499,11 +499,17 @@ export default async function Editor({ params, query = {} }) {
         style: { width: '54px', height: '40px', borderRadius: '12px', background: bg, border: 0, cursor: 'pointer', outline: i === cover ? '4px solid var(--violet)' : 'none', outlineOffset: '2px' },
         onclick: () => { cover = i; drawCovers(); } })));
       drawCovers();
+      const photo = h('input', { class: 'input', type: 'url', placeholder: 'https://… (a link to a real photo)', maxlength: 290, value: quiz.image || '' });
       return [h('h2', {}, 'Quiz details'),
         field('Description', desc, `${LIMITS.quizDescMax} characters at most. Helps people find it in Discover.`),
         h('div', { class: 'field' }, h('span', {}, 'Cover colour'), covers),
+        field('Cover photo (optional)', photo, 'Paste a link to a photo (https). Free photo sites like Unsplash work well. It shows on Discover.'),
         h('div', { class: 'row end' }, h('button', { class: 'btn', onclick: () => close() }, 'Cancel'),
-          h('button', { class: 'btn btn-main', onclick: () => { quiz.description = desc.value; quiz.cover = cover; touch(); close(); } }, 'Done'))];
+          h('button', { class: 'btn btn-main', onclick: () => {
+            const link = photo.value.trim();
+            if (link && !/^https:\/\/[^\s"'<>]{8,290}$/.test(link)) { toast('Use a photo link that starts with https://', 'bad'); return; }
+            quiz.description = desc.value; quiz.cover = cover; quiz.image = link; touch(); close();
+          } }, 'Done'))];
     });
   }
 

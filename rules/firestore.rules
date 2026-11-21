@@ -59,8 +59,11 @@ service cloud.firestore {
         && existsAfter(/databases/$(database)/documents/usernames/$(request.resource.data.username))
         && getAfter(/databases/$(database)/documents/usernames/$(request.resource.data.username)).data.uid == uid;
       allow update: if me(uid)
-        && onlyKeys(['username', 'displayName', 'blook', 'createdAt', 'xp', 'coins', 'owned', 'customs', 'lastGame', 'channel', 'lastGift'])
+        && onlyKeys(['username', 'displayName', 'blook', 'createdAt', 'xp', 'coins', 'owned', 'customs', 'lastGame', 'channel', 'lastGift', 'banner', 'bio', 'metOwner'])
         && progressOk()
+        && str(request.resource.data.get('banner', ''), 300)
+        && str(request.resource.data.get('bio', ''), 160)
+        && request.resource.data.get('metOwner', false) is bool
         && request.resource.data.get('channel', true) is bool
         && str(request.resource.data.get('lastGift', ''), 40)
         && request.resource.data.createdAt == resource.data.createdAt
@@ -89,7 +92,9 @@ service cloud.firestore {
       function quizShape() {
         let d = request.resource.data;
         return d.keys().hasOnly(['owner', 'title', 'description', 'cover', 'questions', 'questionCount', 'big', 'public',
-                                 'keywords', 'authorName', 'authorUsername', 'authorBlook', 'updatedAt', 'createdAt', 'plays', 'liveAt', 'editors'])
+                                 'keywords', 'authorName', 'authorUsername', 'authorBlook', 'updatedAt', 'createdAt', 'plays', 'liveAt', 'editors', 'image'])
+          // a cover photo: a picture link
+          && (!('image' in d) || (d.image is string && d.image.size() <= 300 && (d.image == '' || d.image.matches('^https://[^ "<>]+$'))))
           // making it together: up to 10 people, invited by a Pro owner
           && d.get('editors', []) is list && d.get('editors', []).size() <= 10
           && (d.get('editors', []).size() == 0 || pro()
@@ -122,7 +127,7 @@ service cloud.firestore {
       // someone invited to make it together: the content only, never the
       // owner, the author line, who can edit, or whether it is published
       allow update: if account() && !banned() && editor()
-        && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['title', 'description', 'cover', 'questions', 'questionCount', 'big', 'keywords', 'updatedAt'])
+        && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['title', 'description', 'cover', 'questions', 'questionCount', 'big', 'keywords', 'updatedAt', 'image'])
         && str(request.resource.data.title, 80) && request.resource.data.title.size() > 0
         && str(request.resource.data.description, 280)
         && request.resource.data.cover is int
@@ -206,6 +211,42 @@ service cloud.firestore {
       allow read: if true;
       allow write: if siteOwner() && uid != request.auth.uid;
     }
+    // Presentation+ decks: Pro members only; private to their owner
+    match /decks/{did} {
+      allow read: if signedIn() && resource.data.owner == request.auth.uid;
+      allow create, update: if account() && pro() && request.resource.data.owner == request.auth.uid
+        && (resource == null || resource.data.owner == request.auth.uid)
+        && request.resource.data.keys().hasOnly(['owner', 'title', 'slides', 'updatedAt'])
+        && str(request.resource.data.title, 80)
+        && request.resource.data.slides is list && request.resource.data.slides.size() <= 40;
+      allow delete: if signedIn() && resource.data.owner == request.auth.uid;
+    }
+
+    // Homework: a teacher sets a quiz with a due date; students hand in once
+    match /homework/{hid} {
+      allow read: if true;
+      allow create: if account() && request.resource.data.owner == request.auth.uid
+        && onlyKeys(['owner', 'ownerName', 'quizId', 'quizTitle', 'title', 'dueAt', 'createdAt'])
+        && str(request.resource.data.ownerName, 30) && str(request.resource.data.quizId, 60)
+        && str(request.resource.data.quizTitle, 80) && str(request.resource.data.title, 80)
+        && request.resource.data.dueAt is int && request.resource.data.dueAt > request.time.toMillis()
+        && request.resource.data.dueAt < request.time.toMillis() + 2678400000
+        && request.resource.data.createdAt == request.time;
+      allow delete: if signedIn() && resource.data.owner == request.auth.uid;
+      match /results/{uid} {
+        allow read: if signedIn() && (request.auth.uid == uid
+          || get(/databases/$(database)/documents/homework/$(hid)).data.owner == request.auth.uid);
+        allow create: if me(uid) && account()
+          && onlyKeys(['name', 'score', 'right', 'total', 'at'])
+          && str(request.resource.data.name, 30)
+          && request.resource.data.score is int && request.resource.data.score >= 0 && request.resource.data.score <= 200000
+          && request.resource.data.right is int && request.resource.data.total is int
+          && request.resource.data.right >= 0 && request.resource.data.right <= request.resource.data.total && request.resource.data.total <= 200
+          && request.resource.data.at == request.time
+          && get(/databases/$(database)/documents/homework/$(hid)).data.dueAt > request.time.toMillis();
+      }
+    }
+
     // Invites: a brand-new account says who invited it, once; the inviter
     // marks it claimed when they collect the reward
     match /referrals/{uid} {

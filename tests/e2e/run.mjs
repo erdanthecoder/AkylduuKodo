@@ -149,7 +149,7 @@ await host.click('.modal button:has-text("Done")');
 
 say('discover finds it');
 await host.goto(`${BASE}/discover?q=planet`);
-await host.waitForSelector('.quiz-card:has-text("Space and Science")');
+await host.waitForSelector('.quiz-card:has-text("Space and Science") >> visible=true');
 
 /* ------------------------------------------------------------- games */
 
@@ -496,13 +496,13 @@ if ((which === 'owner' || which === 'all') && !EMULATOR) {
   await host.goto(`${BASE}/`);
   const hostChannel = await host.locator('.me-chip').getAttribute('href');
   await own.goto(`${BASE}${hostChannel}`);
-  await own.waitForSelector('.channel .follow-btn:has-text("Follow")');
-  const before = Number(await own.locator('.channel-stats b').first().getAttribute('data-n'));
+  await own.waitForSelector('.profile .follow-btn:has-text("Follow")');
+  const before = Number(await own.locator('.profile-stats b[data-n]').first().getAttribute('data-n'));
   await own.click('.follow-btn');
   await own.waitForSelector('.follow-btn:has-text("Following")');
   await own.reload();
   await own.waitForSelector('.follow-btn:has-text("Following")');
-  const after = Number(await own.locator('.channel-stats b').first().getAttribute('data-n'));
+  const after = Number(await own.locator('.profile-stats b[data-n]').first().getAttribute('data-n'));
   if (after !== before + 1) fail(`followers ${before} -> ${after}`);
   await own.goto(`${BASE}/channels`);
   await own.waitForSelector('text=New from channels you follow');
@@ -544,7 +544,7 @@ if ((which === 'owner' || which === 'all') && !EMULATOR) {
   await host.locator('.set-row', { hasText: 'Have a channel' }).locator('.switch').click();
   await host.waitForSelector('text=Your channel is off');
   await own.goto(`${BASE}${hostChannel}`);
-  await own.waitForSelector('.channel h1');
+  await own.waitForSelector('.profile h1');
   if (await own.locator('.follow-btn').count()) fail('follow button shown for a profile with no channel');
   await host.goto(`${BASE}/settings`);
   await host.locator('.set-row', { hasText: 'Have a channel' }).locator('.switch').click();
@@ -578,6 +578,18 @@ if (which === 'invite' || which === 'all') {
   const after = await host.evaluate(async () => { const p = await window.__quickzy.session.reloadProfile(); return { coins: p.coins || 0, buddy: Boolean(p.owned && p.owned.buddy) }; });
   if (after.coins < coins0 + 150 || !after.buddy) fail(`inviter reward missing: ${JSON.stringify(after)} from ${coins0}`);
   await pal.context().close();
+
+  say('homework: set a quiz as homework and see the results page');
+  await host.goto(`${BASE}/quiz/${quizId}`);
+  await host.click('button:has-text("Set as homework")');
+  await host.click('.modal button:has-text("1 week")');
+  await host.click('.modal button:has-text("Set homework")');
+  await host.waitForURL(/\/hw\//);
+  await host.waitForSelector('text=Copy link for students');
+  await host.waitForSelector('text=Nobody has handed it in yet');
+  await host.screenshot({ path: `${SHOTS}/homework.png` });
+  await host.goto(`${BASE}/homework`);
+  await host.waitForSelector('.hw-row');
 }
 
 if (which === 'account' || which === 'all') {
@@ -607,7 +619,7 @@ if (which === 'account' || which === 'all') {
 
   say('Pro members wear the gold PRO badge');
   await host.goto(`${BASE}/u/quizmaster`);
-  await host.waitForSelector('h1 .verified.is-pro');
+  await host.waitForSelector('.profile-name .verified.is-pro');
   await host.evaluate(async () => {
     const { net, session } = window.__quickzy;
     await net.store.del('members', session.me().uid);
@@ -617,14 +629,14 @@ if (which === 'account' || which === 'all') {
   say('verified badge after three full published quizzes');
   await host.goto(`${BASE}/u/quizmaster`);
   await host.waitForSelector('h1:has-text("Professor Q")');
-  if (await host.locator('h1 .verified').count()) fail('verified too early');
+  if (await host.locator('.profile-name .verified').count()) fail('verified too early');
   await host.evaluate(async (id) => {
     const q = await import('/src/services/quizzes.js');
     const full = await q.loadForEditing(id);
     for (const t of ['Copy one', 'Copy two']) await q.saveQuiz({ ...full, id: null, title: t }, { publish: true });
   }, quizId);
   await host.goto(`${BASE}/u/quizmaster`);
-  await host.waitForSelector('h1 .verified');
+  await host.waitForSelector('.profile-name .verified');
   await host.waitForSelector('.quiz-card .verified');
 
   say('make with AI: paste a chatbot reply, get a quiz');

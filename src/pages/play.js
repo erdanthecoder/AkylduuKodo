@@ -228,6 +228,21 @@ export default async function Play({ params }) {
       fill(reward, h('p', { class: 'muted-light small' }, 'Sign up to earn XP and coins, open boxes and collect blooks.'));
     }
     const inviteSlot = h('div', {});
+    // playing a game hosted by the founder earns a badge, once
+    import('../config.js').then(async ({ OWNER_UID }) => {
+      const session = await import('../services/session.js');
+      if (meta.host !== OWNER_UID || !session.signedIn() || session.me().uid === OWNER_UID) return;
+      const p = await session.reloadProfile();
+      if (!p || p.metOwner) return;
+      await session.patchProfile({ metOwner: true });
+      sfx('win');
+      const { modal } = await import('../ui/kit.js');
+      modal((close) => [h('div', { class: 'stack center', style: { gap: '10px', textAlign: 'center' } },
+        h('span', { class: 'ach-medal', style: { '--c': '#ffd34d', width: '84px', height: '84px', margin: '0 auto' } }, icon('trophy', { size: 40 })),
+        h('h2', {}, 'New badge: Played with Erdan!'),
+        h('p', { class: 'muted', style: { margin: 0 } }, 'You played a game hosted by the founder of Quickzy. It shows on your profile now.'),
+        h('button', { class: 'btn btn-main btn-block', onclick: () => close() }, 'Awesome!'))]);
+    }).catch(() => {});
     import('../services/invite.js').then((m) => fill(inviteSlot, m.inviteCard({ compact: true }))).catch(() => {});
     screen('is-end',
       h('p', { class: 'muted-light' }, 'Game over'),

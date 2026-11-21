@@ -15,6 +15,20 @@ import { confetti } from '../ui/confetti.js';
 import { quizCard, pageTitle, COVER_BG } from './parts.js';
 import { navigate } from '../router.js';
 import NotFound from './notfound.js';
+import { profileBanner } from '../ui/banner.js';
+import { ACHIEVEMENTS, statsFor, earned } from '../services/achievements.js';
+import { isPro } from '../services/plan.js';
+import { levelOf } from '../services/progress.js';
+import { OWNER_UID } from '../config.js';
+import { logo } from '../ui/icons.js';
+
+/** The ribbon emblem next to a name, like a partner badge. */
+function emblem(kind) {
+  if (kind === 'owner') return h('span', { class: 'emblem emblem-owner', title: 'Founder of Quickzy' }, h('span', { class: 'emblem-mark' }, logo()), h('b', {}, 'FOUNDER'), h('small', {}, 'Quickzy'));
+  if (kind === 'official') return h('span', { class: 'emblem emblem-official', title: 'Official Quickzy account' }, h('span', { class: 'emblem-mark' }, logo()), h('b', {}, 'OFFICIAL'), h('small', {}, 'Quickzy'));
+  if (kind === 'pro') return h('span', { class: 'emblem emblem-pro', title: 'Quickzy Pro member' }, h('b', {}, 'PRO'), h('small', {}, 'member'));
+  return null;
+}
 
 const fmt = (n) => (n >= 1000 ? `${(n / 1000).toFixed(n >= 10000 ? 0 : 1)}k` : String(n));
 
@@ -56,49 +70,69 @@ export default async function Profile({ params }) {
   const user = claim ? await net.store.get('users', claim.uid).catch(() => null) : null;
   if (!user) return NotFound();
   pageTitle(user.displayName);
-  const [quizzes, badge, followers] = await Promise.all([quizzesBy(claim.uid).catch(() => []), badgeOf(claim.uid), channels.followerCount(claim.uid)]);
+  const owner = claim.uid === OWNER_UID;
+  const [quizzes, badge, followers, pro] = await Promise.all([quizzesBy(claim.uid).catch(() => []), badgeOf(claim.uid), channels.followerCount(claim.uid), isPro(claim.uid).catch(() => false)]);
   const mine = me() && me().uid === claim.uid;
   const hasChannel = user.channel !== false;
   const plays = quizzes.reduce((n, q) => n + (q.plays || 0), 0);
-  const questions = quizzes.reduce((n, q) => n + (q.questionCount || 0), 0);
-  // the banner takes the colour of their most played quiz
-  const tint = COVER_BG[(Number(quizzes[0]?.cover) || 0) % COVER_BG.length];
-  const avatar = blook(user.blook, 120);
+  const stats = statsFor(user, { quizzes, followers, pro, owner });
+  const ach = earned(stats);
   const countEl = h('b', { 'data-n': String(followers) }, fmt(followers));
-  let sort = 'top';
-  const grid = h('div', { class: 'grid' });
-  const drawGrid = () => {
-    const list = [...quizzes].sort(sort === 'top' ? (a, b) => (b.plays || 0) - (a.plays || 0) : (a, b) => (b.updatedAt || 0) - (a.updatedAt || 0));
-    fill(grid, ...list.map((q) => quizCard(q)));
-  };
-  drawGrid();
-  const tab = (id, label) => h('button', { class: `chip${sort === id ? ' is-on' : ''}`, onclick: (e) => {
-    sort = id; e.currentTarget.parentElement.querySelectorAll('.chip').forEach((c) => c.classList.remove('is-on')); e.currentTarget.classList.add('is-on'); drawGrid();
-  } }, label);
+  const kind = owner ? 'owner' : badge === 'official' ? 'official' : pro ? 'pro' : null;
 
-  return h('div', { class: 'page stack', style: { gap: '22px' } },
-    h('section', { class: 'channel' },
-      h('div', { class: 'channel-banner', style: { background: tint } },
-        h('div', { class: 'channel-floaters', 'aria-hidden': 'true' }, ...[0, 1, 2, 3, 4].map((i) => h('i', { style: { '--i': i } })))),
-      h('div', { class: 'channel-body' },
-        h('div', { class: 'channel-avatar' }, avatar),
-        h('div', { class: 'grow', style: { minWidth: '220px' } },
-          h('h1', { class: 'row', style: { gap: '10px', margin: 0 } }, user.displayName, badge ? nameBadges(badge) : null),
-          h('p', { class: 'muted', style: { margin: '2px 0 0' } }, `@${user.username}${hasChannel ? ' · Quickzy channel' : ''}`)),
-        mine
-          ? h('a', { class: 'btn', href: '/settings' }, icon('gear', { size: 18 }), hasChannel ? 'Edit channel' : 'Edit profile')
-          : hasChannel ? followButton(claim.uid, countEl) : null),
-      h('div', { class: `channel-stats${hasChannel ? '' : ' no-channel'}` },
-        hasChannel ? h('div', {}, countEl, h('small', {}, followers === 1 ? 'follower' : 'followers')) : null,
-        h('div', {}, h('b', {}, fmt(quizzes.length)), h('small', {}, quizzes.length === 1 ? 'quiz' : 'quizzes')),
-        h('div', {}, h('b', {}, fmt(plays)), h('small', {}, 'plays')),
-        h('div', {}, h('b', {}, fmt(questions)), h('small', {}, 'questions')))),
-    h('div', { class: 'section-head row spread' }, h('h2', {}, 'Quizzes'),
-      quizzes.length > 1 ? h('div', { class: 'row', style: { gap: '6px' } }, tab('top', 'Most played'), tab('new', 'Newest')) : null),
-    quizzes.length
-      ? grid
-      : h('div', { class: 'card flat' }, empty('No published quizzes yet', mine ? 'Publish a quiz and it shows up on your channel.' : `When ${user.displayName} publishes a quiz, it shows up here.`,
-        mine ? h('a', { class: 'btn btn-main', href: '/create' }, 'Make a quiz') : null)));
+  let sort = 'top';
+  let tab = 'content';
+  const body = h('div', { class: 'stack' });
+  const drawBody = () => {
+    tabs.querySelectorAll('button').forEach((b) => b.classList.toggle('is-on', b.dataset.t === tab));
+    if (tab === 'content') {
+      const list = [...quizzes].sort(sort === 'top' ? (a, b) => (b.plays || 0) - (a.plays || 0) : (a, b) => (b.updatedAt || 0) - (a.updatedAt || 0));
+      fill(body,
+        quizzes.length > 1 ? h('div', { class: 'row', style: { gap: '6px' } },
+          ...[['top', 'Most played'], ['new', 'Newest']].map(([id, label]) => h('button', { class: `chip${sort === id ? ' is-on' : ''}`, onclick: () => { sort = id; drawBody(); } }, label))) : null,
+        quizzes.length ? h('div', { class: 'grid' }, ...list.map((q) => quizCard(q)))
+          : h('div', { class: 'card flat' }, empty('No published quizzes yet', mine ? 'Publish a quiz and it shows up on your profile.' : `When ${user.displayName} publishes a quiz, it shows up here.`,
+            mine ? h('a', { class: 'btn btn-main', href: '/create' }, 'Make a quiz') : null)));
+    } else if (tab === 'ach') {
+      const got = ach.filter((a) => a.done).length;
+      fill(body, h('p', { class: 'muted', style: { margin: 0 } }, `${got} of ${ach.length} achievements`),
+        h('div', { class: 'ach-grid' }, ...ach.map((a, i) => h('div', { class: `ach${a.done ? ' is-done' : ''}`, style: { '--c': a.col, animationDelay: `${i * 0.04}s` } },
+          h('span', { class: 'ach-medal' }, icon(a.done ? 'trophy' : 'lock', { size: 22 })), h('b', {}, a.title), h('small', {}, a.how)))));
+    } else {
+      fill(body, h('div', { class: 'card stack about-card' },
+        user.bio ? h('p', { class: 'about-bio' }, user.bio) : h('p', { class: 'muted' }, mine ? 'Add a few words about yourself in Settings.' : 'No bio yet.'),
+        h('div', { class: 'about-facts' },
+          h('div', {}, icon('star', { size: 18 }), h('span', {}, `Level ${levelOf(user.xp || 0)}`)),
+          h('div', {}, icon('users', { size: 18 }), h('span', {}, `${plural(followers, 'follower')}`)),
+          user.createdAt ? h('div', {}, icon('clock', { size: 18 }), h('span', {}, `Joined ${new Date(user.createdAt).toLocaleDateString(undefined, { month: 'long', year: 'numeric' })}`)) : null,
+          h('div', {}, blook(user.blook, 22), h('span', {}, `${stats.blooks} blooks collected`)))));
+    }
+  };
+  const tabs = h('div', { class: 'profile-tabs' },
+    ...[['content', 'Content'], ['ach', 'Achievements'], ['about', 'About']].map(([t, label]) => h('button', { 'data-t': t, onclick: () => { tab = t; drawBody(); } }, label)));
+  drawBody();
+
+  const earnedBadges = ach.filter((a) => a.done && ['met-owner', 'pro', 'famous', 'level-25', 'friend'].includes(a.id));
+  return h('div', { class: 'page stack', style: { gap: '18px' } },
+    h('section', { class: `profile${owner ? ' is-owner' : ''}` },
+      h('div', { class: 'profile-banner' }, profileBanner(user.banner, { owner })),
+      h('div', { class: 'profile-main' },
+        h('div', { class: 'profile-avatar' }, blook(user.blook, owner ? 132 : 120), owner ? h('span', { class: 'profile-crown' }, icon('star', { size: 20 })) : null),
+        h('div', { class: 'profile-name' },
+          h('div', { class: 'row', style: { gap: '10px', alignItems: 'center' } },
+            h('h1', {}, user.displayName), badge ? nameBadges(badge) : null, emblem(kind)),
+          h('p', { class: 'muted', style: { margin: '2px 0 0' } }, `@${user.username}`),
+          earnedBadges.length ? h('div', { class: 'profile-earned' }, ...earnedBadges.map((a) => h('span', { class: 'earned-chip', style: { '--c': a.col } }, icon('trophy', { size: 12 }), a.title))) : null),
+        h('div', { class: 'profile-stats' },
+          h('div', {}, h('small', {}, 'Quizzes'), h('b', {}, fmt(quizzes.length))),
+          h('div', {}, h('small', {}, 'Plays'), h('b', {}, fmt(plays))),
+          h('div', {}, h('small', {}, 'Level'), h('b', {}, String(stats.level))),
+          hasChannel ? h('div', {}, h('small', {}, 'Followers'), countEl) : null),
+        h('div', { class: 'profile-action' }, mine
+          ? h('a', { class: 'btn', href: '/settings' }, icon('gear', { size: 18 }), 'Edit profile')
+          : hasChannel ? followButton(claim.uid, countEl) : null)),
+      tabs),
+    body);
 }
 
 /* --------------------------------------------------------- all channels */

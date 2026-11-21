@@ -201,6 +201,30 @@
           ".write": "auth != null && auth.uid === 'KWIRRSUM2VQVWnr1nUDbPP9bqMk2'"
         }
       }
+    },
+    "shows": {
+      "$pin": {
+        ".validate": "$pin.matches(/^[1-9][0-9]{5}$/)",
+        ".write": "auth != null && !newData.exists() && (data.child('meta/host').val() === auth.uid || data.child('meta/at').val() < now - 86400000)",
+        "meta": {
+          ".read": "auth != null",
+          ".write": "auth != null && auth.token.firebase.sign_in_provider != 'anonymous' && newData.child('host').val() === auth.uid && (!data.exists() || data.child('host').val() === auth.uid)",
+          ".validate": "newData.hasChildren(['host','title','deck','n','at'])"
+        },
+        "cur": {
+          ".read": "auth != null",
+          ".write": "auth != null && root.child('shows/' + $pin + '/meta/host').val() === auth.uid"
+        },
+        "votes": {
+          ".read": "auth != null",
+          "$slide": {
+            "$uid": {
+              ".write": "auth != null && auth.uid === $uid && !data.exists() && root.child('shows/' + $pin + '/meta').exists()",
+              ".validate": "newData.isNumber()"
+            }
+          }
+        }
+      }
     }
   }
 }

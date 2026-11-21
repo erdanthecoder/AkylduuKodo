@@ -106,23 +106,33 @@ export const SHAPE_NAMES = ['bolt', 'drop', 'star', 'hex', 'ring', 'square'];
  * the bolt breaking out past the tile's edge.
  */
 let logoSeq = 0;
+const round2 = (n) => Math.round(n * 100) / 100;
+/** One quarter of the Q's ring (an annulus slice), as a path. */
+function ringPart(cx, cy, r1, r2, a0, a1) {
+  const p = (rad, a) => `${round2(cx + rad * Math.cos(a * Math.PI / 180))} ${round2(cy + rad * Math.sin(a * Math.PI / 180))}`;
+  return `M${p(r2, a0)} A${r2} ${r2} 0 0 1 ${p(r2, a1)} L${p(r1, a1)} A${r1} ${r1} 0 0 0 ${p(r1, a0)} Z`;
+}
+
+/** The Quickzy mark (1.2): a Q whose ring is the four answer colours and
+ *  whose tail is a lightning bolt, on a night-violet tile. */
+export function logoSVG(id = 'q') {
+  const cx = 29; const cy = 28;
+  const cols = ['#ff4772', '#2f9bff', '#ffcd1f', '#12c9a6'];
+  const ring = [180, 270, 0, 90].map((a, i) => `<path d="${ringPart(cx, cy, 9, 19.5, a + 4, a + 86)}" fill="${cols[i]}"/>`).join('');
+  return `<defs><linearGradient id="${id}a" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#3a24a8"/><stop offset="1" stop-color="#17133f"/></linearGradient>`
+    + `<radialGradient id="${id}b" cx=".3" cy=".25" r=".8"><stop offset="0" stop-color="#7c5cff" stop-opacity=".9"/><stop offset="1" stop-color="#7c5cff" stop-opacity="0"/></radialGradient></defs>`
+    + `<rect x="2" y="5" width="60" height="57" rx="17" fill="#0e0b2b"/>`
+    + `<rect x="2" y="2" width="60" height="57" rx="17" fill="url(#${id}a)"/>`
+    + `<rect x="2" y="2" width="60" height="57" rx="17" fill="url(#${id}b)"/>`
+    + ring
+    + `<path d="M36 35 L52 33 L44.5 42.5 L57 42 L35 62 L41.5 47.5 L32.5 48 Z" fill="#fff" stroke="#17133f" stroke-width="2.6" stroke-linejoin="round"/>`
+    + `<path d="M52 7.5 l1.7 4.3 4.3 1.7 -4.3 1.7 -1.7 4.3 -1.7 -4.3 -4.3 -1.7 4.3 -1.7 Z" fill="#ffe45c"/>`;
+}
+
 export function logo() {
   const n = ++logoSeq;
   const mark = svg('svg', { viewBox: '0 0 64 64', class: 'logo-mark', 'aria-hidden': 'true' });
-  mark.innerHTML = `<defs>`
-    + `<linearGradient id="lg${n}" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#7c5cff"/><stop offset=".55" stop-color="#a14dff"/><stop offset="1" stop-color="#ff4772"/></linearGradient>`
-    + `<linearGradient id="lb${n}" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#ffe45c"/><stop offset="1" stop-color="#ffb21f"/></linearGradient>`
-    + `</defs>`
-    // the tile, with a darker base for depth and a soft shine
-    + `<rect x="3" y="7" width="58" height="54" rx="18" fill="#3d22b8"/>`
-    + `<rect x="3" y="3" width="58" height="53" rx="18" fill="url(#lg${n})"/>`
-    + `<path d="M9 22 C11 11 20 7 32 7" stroke="#fff" stroke-width="3.5" stroke-linecap="round" opacity=".35" fill="none"/>`
-    // the Q: a thick ring
-    + `<path d="M30 12 a17.5 17.5 0 1 0 0.01 0 Z M30 21 a8.5 8.5 0 1 1 -0.01 0 Z" fill="#fff" fill-rule="evenodd"/>`
-    // its tail is a lightning bolt, breaking out of the tile
-    + `<path d="M38 33 L55 31 L46 42 L58 41.5 L33 63 L41 47 L31.5 47.5 Z" fill="url(#lb${n})" stroke="#2a1580" stroke-width="2.6" stroke-linejoin="round"/>`
-    // a little sparkle
-    + `<path d="M52 8 l1.6 4 4 1.6 -4 1.6 -1.6 4 -1.6 -4 -4 -1.6 4 -1.6 Z" fill="#fff"/>`;
+  mark.innerHTML = logoSVG(`lg${n}`);
   return mark;
 }
 
