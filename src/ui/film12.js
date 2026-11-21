@@ -417,7 +417,7 @@ export function playFilm12({ pilot = 'fox' } = {}) {
         });
 
         // story beats
-        if (t > 0.3) once('a', () => say('Above the clouds, 11 December 2026…'));
+        if (t > 0.3) once('a', () => say('Above the clouds…'));
         if (t > 4.2) once('b', () => { say('WARNING: fighter jets behind you!', 'is-alert'); sfx('tagged'); root.classList.add('is-alert'); });
         if (t > 7.6) once('b2', () => root.classList.remove('is-alert'));
         if (t > 9.8) once('c', () => {
