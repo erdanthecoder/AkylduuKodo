@@ -227,6 +227,8 @@ export default async function Play({ params }) {
     } else if (mineRow) {
       fill(reward, h('p', { class: 'muted-light small' }, 'Sign up to earn XP and coins, open boxes and collect blooks.'));
     }
+    const inviteSlot = h('div', {});
+    import('../services/invite.js').then((m) => fill(inviteSlot, m.inviteCard({ compact: true }))).catch(() => {});
     screen('is-end',
       h('p', { class: 'muted-light' }, 'Game over'),
       myTeam() ? h('div', { class: 'team-badge', style: { background: myTeam().colour } }, blook(myTeam().blook, 44),
@@ -236,6 +238,7 @@ export default async function Play({ params }) {
       mineRow && mineRow.x ? h('p', { class: 'muted-light' }, mineRow.x) : null,
       h('ol', { class: 'mini-podium' }, ...top.map((r) => h('li', { class: r.u === uid ? 'is-me' : '' }, blook(r.b), h('b', {}, r.n), h('span', {}, r.s.toLocaleString())))),
       reward,
+      inviteSlot,
       h('div', { class: 'row', style: { justifyContent: 'center' } },
         h('a', { class: 'btn btn-main', href: '/join' }, 'Join another game'),
         h('a', { class: 'btn btn-dark', href: '/signup' }, 'Make your own quiz')));

@@ -14,7 +14,9 @@ const order = (text, options, time = 30) => ({ id: id(), type: 'order', text, op
 const num = (text, answer, tolerance = 0, unit = '', time = 20) => ({ id: id(), type: 'number', text, answer, tolerance, unit, time, points: 'standard' });
 const poll = (text, options) => ({ id: id(), type: 'poll', text, options, time: 20, points: 'none' });
 
-export const QUIZZES = [
+import { MORE } from './quizzes2.mjs';
+
+const BASE = [
   {
     slug: 'space', cover: 5, title: 'Planets and Space',
     description: 'A tour of the Solar System: planets, the Moon, the Sun and the people who went to space.',
@@ -196,3 +198,5 @@ export const QUIZZES = [
     ],
   },
 ];
+
+export const QUIZZES = [...BASE, ...MORE];

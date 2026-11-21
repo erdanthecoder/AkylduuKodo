@@ -552,6 +552,34 @@ if ((which === 'owner' || which === 'all') && !EMULATOR) {
   await own.context().close();
 }
 
+if (which === 'invite' || which === 'all') {
+  say('teachers: the classroom page');
+  await host.goto(`${BASE}/teachers`);
+  await host.waitForSelector('text=Your first game in two minutes');
+  await host.screenshot({ path: `${SHOTS}/teachers.png`, fullPage: true });
+
+  say('invite: a friend joins with my link, we both get rewards');
+  const inviter = await host.evaluate(() => window.__quickzy.session.me().uid);
+  const coins0 = await host.evaluate(async () => (await window.__quickzy.session.reloadProfile()).coins || 0);
+  const pal = await newPage('pal', { width: 390, height: 800 });
+  await pal.goto(`${BASE}/?ref=${inviter}`);
+  await pal.goto(`${BASE}/signup`);
+  await pal.fill('input[type=email]', 'pal@example.com');
+  const ppw = pal.locator('input[type=password]');
+  await ppw.nth(0).fill('Friendly-Pass-7');
+  await ppw.nth(1).fill('Friendly-Pass-7');
+  await pal.check('input[type=checkbox]');
+  await pal.click('button:has-text("Create account")');
+  await pal.waitForSelector('text=A gift from your friend!', { timeout: 15000 });
+  await pal.screenshot({ path: `${SHOTS}/invite-friend.png` });
+  await host.goto(`${BASE}/`);
+  await host.waitForSelector('.modal >> text=joined!', { timeout: 15000 });
+  await host.screenshot({ path: `${SHOTS}/invite-inviter.png` });
+  const after = await host.evaluate(async () => { const p = await window.__quickzy.session.reloadProfile(); return { coins: p.coins || 0, buddy: Boolean(p.owned && p.owned.buddy) }; });
+  if (after.coins < coins0 + 150 || !after.buddy) fail(`inviter reward missing: ${JSON.stringify(after)} from ${coins0}`);
+  await pal.context().close();
+}
+
 if (which === 'account' || which === 'all') {
   say('kick a player from the lobby');
   const pin = await openLobby('Classic');

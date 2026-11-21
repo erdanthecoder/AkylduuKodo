@@ -403,6 +403,14 @@ const DRAW = {
     eyes(s, { y: 52 });
     mouth(s, 'open', 63);
   },
+  buddy(s) {
+    // the friendship blook: two hearts on its cheeks and a high-five hand
+    s.append(svg('path', { d: 'M84 30 l6 -10 l4 3 l-5 9 l9 -6 l3 4 l-9 7 l10 -2 l1 5 l-12 3 Z', fill: '#ffd0a8' }));
+    block(s, '#ff8fb1', '#e2638c');
+    eyes(s, { y: 50, style: 'happy' });
+    mouth(s, 'open', 66);
+    for (const x of [26, 74]) s.append(svg('path', { d: `M${x} 64 c-4 -6 -12 -1 -6 5 l6 5 l6 -5 c6 -6 -2 -11 -6 -5 Z`, fill: '#ff2f6d' }));
+  },
   dragon(s) {
     s.append(svg('path', { d: 'M28 26 L24 8 L40 22 Z M72 26 L76 8 L60 22 Z', fill: '#ffd34d' }));
     s.append(svg('path', { d: 'M4 50 L16 38 L16 64 Z M96 50 L84 38 L84 64 Z', fill: '#2fa060' }));
@@ -600,6 +608,7 @@ export const BLOOKS = [
   { id: 'reindeer', name: 'Jingle', set: 'Winter', limited: true },
   { id: 'elf', name: 'Twinkle', set: 'Winter', limited: true },
   { id: 'santa', name: 'Santa', set: 'Winter', limited: true },
+  { id: 'buddy', name: 'Buddy', set: 'Friends', reward: true },
   { id: 'kyrgyzstan', name: 'Kyrgyzstan', set: 'Flags', exclusive: true },
   { id: 'azerbaijan', name: 'Azerbaijan', set: 'Flags', exclusive: true },
   { id: 'turkey', name: 'Türkiye', set: 'Flags', exclusive: true },
@@ -631,13 +640,15 @@ const WINTER_RARITY = { snowman: 'common', gingerbread: 'uncommon', reindeer: 'r
 for (const [id, r] of Object.entries(WINTER_RARITY)) RARITY_OF[r].push(id);
 // flags are legendary and exclusive: never in any box, only given by the owner
 RARITY_OF.legendary.push('kyrgyzstan', 'azerbaijan', 'turkey', 'uzbekistan');
+// the Buddy only comes from inviting a friend
+RARITY_OF.epic.push('buddy');
 for (const [r, ids] of Object.entries(RARITY_OF)) for (const id of ids) BLOOKS.find((b) => b.id === id).rarity = r;
 
 /** Everyone owns the commons from the start. */
 export const LIMITED = BLOOKS.filter((b) => b.limited).map((b) => b.id);
 export const EXCLUSIVE = BLOOKS.filter((b) => b.exclusive).map((b) => b.id);
 /** Everything boxes can give: not limited, not exclusive. */
-export const REGULAR = BLOOKS.filter((b) => !b.limited && !b.exclusive).map((b) => b.id);
+export const REGULAR = BLOOKS.filter((b) => !b.limited && !b.exclusive && !b.reward).map((b) => b.id);
 export const STARTERS = RARITY_OF.common.filter((id) => !LIMITED.includes(id));
 
 export function rarityOf(id) {
