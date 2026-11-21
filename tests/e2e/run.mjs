@@ -496,13 +496,13 @@ if ((which === 'owner' || which === 'all') && !EMULATOR) {
   await host.goto(`${BASE}/`);
   const hostChannel = await host.locator('.me-chip').getAttribute('href');
   await own.goto(`${BASE}${hostChannel}`);
-  await own.waitForSelector('.channel .follow-btn:has-text("Follow")');
-  const before = Number(await own.locator('.channel-stats b').first().getAttribute('data-n'));
+  await own.waitForSelector('.profile .follow-btn:has-text("Follow")');
+  const before = Number(await own.locator('.profile-stats b[data-n]').first().getAttribute('data-n'));
   await own.click('.follow-btn');
   await own.waitForSelector('.follow-btn:has-text("Following")');
   await own.reload();
   await own.waitForSelector('.follow-btn:has-text("Following")');
-  const after = Number(await own.locator('.channel-stats b').first().getAttribute('data-n'));
+  const after = Number(await own.locator('.profile-stats b[data-n]').first().getAttribute('data-n'));
   if (after !== before + 1) fail(`followers ${before} -> ${after}`);
   await own.goto(`${BASE}/channels`);
   await own.waitForSelector('text=New from channels you follow');
@@ -544,7 +544,7 @@ if ((which === 'owner' || which === 'all') && !EMULATOR) {
   await host.locator('.set-row', { hasText: 'Have a channel' }).locator('.switch').click();
   await host.waitForSelector('text=Your channel is off');
   await own.goto(`${BASE}${hostChannel}`);
-  await own.waitForSelector('.channel h1');
+  await own.waitForSelector('.profile h1');
   if (await own.locator('.follow-btn').count()) fail('follow button shown for a profile with no channel');
   await host.goto(`${BASE}/settings`);
   await host.locator('.set-row', { hasText: 'Have a channel' }).locator('.switch').click();
