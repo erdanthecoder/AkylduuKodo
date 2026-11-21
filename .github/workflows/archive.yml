@@ -1,0 +1,56 @@
+name: Publish the Quickzy archive
+
+# The museum of every Quickzy version, at https://archivedquickzy.web.app
+on:
+  push:
+    branches: [main]
+    paths: ['archive/**', '.github/workflows/archive.yml']
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: archive
+  cancel-in-progress: false
+
+jobs:
+  publish:
+    name: Publish the archive
+    runs-on: ubuntu-latest
+    env:
+      PROJECT: akylduukodo
+      FIREBASE: npx -y firebase-tools@12.9.1
+      SITE: archivedquickzy
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+      - name: Sign in with the service account
+        env:
+          SA: ${{ secrets.FIREBASE_SERVICE_ACCOUNT_AKYLDUUKODO }}
+        run: |
+          printf '%s' "$SA" > "$RUNNER_TEMP/sa.json"
+          echo "GOOGLE_APPLICATION_CREDENTIALS=$RUNNER_TEMP/sa.json" >> "$GITHUB_ENV"
+      - name: Make sure the archive site exists
+        run: |
+          if ! $FIREBASE hosting:sites:get "$SITE" --project "$PROJECT" > /dev/null 2>&1; then
+            $FIREBASE hosting:sites:create "$SITE" --project "$PROJECT" --non-interactive || {
+              echo "::error::Could not create the Firebase Hosting site '$SITE'. Create it in the Firebase console (Hosting, Add another site) and run this again."
+              exit 1
+            }
+          fi
+      - name: Publish
+        run: |
+          cd archive
+          cat > firebase.json <<JSON
+          { "hosting": { "site": "$SITE", "public": ".", "ignore": ["firebase.json", "**/.*"],
+            "headers": [{ "source": "**", "headers": [{ "key": "X-Content-Type-Options", "value": "nosniff" }] }] } }
+          JSON
+          echo '{"projects":{"default":"akylduukodo"}}' > .firebaserc
+          $FIREBASE deploy --only hosting --project "$PROJECT" --non-interactive
+          echo "### Live at https://$SITE.web.app" >> "$GITHUB_STEP_SUMMARY"
+      - name: Forget the key
+        if: always()
+        run: rm -f "$RUNNER_TEMP/sa.json"

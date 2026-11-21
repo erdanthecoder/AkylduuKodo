@@ -1,0 +1,123 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Quickzy Archive</title>
+  <meta name="description" content="Every version of Quickzy, from 1.0 to today: what changed and how it looked." />
+  <meta name="theme-color" content="#17133f" />
+  <link rel="icon" href="icon.svg" type="image/svg+xml" />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Lilita+One&family=Nunito:wght@600;700;800;900&display=swap" />
+  <style>
+    :root { --bg: #17133f; --bg2: #211b57; --ink: #fff; --ink2: rgba(255,255,255,.72); --line: rgba(255,255,255,.12); --gold: #ffcd1f; }
+    * { box-sizing: border-box; }
+    html { scroll-behavior: smooth; }
+    body { margin: 0; background: var(--bg); color: var(--ink); font: 700 16px/1.5 Nunito, system-ui, sans-serif; overflow-x: hidden; }
+    a { color: inherit; }
+    h1, h2, h3 { font-family: 'Lilita One', system-ui; font-weight: 400; margin: 0; letter-spacing: .3px; }
+    .wrap { width: min(1100px, 100% - 32px); margin: 0 auto; }
+
+    header { position: relative; padding: 70px 0 40px; text-align: center; overflow: hidden; }
+    header::before { content: ''; position: absolute; inset: 0; background: radial-gradient(circle at 50% 0%, #6b4cff88, transparent 60%); }
+    .logo { position: relative; width: 84px; height: 84px; margin: 0 auto 16px; animation: bob 3s ease-in-out infinite; }
+    @keyframes bob { 50% { transform: translateY(-8px) rotate(-4deg); } }
+    header h1 { position: relative; font-size: clamp(40px, 8vw, 76px); line-height: 1; }
+    header h1 em { font-style: normal; color: var(--gold); }
+    header p { position: relative; color: var(--ink2); max-width: 560px; margin: 14px auto 22px; font-size: 18px; }
+    .btn { display: inline-flex; align-items: center; gap: 8px; padding: 12px 20px; border-radius: 14px; background: var(--gold); color: #17133f; text-decoration: none; font-weight: 900; box-shadow: 0 5px 0 #c99a00; transition: transform .12s; position: relative; }
+    .btn:hover { transform: translateY(-2px); }
+    .jump { display: flex; gap: 10px; justify-content: center; flex-wrap: wrap; margin-top: 26px; position: relative; }
+    .jump a { padding: 8px 16px; border-radius: 99px; border: 2px solid var(--line); text-decoration: none; font-weight: 900; background: rgba(255,255,255,.05); }
+    .jump a:hover { border-color: var(--gold); }
+
+    .timeline { position: relative; padding: 20px 0 60px; }
+    .timeline::before { content: ''; position: absolute; left: 22px; top: 0; bottom: 0; width: 4px; border-radius: 4px; background: linear-gradient(var(--gold), #ff4772, #6b4cff, #12c9a6); }
+    .ver { position: relative; padding-left: 64px; margin-bottom: 70px; opacity: 0; transform: translateY(30px); transition: opacity .7s, transform .7s cubic-bezier(.2,.9,.3,1.1); }
+    .ver.in { opacity: 1; transform: none; }
+    .dot { position: absolute; left: 6px; top: 4px; width: 36px; height: 36px; border-radius: 50%; background: var(--c); border: 5px solid var(--bg); box-shadow: 0 0 0 3px var(--c); }
+    .ver-head { display: flex; flex-wrap: wrap; align-items: baseline; gap: 6px 14px; }
+    .ver-num { font: 400 clamp(44px, 7vw, 64px)/1 'Lilita One', system-ui; color: var(--c); }
+    .ver-name { font-size: 26px; }
+    .ver-date { color: var(--ink2); font-size: 14px; width: 100%; }
+    .tag { font-size: 12px; font-weight: 900; padding: 3px 10px; border-radius: 99px; background: var(--gold); color: #17133f; align-self: center; }
+    .intro { color: var(--ink2); font-size: 18px; max-width: 720px; margin: 10px 0 18px; }
+    .news { display: grid; gap: 10px; grid-template-columns: repeat(auto-fill, minmax(230px, 1fr)); margin-bottom: 22px; }
+    .news div { padding: 12px 14px; border-radius: 14px; background: rgba(255,255,255,.06); border-left: 4px solid var(--c); }
+    .news b { display: block; }
+    .news small { color: var(--ink2); font-weight: 700; }
+    .gallery { display: grid; gap: 12px; grid-template-columns: repeat(auto-fill, minmax(240px, 1fr)); }
+    .shot { margin: 0; border-radius: 14px; overflow: hidden; background: var(--bg2); border: 2px solid var(--line); cursor: zoom-in; transition: transform .15s, border-color .15s; padding: 0; color: inherit; font: inherit; text-align: left; }
+    .shot:hover { transform: translateY(-4px) rotate(-.4deg); border-color: var(--c); }
+    .shot img { display: block; width: 100%; aspect-ratio: 16 / 10; object-fit: cover; object-position: top; background: #0e0b2a; }
+    .shot span { display: block; padding: 8px 12px; font-size: 14px; }
+
+    .box { position: fixed; inset: 0; z-index: 9; display: grid; place-items: center; padding: 16px; background: rgba(8,6,28,.92); opacity: 0; pointer-events: none; transition: opacity .2s; }
+    .box.open { opacity: 1; pointer-events: auto; }
+    .box img { max-width: 100%; max-height: 82vh; border-radius: 12px; box-shadow: 0 20px 60px #000a; }
+    .box p { text-align: center; margin: 10px 0 0; }
+    .box button { position: absolute; top: 14px; right: 14px; width: 44px; height: 44px; border-radius: 12px; border: 0; background: #fff; color: #17133f; font-size: 22px; font-weight: 900; cursor: pointer; }
+
+    footer { text-align: center; color: var(--ink2); padding: 30px 0 50px; border-top: 2px solid var(--line); }
+    @media (prefers-reduced-motion: reduce) { .ver { opacity: 1; transform: none; transition: none; } .logo { animation: none; } }
+    @media (max-width: 560px) { .timeline::before { left: 12px; } .ver { padding-left: 40px; } .dot { left: -2px; width: 30px; height: 30px; } }
+  </style>
+</head>
+<body>
+  <header>
+    <img class="logo" src="icon.svg" alt="" />
+    <h1>Quickzy <em>Archive</em></h1>
+    <p>Every version of Quickzy, from the very first one to today. See what changed and how it looked.</p>
+    <a class="btn" href="https://quickzy.web.app">Play the newest Quickzy →</a>
+    <nav class="jump" id="jump"></nav>
+  </header>
+  <main class="wrap timeline" id="timeline"></main>
+  <footer>Quickzy Archive · pictures taken from each version's own code · <a href="https://quickzy.web.app">quickzy.web.app</a></footer>
+  <div class="box" id="box" role="dialog" aria-modal="true" aria-label="Picture">
+    <button id="close" aria-label="Close">×</button>
+    <div><img id="boxImg" alt="" /><p id="boxText"></p></div>
+  </div>
+  <script src="versions.js"></script>
+  <script>
+    const el = (tag, attrs = {}, ...kids) => {
+      const e = document.createElement(tag);
+      for (const [k, v] of Object.entries(attrs)) k === 'style' ? e.setAttribute('style', v) : e[k] = v;
+      e.append(...kids);
+      return e;
+    };
+    const line = document.getElementById('timeline');
+    const jump = document.getElementById('jump');
+    const box = document.getElementById('box');
+    const open = (src, text) => { document.getElementById('boxImg').src = src; document.getElementById('boxText').textContent = text; box.classList.add('open'); };
+    const close = () => box.classList.remove('open');
+    box.addEventListener('click', (e) => { if (e.target === box || e.target.id === 'close') close(); });
+    addEventListener('keydown', (e) => { if (e.key === 'Escape') close(); });
+
+    VERSIONS.forEach((ver, i) => {
+      jump.append(el('a', { href: `#v${ver.v}` }, ver.v));
+      const gallery = el('div', { className: 'gallery' }, ...ver.shots.map(([file, text]) => {
+        const src = `shots/${ver.v}/${file}.webp`;
+        const b = el('button', { className: 'shot', type: 'button' }, el('img', { src, alt: text, loading: 'lazy' }), el('span', {}, text));
+        b.addEventListener('click', () => open(src, `${ver.v} · ${text}`));
+        return b;
+      }));
+      line.append(el('section', { className: 'ver', id: `v${ver.v}`, style: `--c:${ver.colour}` },
+        el('span', { className: 'dot' }),
+        el('div', { className: 'ver-head' },
+          el('span', { className: 'ver-num' }, ver.v),
+          el('h2', { className: 'ver-name' }, ver.name),
+          i === 0 ? el('span', { className: 'tag' }, 'NEWEST') : '',
+          el('span', { className: 'ver-date' }, ver.date)),
+        el('p', { className: 'intro' }, ver.intro),
+        el('div', { className: 'news' }, ...ver.news.map(([t, d]) => el('div', {}, el('b', {}, t), el('small', {}, d)))),
+        gallery));
+    });
+
+    const io = 'IntersectionObserver' in window ? new IntersectionObserver((es) => es.forEach((e) => {
+      if (e.isIntersecting) { e.target.classList.add('in'); io.unobserve(e.target); }
+    }), { threshold: 0.05 }) : null;
+    document.querySelectorAll('.ver').forEach((s) => (io ? io.observe(s) : s.classList.add('in')));
+  </script>
+</body>
+</html>
