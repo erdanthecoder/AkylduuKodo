@@ -155,6 +155,10 @@ await host.click('.modal button:has-text("Done")');
 say('discover finds it');
 await host.goto(`${BASE}/discover?q=planet`);
 await host.waitForSelector('.quiz-card:has-text("Space and Science") >> visible=true');
+say('search people by username');
+await host.goto(`${BASE}/discover?q=@quizm`);
+await host.waitForSelector('.person:has-text("@quizmaster")');
+await host.screenshot({ path: `${SHOTS}/people-search.png` });
 
 /* ------------------------------------------------------------- games */
 

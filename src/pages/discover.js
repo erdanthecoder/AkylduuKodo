@@ -3,6 +3,8 @@
 import { h, fill, debounce } from '../ui/dom.js';
 import { icon, verifiedBadge } from '../ui/icons.js';
 import { empty, segmented } from '../ui/kit.js';
+import { searchPeople } from '../services/channels.js';
+import { blook } from '../ui/blooks.js';
 import { popularQuizzes, newestQuizzes, searchQuizzes, quizzesBy, words, getQuiz } from '../services/quizzes.js';
 import { site } from '../services/site.js';
 import { OFFICIAL_UID } from '../config.js';
@@ -76,7 +78,7 @@ export default async function Discover({ query }) {
   let subject = SUBJECTS.find((s) => s.id === query.subject) || SUBJECTS[0];
   const featured = h('div', { class: 'stack', style: { gap: '18px' } });
   const results = h('div');
-  const search = h('input', { class: 'input input-xl', type: 'search', placeholder: 'Search quizzes: planets, fractions, capitals…', value: query.q || '', 'aria-label': 'Search quizzes',
+  const search = h('input', { class: 'input input-xl', type: 'search', placeholder: 'Search quizzes or people: planets, fractions, @name…', value: query.q || '', 'aria-label': 'Search quizzes',
     style: { paddingLeft: '52px', textAlign: 'left' } });
 
   // the hero: the owner's picks (or the most played) as big photo cards,
@@ -109,6 +111,7 @@ export default async function Discover({ query }) {
   }, s.name)));
   drawChips();
 
+  const people = h('div', { class: 'people' });
   let seq = 0;
   const run = async () => {
     const mine = ++seq;
@@ -119,6 +122,12 @@ export default async function Discover({ query }) {
     history.replaceState(null, '', `/discover${params.toString() ? `?${params}` : ''}`);
     featured.hidden = Boolean(q) || subject.id !== 'all';
     fill(results, h('div', { class: 'loading' }, h('div', { class: 'spinner' })));
+    fill(people);
+    if (q) searchPeople(q).then((list) => {
+      if (mine !== seq || !list.length) return;
+      fill(people, h('h2', {}, 'People'), h('div', { class: 'people-row' }, ...list.map((u) =>
+        h('a', { class: 'person', href: `/u/${u.username}` }, blook(u.blook), h('b', {}, u.name), h('small', {}, `@${u.username}`)))));
+    });
     try {
       let list = q ? await searchQuizzes(q) : sort === 'new' ? await newestQuizzes(80) : await popularQuizzes(80);
       list = list.filter((x) => inSubject(x, subject));
@@ -138,6 +147,7 @@ export default async function Discover({ query }) {
     h('div', { style: { position: 'relative' } }, search,
       h('span', { style: { position: 'absolute', left: '18px', top: '50%', transform: 'translateY(-50%)', color: 'var(--muted)', display: 'flex' } }, icon('search', { size: 22 }))),
     chips,
+    people,
     featured,
     h('div', { class: 'row spread' }, h('h2', {}, 'All quizzes'),
       segmented([['popular', 'Most played'], ['new', 'Newest']], sort, (v) => { sort = v; if (!search.value.trim()) run(); })),

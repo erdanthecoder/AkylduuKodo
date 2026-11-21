@@ -1544,3 +1544,12 @@ button.bcard.is-slot { color: var(--violet); border-color: var(--violet); backgr
 .create-kind small { color: var(--ink-2); font-weight: 700; }
 .create-kind-ic { display: grid; place-items: center; width: 54px; height: 54px; border-radius: 16px; background: var(--c); color: #fff; transform: rotate(-5deg); }
 .create-kind.is-locked { opacity: .7; }
+/* People search */
+.people:empty { display: none; }
+.people { display: grid; gap: 10px; }
+.people-row { display: flex; gap: 12px; overflow-x: auto; padding-bottom: 6px; }
+.person { flex: 0 0 auto; display: grid; justify-items: center; gap: 2px; width: 120px; padding: 14px 8px; border-radius: 18px; background: var(--card); border: 2px solid var(--line); color: var(--ink); text-decoration: none; text-align: center; transition: transform .12s; }
+.person:hover { transform: translateY(-3px); }
+.person .blook { width: 56px; height: 56px; }
+.person b { max-width: 100%; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.person small { color: var(--ink-2); font-weight: 700; max-width: 100%; overflow: hidden; text-overflow: ellipsis; }
