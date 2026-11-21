@@ -619,7 +619,7 @@ if (which === 'account' || which === 'all') {
 
   say('Pro members wear the gold PRO badge');
   await host.goto(`${BASE}/u/quizmaster`);
-  await host.waitForSelector('h1 .verified.is-pro');
+  await host.waitForSelector('.profile-name .verified.is-pro');
   await host.evaluate(async () => {
     const { net, session } = window.__quickzy;
     await net.store.del('members', session.me().uid);
@@ -629,14 +629,14 @@ if (which === 'account' || which === 'all') {
   say('verified badge after three full published quizzes');
   await host.goto(`${BASE}/u/quizmaster`);
   await host.waitForSelector('h1:has-text("Professor Q")');
-  if (await host.locator('h1 .verified').count()) fail('verified too early');
+  if (await host.locator('.profile-name .verified').count()) fail('verified too early');
   await host.evaluate(async (id) => {
     const q = await import('/src/services/quizzes.js');
     const full = await q.loadForEditing(id);
     for (const t of ['Copy one', 'Copy two']) await q.saveQuiz({ ...full, id: null, title: t }, { publish: true });
   }, quizId);
   await host.goto(`${BASE}/u/quizmaster`);
-  await host.waitForSelector('h1 .verified');
+  await host.waitForSelector('.profile-name .verified');
   await host.waitForSelector('.quiz-card .verified');
 
   say('make with AI: paste a chatbot reply, get a quiz');
