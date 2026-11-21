@@ -16,7 +16,7 @@ import { celebrate } from './confetti.js';
 import { sfx, playMusic, stopMusic } from '../game/sound.js';
 
 const THREE_URL = 'https://cdn.jsdelivr.net/npm/three@0.170.0/build/three.module.js';
-const SEEN = 'quickzy.film12b.seen';
+const SEEN = 'quickzy.film12b.seen.v2';
 export const storySeen = () => { try { return localStorage.getItem(SEEN) === '1'; } catch { return true; } };
 
 const KIDS = ['fox', 'panda', 'cat', 'robot', 'unicorn', 'frog', 'tiger', 'owl', 'bunny', 'dragon', 'koala', 'penguin'];
@@ -95,6 +95,35 @@ export function playStory() {
       box(9.4, 4.4, 0.12, std(0x6b4a2a), 0, 3.9, -5.88, room);
       const board = new T.Mesh(new T.PlaneGeometry(9, 4), new T.MeshStandardMaterial({ map: boardTex, roughness: 0.9 }));
       board.position.set(0, 3.9, -5.8); room.add(board);
+      // ceiling lights, a clock, posters, a door, a bookshelf
+      box(24, 0.2, 20, std(0xf7f2e8), 0, 8, 0, room);
+      for (const lx of [-5, 0, 5]) for (const lz of [-2, 4]) { const l = new T.Mesh(new T.BoxGeometry(2.4, 0.08, 0.5), new T.MeshBasicMaterial({ color: 0xfffbe8 })); l.position.set(lx, 7.88, lz); room.add(l); }
+      const clockC = document.createElement('canvas'); clockC.width = clockC.height = 128;
+      const cc = clockC.getContext('2d'); cc.fillStyle = '#fff'; cc.beginPath(); cc.arc(64, 64, 60, 0, 7); cc.fill(); cc.lineWidth = 6; cc.strokeStyle = '#333'; cc.stroke();
+      cc.lineWidth = 5; cc.beginPath(); cc.moveTo(64, 64); cc.lineTo(64, 24); cc.moveTo(64, 64); cc.lineTo(92, 70); cc.stroke();
+      const clockTex = new T.CanvasTexture(clockC); clockTex.colorSpace = T.SRGBColorSpace;
+      const clock = new T.Mesh(new T.CircleGeometry(0.45, 32), new T.MeshBasicMaterial({ map: clockTex })); clock.position.set(5.6, 6.6, -5.88); room.add(clock);
+      const poster = (txt, col, x) => {
+        const c = document.createElement('canvas'); c.width = 256; c.height = 340; const g = c.getContext('2d');
+        g.fillStyle = col; g.fillRect(0, 0, 256, 340); g.fillStyle = '#fff'; g.font = '700 34px Nunito, sans-serif'; g.textAlign = 'center';
+        txt.split(' ').forEach((w, i) => g.fillText(w, 128, 90 + i * 50));
+        const tx = new T.CanvasTexture(c); tx.colorSpace = T.SRGBColorSpace;
+        const m = new T.Mesh(new T.PlaneGeometry(1.1, 1.45), new T.MeshStandardMaterial({ map: tx })); m.position.set(x, 4.2, -5.88); room.add(m);
+      };
+      poster('READ EVERY DAY', '#2f9bff', -6.4); poster('THE WATER CYCLE', '#12c9a6', 6.4);
+      box(1.5, 3.4, 0.15, std(0x8a5a2b, { roughness: 0.5 }), -11.85, 1.7, 5, room);                 // door
+      box(0.5, 2.6, 2.4, std(0x9b6b3d), 11.6, 1.3, 6.5, room);                                        // bookshelf
+      for (let i = 0; i < 12; i++) box(0.3, 0.45, 0.14, std([0xff4772, 0x2f9bff, 0xffcd1f, 0x12c9a6][i % 4]), 11.4, 0.5 + Math.floor(i / 6) * 0.9, 5.6 + (i % 6) * 0.32, room);
+      // sun beams through the windows, with dust floating in them
+      const beamMat = new T.MeshBasicMaterial({ color: 0xfff1c8, transparent: true, opacity: 0.12, depthWrite: false, side: T.DoubleSide });
+      for (const z of [-2, 3]) { const beam = new T.Mesh(new T.PlaneGeometry(9, 2.4), beamMat); beam.position.set(7.5, 2.8, z); beam.rotation.set(0, Math.PI / 2, -0.55); room.add(beam); }
+      const dustGeo = new T.BufferGeometry(); const dustPos = new Float32Array(240 * 3);
+      for (let i = 0; i < 240; i++) { dustPos[i * 3] = 3 + Math.random() * 9; dustPos[i * 3 + 1] = Math.random() * 6; dustPos[i * 3 + 2] = -4 + Math.random() * 9; }
+      dustGeo.setAttribute('position', new T.BufferAttribute(dustPos, 3));
+      const dust = new T.Points(dustGeo, new T.PointsMaterial({ color: 0xfff5d6, size: 0.04, transparent: true, opacity: 0.7 })); room.add(dust);
+      // little pictures: Zzz, phones and clapping hands
+      const emojiTex = (ch) => { const c = document.createElement('canvas'); c.width = c.height = 128; const g = c.getContext('2d'); g.font = '96px system-ui, "Apple Color Emoji", "Segoe UI Emoji"'; g.textAlign = 'center'; g.textBaseline = 'middle'; g.fillText(ch, 64, 70); const tx = new T.CanvasTexture(c); tx.colorSpace = T.SRGBColorSpace; return tx; };
+      const zzzTex = emojiTex('💤'); const phoneTex = emojiTex('📱'); const clapTex = emojiTex('👏');
       // desks with kids (blooks on little stands so they can bounce and clap)
       const kids = [];
       KIDS.slice(0, 9).forEach((id, i) => {
@@ -106,7 +135,10 @@ export function playStory() {
         kidImgs[i].onload = () => { tex.needsUpdate = true; };
         const kid = new T.Sprite(new T.SpriteMaterial({ map: tex }));
         kid.scale.set(1.3, 1.3, 1); kid.position.set(x, 1.95, z + 0.3); room.add(kid);
-        kids.push({ s: kid, base: 1.95, phase: i * 0.7 });
+        const zzz = new T.Sprite(new T.SpriteMaterial({ map: zzzTex, transparent: true })); zzz.scale.set(0.6, 0.6, 1); room.add(zzz);
+        const phone = new T.Sprite(new T.SpriteMaterial({ map: phoneTex, transparent: true })); phone.scale.set(0.45, 0.45, 1); phone.position.set(x + 0.55, 1.6, z + 0.5); phone.visible = false; room.add(phone);
+        const clapS = new T.Sprite(new T.SpriteMaterial({ map: clapTex, transparent: true })); clapS.scale.set(0.55, 0.55, 1); clapS.visible = false; room.add(clapS);
+        kids.push({ s: kid, base: 1.95, phase: i * 0.7, zzz, phone, clap: clapS, x, z });
       });
       // the teacher: built from simple shapes, with glasses and a tie
       const teacher = new T.Group();
@@ -123,6 +155,16 @@ export function playStory() {
         const hand = new T.Mesh(new T.SphereGeometry(0.09, 12, 10), skin); hand.position.y = -0.78; arm.add(hand);
         arm.position.set(x, 1.95, 0); teacher.add(arm);
       }
+      // a face: eyes, eyebrows and a mouth that moves when he talks
+      const dark = std(0x1a1410);
+      for (const ex of [-0.11, 0.11]) {
+        const eye = new T.Mesh(new T.SphereGeometry(0.035, 10, 8), dark); eye.position.set(ex, 2.34, 0.285); teacher.add(eye);
+        const brow = new T.Mesh(new T.BoxGeometry(0.12, 0.02, 0.02), std(0x3a2615)); brow.position.set(ex, 2.44, 0.27); teacher.add(brow);
+      }
+      const mouth = new T.Mesh(new T.CapsuleGeometry(0.014, 0.07, 4, 8), std(0x8a3b2e)); mouth.rotation.z = Math.PI / 2; mouth.position.set(0, 2.2, 0.275); teacher.add(mouth);
+      const nose = new T.Mesh(new T.SphereGeometry(0.04, 10, 8), skin); nose.position.set(0, 2.28, 0.31); teacher.add(nose);
+      for (const sx of [-0.18, 0.18]) { const shoe = new T.Mesh(new T.BoxGeometry(0.2, 0.1, 0.34), std(0x2a1a10, { roughness: 0.4 })); shoe.position.set(sx, 0.05, 0.06); teacher.add(shoe); }
+      const belt = new T.Mesh(new T.CylinderGeometry(0.37, 0.37, 0.07, 20), std(0x3a2615)); belt.position.y = 1.12; teacher.add(belt);
       teacher.position.set(-2.2, 0, -4.6);
       room.add(teacher);
 
@@ -187,20 +229,29 @@ export function playStory() {
       // seat in front with its fold-down tray
       box(1.5, 1.6, 0.3, std(0x2c3550), 0, 0.5, -1.5, plane);
       box(1.3, 0.45, 0.25, std(0x2c3550), 0, 1.5, -1.5, plane);
-      box(1.2, 0.04, 0.6, std(0x3b3f4a), 0, 0.55, -1.05, plane);
+      box(1.2, 0.04, 0.8, std(0x3b3f4a), 0, 0.55, -0.9, plane);
+      // a seat-back screen, a headrest cover, an armrest, a coffee and a reading light
+      const tv = new T.Mesh(new T.PlaneGeometry(0.42, 0.26), new T.MeshBasicMaterial({ color: 0x1e3b6e })); tv.position.set(0, 1.28, -1.34); plane.add(tv);
+      box(0.9, 0.3, 0.27, std(0xf2f2f2), 0, 1.62, -1.48, plane);
+      box(0.12, 0.12, 1.2, std(0x6b6f7a), -1.0, 0.45, -0.2, plane);
+      const cup = new T.Mesh(new T.CylinderGeometry(0.05, 0.04, 0.11, 16), std(0xffffff)); cup.position.set(0.52, 0.63, -0.75); plane.add(cup);
+      const coffee = new T.Mesh(new T.CircleGeometry(0.045, 16), std(0x4a2a12)); coffee.rotation.x = -Math.PI / 2; coffee.position.set(0.52, 0.685, -0.75); plane.add(coffee);
+      box(6, 0.1, 6, std(0xd9d6cf), 0, 2.4, 0, plane);
+      const spot = new T.SpotLight(0xfff0d0, 6, 4, 0.5, 0.6); spot.position.set(0, 2.3, -0.4); spot.target.position.set(0, 0.6, -1.0); plane.add(spot); plane.add(spot.target);
+      const winLight = new T.PointLight(0xcfe6ff, 2.5, 3); winLight.position.set(-1.3, 1.25, -0.4); plane.add(winLight);
       // the laptop: a screen that shows Quickzy
-      const lap = new T.Group(); lap.position.set(0, 0.58, -1.0); plane.add(lap);
+      const lap = new T.Group(); lap.position.set(0, 0.58, -0.78); plane.add(lap);
       box(0.9, 0.03, 0.6, std(0xbfc3cc, { metalness: 0.6, roughness: 0.3 }), 0, 0, 0, lap);
       const screenCanvas = document.createElement('canvas'); screenCanvas.width = 1024; screenCanvas.height = 640;
       const scx = screenCanvas.getContext('2d');
       const screenTex = new T.CanvasTexture(screenCanvas); screenTex.colorSpace = T.SRGBColorSpace;
-      const lid = new T.Group(); lid.position.set(0, 0.015, -0.29); lid.rotation.x = -0.25; lap.add(lid);
+      const lid = new T.Group(); lid.position.set(0, 0.015, -0.29); lid.rotation.x = -0.12; lap.add(lid);
       box(0.9, 0.58, 0.02, std(0xbfc3cc, { metalness: 0.6, roughness: 0.3 }), 0, 0.29, 0, lid);
       const scr = new T.Mesh(new T.PlaneGeometry(0.84, 0.52), new T.MeshBasicMaterial({ map: screenTex, toneMapped: false }));
       scr.position.set(0, 0.29, 0.012); lid.add(scr);
       // hands on the keyboard
       const handMat = std(0xf1c7a1, { roughness: 0.6 });
-      const hands = [-0.22, 0.22].map((x) => { const m = new T.Mesh(new T.CapsuleGeometry(0.05, 0.16, 4, 10), handMat); m.rotation.x = Math.PI / 2; m.position.set(x, 0.62, -0.8); plane.add(m); return m; });
+      const hands = [-0.22, 0.22].map((x) => { const m = new T.Mesh(new T.CapsuleGeometry(0.05, 0.16, 4, 10), handMat); m.rotation.x = Math.PI / 2; m.position.set(x, 0.62, -0.56); plane.add(m); return m; });
 
       const drawSky = (t) => {
         const g = sctx; const grad = g.createLinearGradient(0, 0, 0, 512);
@@ -270,7 +321,17 @@ export function playStory() {
           armR.rotation.z = t < 6 ? 2.4 + Math.sin(t * 9) * 0.12 : 0.1;    // writing, then down
           teacher.rotation.y = t < 6 ? Math.PI - 0.3 : 0.15;
           head.rotation.x = t > 7.5 ? 0.25 : 0;
-          kids.forEach((k) => { k.s.position.y = k.base - (t > 2 ? 0.25 : 0) + Math.sin(t * 0.8 + k.phase) * 0.02; });
+          kids.forEach((k) => {
+            const asleep = t > 2;
+            k.s.position.y = k.base - (asleep ? 0.3 : 0) + Math.sin(t * 0.8 + k.phase) * 0.02;
+            k.s.material.rotation = asleep ? 0.5 * Math.sin(k.phase + 1) : 0;
+            k.zzz.visible = asleep;
+            const zt = (t * 0.5 + k.phase) % 1;
+            k.zzz.position.set(k.x + 0.35 + zt * 0.3, 2.3 + zt * 0.9, k.z + 0.3);
+            k.zzz.material.opacity = 1 - zt;
+          });
+          mouth.scale.y = (t < 6 || (t > 6.4 && t < 10.5)) ? 1 + Math.abs(Math.sin(t * 14)) * 0.9 : 1;
+          dust.rotation.y = t * 0.02;
           if (t < 6) { const k = ease(t / 6); shot(6 - k * 2, 3.2, 9 - k * 2, -1, 2.6, -5); } else { const k = ease((t - 6) / 4); shot(-1.2 + k * 0.2, 2.5, -1.2 + k * 0.4, -2.2, 2.3, -4.6, 40 - k * 8); }
           once('a', () => say('“…and that is how photosynthesis works.”'));
           if (t > 3.2) once('b', () => say('(the whole class is asleep)', 'is-alert'));
@@ -284,9 +345,9 @@ export function playStory() {
           const step = k < 0.3 ? 0 : k < 0.7 ? 1 : 2;
           drawScreen(step, step === 0 ? k / 0.3 : step === 1 ? (k - 0.3) / 0.4 : (k - 0.7) / 0.3);
           hands.forEach((m, i) => { m.position.y = 0.62 + (step === 1 ? Math.abs(Math.sin(t * 18 + i * 1.7)) * 0.02 : 0); });
-          const sway = Math.sin(t * 0.9) * 0.01;
+          const sway = Math.sin(t * 0.9) * 0.01 + (Math.sin(t * 23) * Math.sin(t * 1.7) > 0.8 ? (Math.random() - 0.5) * 0.012 : 0);
           if (k < 0.12) { const e = ease(k / 0.12); shot(-0.9 + e * 0.9, 1.35, 0.4 - e * 0.1, -1.6 + e * 1.6, 1.25 - e * 0.55, -0.4 - e * 0.6); }
-          else shot(0 + sway, 1.42, 0.55, 0, 0.86, -1.2, 46 - Math.min(1, (k - 0.12) * 3) * 8);
+          else shot(0 + sway, 1.3, 0.55, 0, 0.88, -1.1, 46 - Math.min(1, (k - 0.12) * 3) * 10);
           once('e', () => { say('Later, on a plane…'); playMusic('lobby'); });
           if (k > 0.14) once('f', () => say('He opens Quickzy.'));
           if (k > 0.3) once('g', () => say('He sets up Quickzy Pro: 7 days free.'));
@@ -300,7 +361,18 @@ export function playStory() {
           teacher.rotation.y = 0.2; head.rotation.x = 0;
           armL.rotation.z = -0.4 + Math.sin(t * 3) * 0.15; armR.rotation.z = 0.6 + Math.sin(t * 3 + 1) * 0.2;
           const clap = k > 10.5;
-          kids.forEach((kd) => { kd.s.position.y = kd.base + (k > 1 ? 0.15 : 0) + (clap ? Math.abs(Math.sin(t * 9 + kd.phase)) * 0.35 : Math.sin(t * 2 + kd.phase) * 0.05); });
+          kids.forEach((kd) => {
+            kd.zzz.visible = false; kd.s.material.rotation = 0;
+            kd.s.position.y = kd.base + (k > 1 ? 0.15 : 0) + (clap ? Math.abs(Math.sin(t * 9 + kd.phase)) * 0.35 : Math.sin(t * 2 + kd.phase) * 0.05);
+            kd.phone.visible = k > 4 && !clap;
+            kd.phone.position.y = 1.6 + Math.sin(t * 3 + kd.phase) * 0.05;
+            kd.clap.visible = clap;
+            const ct = (t * 0.8 + kd.phase) % 1;
+            kd.clap.position.set(kd.x + Math.sin(kd.phase) * 0.4, 2.6 + ct * 1.4, kd.z + 0.3);
+            kd.clap.material.opacity = 1 - ct;
+          });
+          mouth.scale.y = k < 10 ? 1 + Math.abs(Math.sin(t * 12)) * 0.8 : 1.6;
+          dust.rotation.y = t * 0.02;
           if (k < 4) { const e = ease(k / 4); shot(5 - e * 3, 3, 10 - e * 3, 0, 3.4, -5.5); }
           else if (k < 10.5) shot(0, 3.6, 3.5, 0, 3.8, -5.8, 44);
           else { const e = ease((k - 10.5) / 3); shot(-6 + e * 4, 2.6, -3.5 + e * 2, 0, 1.9, 3, 52); }
