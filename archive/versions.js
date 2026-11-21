@@ -17,9 +17,9 @@ window.VERSIONS = [
     ],
     shots: [
       ['home', 'The new home page'], ['skyrace-player-wide', 'Sky Race'], ['skyrace-jets', 'Fighter jets in Sky Race'],
-      ['treasure', 'Treasure Hunt'], ['fishing', 'Fishing Frenzy'], ['candy', 'Candy Factory'],
+      ['treasure-player-wide', 'Treasure Hunt'], ['fishing-player-wide', 'Fishing Frenzy'], ['candy', 'Candy Factory'],
       ['solo-modes', 'Five ways to play alone'], ['solo-bubbles', 'Bubble Pop'], ['solo-flashcard', 'Flashcards'],
-      ['create-chooser', 'One Create button'], ['box-reveal', 'Box opening'], ['homework', 'Homework'],
+      ['people-search', 'Search people'], ['create-chooser', 'One Create button'], ['box-reveal', 'Box opening'], ['homework', 'Homework'],
     ],
   },
   {
@@ -38,7 +38,7 @@ window.VERSIONS = [
     ],
     shots: [
       ['home', 'Home with the new sidebar'], ['defense-player-wide', 'Tower Defense'], ['obby-player-wide', 'Sky Climb'],
-      ['teams-player', 'Team mode'], ['teams-end', 'Teams at the end'], ['lasertag-player-wide', 'Laser Tag'],
+      ['teams-lobby', 'Team mode'], ['spacecraft-player-wide', 'Spacecraft'], ['lasertag-player-wide', 'Laser Tag'],
       ['box-reveal', 'Box opening'], ['podium', 'The podium'],
     ],
   },
