@@ -163,6 +163,13 @@ export function verifiedBadge(title, kind = 'verified') {
       + '<circle cx="12" cy="12" r="2.8" fill="none" stroke="#e8112d" stroke-width=".8"/><path d="M9.6 11.2h4.8M9.6 12.8h4.8M11.2 9.6v4.8M12.8 9.6v4.8" stroke="#e8112d" stroke-width=".6"/></svg>';
     return b;
   }
+  if (kind === 'official') {
+    // the official account wears the Quickzy logo itself
+    const mark = svg('svg', { viewBox: '0 0 64 64', 'aria-hidden': 'true' });
+    mark.innerHTML = logoSVG(`ob${++logoSeq}`);
+    b.append(mark);
+    return b;
+  }
   b.append(icon('check', { size: 12, stroke: 3.6 }));
   return b;
 }

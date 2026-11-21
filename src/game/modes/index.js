@@ -17,7 +17,7 @@ export const MODES = [
   },
   {
     id: 'lasertag', name: 'Laser Tag', kind: 'arcade',
-    tagline: 'Tag rivals in the arena. Answer questions to recharge.',
+    tagline: 'Tag rivals in the arena. Moving and shooting burn energy: answer to recharge.',
     bg: 'linear-gradient(140deg, #0e1a4d, #3a1aa8)',
     durations: [3, 5, 7, 10],
   },
