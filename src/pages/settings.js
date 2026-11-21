@@ -17,6 +17,8 @@ import { nameBadges } from '../ui/badges.js';
 import * as siteSvc from '../services/site.js';
 import { unfollowAll } from '../services/channels.js';
 import { myPlan } from '../services/plan.js';
+import { BANNERS, BANNER_IDS, bannerThumb, validBanner } from '../ui/banner.js';
+import { isClean } from '../services/names.js';
 
 export function blookPicker(current, onPick) {
   const grid = h('div', { class: 'blook-grid', role: 'radiogroup', 'aria-label': 'Blook' });
@@ -122,6 +124,7 @@ function profileSection() {
       toggle(p.channel !== false, async (on) => {
         try { await session.patchProfile({ channel: on }); toast(on ? 'Your channel is on' : 'Your channel is off', 'ok'); } catch (err) { toast(explain(err), 'bad'); }
       })),
+    bannerAndBio(p),
     h('h3', {}, 'Your blook'),
     blookPicker(chosen, (id) => { chosen = id; fill(preview, blook(id)); preview.firstChild.style.width = '96px'; preview.firstChild.style.height = '96px'; sfx('pick'); }),
     errorBox,
@@ -333,4 +336,30 @@ export default async function Settings({ query }) {
     verifiedSection(),
     accountSection(),
     deviceSection());
+}
+
+/** Profile banner (a scene or your own picture) and a short bio. */
+function bannerAndBio(p) {
+  let pick = validBanner(p.banner) || 'sky';
+  const grid = h('div', { class: 'banner-pick' });
+  const url = input({ value: pick.startsWith('https://') ? pick : '', placeholder: 'https://… (a picture link)', maxlength: 290 });
+  const draw = () => fill(grid, ...BANNER_IDS.map((id) => h('button', { type: 'button', class: id === pick ? 'is-on' : '', 'aria-label': BANNERS[id].name, onclick: () => { pick = id; url.value = ''; draw(); } },
+    bannerThumb(id), h('span', {}, BANNERS[id].name))));
+  draw();
+  const bio = h('textarea', { class: 'input', rows: 2, maxlength: 160, placeholder: 'A few words about you (shown on your profile)' }, p.bio || '');
+  const save = h('button', { class: 'btn' }, 'Save banner and bio');
+  save.addEventListener('click', busy(save, async () => {
+    const link = url.value.trim();
+    const banner = link ? validBanner(link) : pick;
+    if (link && !banner) { toast('Use a picture link that starts with https://', 'bad'); return; }
+    const text = bio.value.trim().slice(0, 160);
+    if (text && !isClean(text)) { toast('Please write something kinder in your bio.', 'bad'); return; }
+    try { await session.patchProfile({ banner, bio: text }); toast('Profile updated', 'ok'); sfx('coin'); } catch (err) { toast(explain(err), 'bad'); }
+  }));
+  return h('div', { class: 'stack', style: { gap: '10px' } },
+    h('h3', { style: { margin: '6px 0 0' } }, 'Profile banner'),
+    grid,
+    field('Or use your own picture', url, 'Paste a link to a picture (https). Keep it friendly: everyone can see it.'),
+    field('Bio', bio),
+    h('div', { class: 'row end' }, save));
 }
