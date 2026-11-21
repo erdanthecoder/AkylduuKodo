@@ -92,7 +92,9 @@ service cloud.firestore {
       function quizShape() {
         let d = request.resource.data;
         return d.keys().hasOnly(['owner', 'title', 'description', 'cover', 'questions', 'questionCount', 'big', 'public',
-                                 'keywords', 'authorName', 'authorUsername', 'authorBlook', 'updatedAt', 'createdAt', 'plays', 'liveAt', 'editors'])
+                                 'keywords', 'authorName', 'authorUsername', 'authorBlook', 'updatedAt', 'createdAt', 'plays', 'liveAt', 'editors', 'image'])
+          // a cover photo: a picture link
+          && (!('image' in d) || (d.image is string && d.image.size() <= 300 && (d.image == '' || d.image.matches('^https://[^ "<>]+$'))))
           // making it together: up to 10 people, invited by a Pro owner
           && d.get('editors', []) is list && d.get('editors', []).size() <= 10
           && (d.get('editors', []).size() == 0 || pro()
@@ -125,7 +127,7 @@ service cloud.firestore {
       // someone invited to make it together: the content only, never the
       // owner, the author line, who can edit, or whether it is published
       allow update: if account() && !banned() && editor()
-        && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['title', 'description', 'cover', 'questions', 'questionCount', 'big', 'keywords', 'updatedAt'])
+        && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['title', 'description', 'cover', 'questions', 'questionCount', 'big', 'keywords', 'updatedAt', 'image'])
         && str(request.resource.data.title, 80) && request.resource.data.title.size() > 0
         && str(request.resource.data.description, 280)
         && request.resource.data.cover is int

@@ -60,6 +60,9 @@ export const COVERS = 6;
  * Save the editor's quiz. `quiz` is in full form (answers inline).
  * Returns the id. Publishing is a separate flag so a draft is never public.
  */
+/** A cover photo link: https only, short enough for the rules. */
+export const cleanImage = (v) => (typeof v === 'string' && /^https:\/\/[^\s"'<>]{8,290}$/.test(v.trim()) ? v.trim() : '');
+
 export async function saveQuiz(quiz, { publish } = {}) {
   const user = me();
   const profile = myProfile();
@@ -79,6 +82,7 @@ export async function saveQuiz(quiz, { publish } = {}) {
       { op: 'update', col: COL, id: quiz.id, data: {
         title: title || 'Untitled quiz', description,
         cover: Number.isInteger(quiz.cover) ? quiz.cover % COVERS : 0,
+        ...(cleanImage(quiz.image) || before.image ? { image: cleanImage(quiz.image) } : {}),
         questions: pub, questionCount: pub.length,
         big: Boolean(before.public) && pub.length >= LIMITS.verifyMinQuestions,
         keywords: words(`${title} ${description} ${pub.map((q) => q.text).join(' ')}`),
@@ -103,6 +107,7 @@ export async function saveQuiz(quiz, { publish } = {}) {
     title: title || 'Untitled quiz',
     description,
     cover: Number.isInteger(quiz.cover) ? quiz.cover % COVERS : 0,
+    ...(cleanImage(quiz.image) || (before && before.image) ? { image: cleanImage(quiz.image) } : {}),
     questions: pub,
     questionCount: pub.length,
     // counts towards the verified badge; the rules check it matches

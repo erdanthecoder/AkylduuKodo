@@ -28,10 +28,16 @@ function coverPattern(i) {
   return s;
 }
 
+/** A cover photo link we are willing to show. */
+export const coverPhoto = (q) => (typeof q.image === 'string' && /^https:\/\/[^\s"'<>]{8,290}$/.test(q.image) ? q.image : '');
+
 export function cover(quiz, { big = false } = {}) {
   const i = Number(quiz.cover) || 0;
-  return h('div', { class: 'quiz-cover', style: { background: COVER_BG[i % COVER_BG.length], height: big ? '180px' : null } },
-    coverPattern(i),
+  const photo = coverPhoto(quiz);
+  const img = photo ? h('img', { class: 'cover-photo', src: photo, alt: '', loading: 'lazy', referrerpolicy: 'no-referrer' }) : null;
+  if (img) img.addEventListener('error', () => { img.remove(); });
+  return h('div', { class: `quiz-cover${photo ? ' has-photo' : ''}`, style: { background: COVER_BG[i % COVER_BG.length], height: big ? '180px' : null } },
+    coverPattern(i), img,
     h('span', { class: 'cover-title' }, quiz.title || 'Untitled quiz'),
     h('span', { class: 'count' }, plural(quiz.questionCount || (quiz.questions || []).length || 0, 'question')));
 }
