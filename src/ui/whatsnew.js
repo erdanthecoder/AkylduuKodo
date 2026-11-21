@@ -50,6 +50,7 @@ export function showWhatsNew() {
     h('div', { class: 'row' },
       h('button', { class: 'btn grow', onclick: () => { close(); playFilm(); } }, icon('play', { size: 16 }), `Watch the ${VERSION} film`),
       VERSION !== '1.2' && isOwner() ? h('button', { class: 'btn grow', onclick: () => { close(); playFilm('1.2'); } }, icon('star', { size: 16 }), 'Preview 1.2 (only you)') : null,
+      VERSION === '1.2' || isOwner() ? h('button', { class: 'btn grow', onclick: () => { close(); import('./film12b.js').then((s) => s.playStory()); } }, icon('play', { size: 16 }), 'Watch the teacher\'s story') : null,
       h('button', { class: 'btn btn-main grow', onclick: () => close() }, "Let's play")))]);
 }
 
@@ -67,6 +68,8 @@ export function maybeShowWhatsNew() {
 
 /** The film for this version: 1.2 is the 3D Sky Race film; 1.1 the plane film. */
 export function playFilm(version = VERSION) {
-  if (version === '1.2') return import('./film12.js').then((f) => f.playFilm12({ pilot: pilotBlook() }));
+  // 1.2: the Sky Race film, then the teacher's story (once)
+  if (version === '1.2') return import('./film12.js').then((f) => f.playFilm12({ pilot: pilotBlook() }))
+    .then(() => import('./film12b.js')).then((s) => (s.storySeen() ? null : s.playStory()));
   return import('./flight.js').then((f) => f.playFlight({ pilot: pilotBlook() }));
 }

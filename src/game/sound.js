@@ -63,6 +63,8 @@ function noise({ at = 0, dur = 0.2, gain = 0.25, freq = 1200 } = {}) {
 const SOUNDS = {
   pick: () => tone(660, { dur: 0.08, type: 'triangle', gain: 0.2 }),
   tap: () => tone(520, { dur: 0.05, type: 'square', gain: 0.08 }),
+  // a room full of people clapping: many short, bright bursts
+  applause: () => { for (let i = 0; i < 70; i++) noise({ at: Math.random() * 2.8, dur: 0.035 + Math.random() * 0.03, gain: 0.05 + Math.random() * 0.08, freq: 1400 + Math.random() * 2200 }); },
   join: () => { tone(523, { dur: 0.1, type: 'triangle' }); tone(784, { at: 0.08, dur: 0.16, type: 'triangle' }); },
   right: () => { tone(659, { dur: 0.1, type: 'triangle' }); tone(880, { at: 0.09, dur: 0.1, type: 'triangle' }); tone(1319, { at: 0.18, dur: 0.22, type: 'triangle', gain: 0.25 }); },
   wrong: () => { tone(220, { dur: 0.18, type: 'sawtooth', gain: 0.12, slide: -80 }); tone(165, { at: 0.14, dur: 0.26, type: 'sawtooth', gain: 0.12, slide: -60 }); },
