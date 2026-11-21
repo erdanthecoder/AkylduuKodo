@@ -1,0 +1,50 @@
+name: Sign-in domains
+
+# Makes sure every address Quickzy is served from may use Firebase sign-in
+# (Authentication → Settings → Authorized domains). Adds what is missing,
+# never removes anything.
+on:
+  push:
+    branches: [main, 'claude/**']
+    paths: ['.github/workflows/auth-domains.yml']
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  domains:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    env:
+      DOMAINS: quickzy.work.gd
+    steps:
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+      - name: Add the domains
+        env:
+          SA: ${{ secrets.FIREBASE_SERVICE_ACCOUNT_AKYLDUUKODO }}
+        run: |
+          printf '%s' "$SA" > "$RUNNER_TEMP/sa.json"
+          export GOOGLE_APPLICATION_CREDENTIALS="$RUNNER_TEMP/sa.json"
+          npm install --no-save --no-package-lock google-auth-library@9.14.2 >/dev/null 2>&1
+          node -e "
+            const { GoogleAuth } = require('google-auth-library');
+            (async () => {
+              const auth = new GoogleAuth({ scopes: ['https://www.googleapis.com/auth/cloud-platform', 'https://www.googleapis.com/auth/firebase'] });
+              const client = await auth.getClient();
+              const url = 'https://identitytoolkit.googleapis.com/admin/v2/projects/akylduukodo/config';
+              const cur = (await client.request({ url })).data;
+              const have = cur.authorizedDomains || [];
+              const want = process.env.DOMAINS.split(',').map((d) => d.trim()).filter(Boolean);
+              const missing = want.filter((d) => !have.includes(d));
+              console.log('Authorized now:', have.join(', '));
+              if (!missing.length) { console.log('Nothing to add.'); return; }
+              await client.request({ url: url + '?updateMask=authorizedDomains', method: 'PATCH', data: { authorizedDomains: [...have, ...missing] } });
+              console.log('Added:', missing.join(', '));
+            })().catch((e) => { console.error('Failed:', e.response ? JSON.stringify(e.response.data) : e.message); process.exit(1); });
+          "
+      - name: Forget the key
+        if: always()
+        run: rm -f "$RUNNER_TEMP/sa.json"
