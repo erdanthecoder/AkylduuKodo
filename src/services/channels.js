@@ -62,3 +62,13 @@ export async function unfollowAll() {
   const rows = await net.store.query('follows', { where: [['from', '==', me().uid]], limit: 500 }).catch(() => []);
   for (const r of rows) await net.store.del('follows', r.id).catch(() => {});
 }
+
+/** People whose username starts with what was typed ("@erd" finds erdan). */
+export async function searchPeople(text, limit = 12) {
+  const q = String(text || '').toLowerCase().replace(/^@/, '').replace(/[^a-z0-9_]/g, '');
+  if (q.length < 2) return [];
+  const rows = await net.store.query('users', { where: [['username', '>=', q], ['username', '<=', `${q}`]], limit: limit * 2 }).catch(() => []);
+  // only people who chose to have a channel
+  return rows.filter((u) => u.username && u.channel !== false).slice(0, limit)
+    .map((u) => ({ uid: u.id, username: u.username, name: u.displayName || u.username, blook: u.blook }));
+}
